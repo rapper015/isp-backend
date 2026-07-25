@@ -5,6 +5,7 @@ from django.utils import timezone
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 from customers.views import CustomerListCreateView
+from leads.views import LeadListCreateView
 from payments.views import PaymentListCreateView
 from plans.views import PlanListCreateView
 from subscribers.views import SubscriberListCreateView
@@ -45,4 +46,6 @@ urlpatterns = [
     path("api/v1/payments/", include("payments.urls")),
     path("api/v1/dashboard/", include("dashboard.urls")),
     path("api/v1/network/", include("network.urls")),
+    path("api/v1/leads", LeadListCreateView.as_view()),
+    path("api/v1/leads/", include("leads.urls")),
 ]
