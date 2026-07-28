@@ -48,4 +48,12 @@ urlpatterns = [
     path("api/v1/network/", include("network.urls")),
     path("api/v1/leads", LeadListCreateView.as_view()),
     path("api/v1/leads/", include("leads.urls")),
+    # Duplicate mounts for the two routes above that don't already start
+    # with "api/" - so a reverse proxy that forwards the full incoming path
+    # under an "/api" prefix (e.g. "location /api/ { proxy_pass
+    # http://backend; }" without stripping the prefix) still reaches them.
+    # "api/v1/*"/"api/schema"/"api/docs"/"api/redoc" above already match
+    # what such a proxy would send, so they don't need a duplicate.
+    path("api/health", health),
+    path("api/internal/aaa/", include("aaa.urls")),
 ]
