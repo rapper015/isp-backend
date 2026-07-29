@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "payments",
     "dashboard",
     "leads",
+    "kyc",
+    "lifecycle",
 ]
 
 MIDDLEWARE = [
@@ -117,6 +119,14 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Uploaded KYC documents. Deliberately NOT wired into urlpatterns via
+# django.conf.urls.static.static() - that would serve every file under
+# MEDIA_ROOT publicly with no auth check, which is unacceptable for
+# sensitive identity documents. Files are only ever read back through
+# kyc.views.KycDocumentFileView, which is gated by AdminAPIView auth.
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -5,7 +5,9 @@ from django.utils import timezone
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 from customers.views import CustomerListCreateView
+from kyc.views import KycDocumentListCreateView
 from leads.views import LeadListCreateView
+from lifecycle.views import LifecycleAnalyticsView
 from payments.views import PaymentListCreateView
 from plans.views import PlanListCreateView
 from subscribers.views import SubscriberListCreateView
@@ -48,6 +50,10 @@ urlpatterns = [
     path("api/v1/network/", include("network.urls")),
     path("api/v1/leads", LeadListCreateView.as_view()),
     path("api/v1/leads/", include("leads.urls")),
+    path("api/v1/kyc-documents", KycDocumentListCreateView.as_view()),
+    path("api/v1/kyc-documents/", include("kyc.urls")),
+    path("api/v1/customers/<int:customer_id>/lifecycle/", include("lifecycle.urls")),
+    path("api/v1/lifecycle/analytics", LifecycleAnalyticsView.as_view()),
     # Duplicate mounts for the two routes above that don't already start
     # with "api/" - so a reverse proxy that forwards the full incoming path
     # under an "/api" prefix (e.g. "location /api/ { proxy_pass
