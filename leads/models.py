@@ -41,8 +41,20 @@ class Lead(models.Model):
         NOT_INTERESTED = "not_interested", "Not Interested"
         OTHER_CLOSED = "other_closed", "Other Closed"
 
-    franchise = models.CharField(max_length=128)
-    branch = models.CharField(max_length=128)
+    franchise = models.ForeignKey(
+        "resellers.Franchise",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="leads",
+    )
+    branch = models.ForeignKey(
+        "resellers.Branch",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="leads",
+    )
     area = models.CharField(max_length=128, blank=True)
     colony = models.CharField(max_length=128, blank=True)
     connection_type = models.CharField(

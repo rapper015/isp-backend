@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "leads",
     "kyc",
     "lifecycle",
+    "resellers",
 ]
 
 MIDDLEWARE = [

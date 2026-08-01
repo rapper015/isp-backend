@@ -10,6 +10,7 @@ from leads.views import LeadListCreateView
 from lifecycle.views import LifecycleAnalyticsView
 from payments.views import PaymentListCreateView
 from plans.views import PlanListCreateView
+from resellers.views import BranchListCreateView, FranchiseListCreateView
 from subscribers.views import SubscriberListCreateView
 
 
@@ -54,6 +55,10 @@ urlpatterns = [
     path("api/v1/kyc-documents/", include("kyc.urls")),
     path("api/v1/customers/<int:customer_id>/lifecycle/", include("lifecycle.urls")),
     path("api/v1/lifecycle/analytics", LifecycleAnalyticsView.as_view()),
+    path("api/v1/franchises", FranchiseListCreateView.as_view()),
+    path("api/v1/franchises/", include("resellers.urls")),
+    path("api/v1/branches", BranchListCreateView.as_view()),
+    path("api/v1/branches/", include("resellers.urls_branches")),
     # Duplicate mounts for the two routes above that don't already start
     # with "api/" - so a reverse proxy that forwards the full incoming path
     # under an "/api" prefix (e.g. "location /api/ { proxy_pass

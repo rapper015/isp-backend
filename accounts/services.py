@@ -19,7 +19,13 @@ def login(email: str, password: str) -> dict:
     admin.save(update_fields=["last_login_at"])
 
     token = sign_admin_token(
-        {"userId": str(admin.id), "email": admin.email, "role": admin.role}
+        {
+            "userId": str(admin.id),
+            "email": admin.email,
+            "role": admin.role,
+            "franchiseId": str(admin.franchise_id) if admin.franchise_id else None,
+            "branchId": str(admin.branch_id) if admin.branch_id else None,
+        }
     )
 
     return {
@@ -29,5 +35,7 @@ def login(email: str, password: str) -> dict:
             "name": admin.name,
             "email": admin.email,
             "role": admin.role,
+            "franchiseId": str(admin.franchise_id) if admin.franchise_id else None,
+            "branchId": str(admin.branch_id) if admin.branch_id else None,
         },
     }
