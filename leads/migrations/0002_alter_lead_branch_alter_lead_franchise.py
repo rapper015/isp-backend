@@ -2,6 +2,63 @@
 
 import django.db.models.deletion
 from django.db import migrations, models
+from django.utils.text import slugify
+
+
+def _unique_code(model, base_code):
+    code = base_code[:64] or "LEGACY"
+    suffix = 1
+    while model.objects.filter(**{f"{model._meta.model_name}_code": code}).exists():
+        suffix += 1
+        code = f"{base_code}-{suffix}"[:64]
+    return code
+
+
+def migrate_franchise_branch_strings_to_fk(apps, schema_editor):
+    """Leads used to carry franchise/branch as free-text strings. Group identical
+    strings into real Franchise/Branch rows so the new FK columns have somewhere
+    to point, instead of dropping legacy data on the floor.
+    """
+    Lead = apps.get_model("leads", "Lead")
+    Franchise = apps.get_model("resellers", "Franchise")
+    Branch = apps.get_model("resellers", "Branch")
+
+    franchises_by_name = {}
+    branches_by_key = {}
+
+    def get_franchise(name):
+        name = (name or "").strip()
+        if not name:
+            return None
+        if name not in franchises_by_name:
+            franchise = Franchise.objects.filter(name=name).first()
+            if franchise is None:
+                code = _unique_code(Franchise, f"LEGACY-{slugify(name)}")
+                franchise = Franchise.objects.create(franchise_code=code, name=name)
+            franchises_by_name[name] = franchise
+        return franchises_by_name[name]
+
+    def get_branch(franchise, name):
+        name = (name or "").strip()
+        if franchise is None or not name:
+            return None
+        key = (franchise.id, name)
+        if key not in branches_by_key:
+            branch = Branch.objects.filter(franchise=franchise, name=name).first()
+            if branch is None:
+                code = _unique_code(Branch, f"LEGACY-{slugify(name)}")
+                branch = Branch.objects.create(
+                    branch_code=code, franchise=franchise, name=name
+                )
+            branches_by_key[key] = branch
+        return branches_by_key[key]
+
+    for lead in Lead.objects.all():
+        franchise = get_franchise(lead.franchise)
+        branch = get_branch(franchise, lead.branch)
+        lead.franchise_new_id = franchise.id if franchise else None
+        lead.branch_new_id = branch.id if branch else None
+        lead.save(update_fields=["franchise_new", "branch_new"])
 
 
 class Migration(migrations.Migration):
@@ -12,14 +69,31 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.AddField(
             model_name='lead',
-            name='branch',
+            name='franchise_new',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='leads', to='resellers.franchise'),
+        ),
+        migrations.AddField(
+            model_name='lead',
+            name='branch_new',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='leads', to='resellers.branch'),
         ),
-        migrations.AlterField(
+        migrations.RunPython(
+            migrate_franchise_branch_strings_to_fk, reverse_code=migrations.RunPython.noop
+        ),
+        migrations.RemoveField(
             model_name='lead',
             name='franchise',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='leads', to='resellers.franchise'),
+        ),
+        migrations.RemoveField(
+            model_name='lead',
+            name='branch',
+        ),
+        migrations.RenameField(
+            model_name='lead', old_name='franchise_new', new_name='franchise'
+        ),
+        migrations.RenameField(
+            model_name='lead', old_name='branch_new', new_name='branch'
         ),
     ]
