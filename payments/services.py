@@ -7,6 +7,7 @@ from aaa.exceptions import AppError
 from billing.models import Invoice, LedgerEntry
 from billing.sequences import next_payment_reference
 from billing.services import round2
+from orders.activation import maybe_activate_from_invoice
 
 from .models import Payment
 
@@ -86,5 +87,7 @@ def record_payment(input_data: dict) -> Payment:
     subscriber = invoice.subscriber
     subscriber.current_balance = max(Decimal("0"), round2(subscriber.current_balance - amount))
     subscriber.save(update_fields=["current_balance"])
+
+    maybe_activate_from_invoice(invoice)
 
     return payment

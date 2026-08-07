@@ -55,6 +55,8 @@ urlpatterns = [
     path("api/v1/kyc-documents/", include("kyc.urls")),
     path("api/v1/customers/<int:customer_id>/lifecycle/", include("lifecycle.urls")),
     path("api/v1/lifecycle/analytics", LifecycleAnalyticsView.as_view()),
+    path("api/v1/", include("resources.urls")),
+    path("api/v1/", include("orders.urls")),
     path("api/v1/franchises", FranchiseListCreateView.as_view()),
     path("api/v1/franchises/", include("resellers.urls")),
     path("api/v1/branches", BranchListCreateView.as_view()),
