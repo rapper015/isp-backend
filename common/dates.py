@@ -18,7 +18,7 @@ def parse_dt(value):
         parsed = value
 
     if timezone.is_naive(parsed):
-        parsed = timezone.make_aware(parsed, timezone.utc)
+        parsed = timezone.make_aware(parsed, timezone.UTC)
     return parsed
 
 
