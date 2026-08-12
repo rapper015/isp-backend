@@ -84,6 +84,9 @@ fixing a collision risk in the Node reference's epoch-millis-suffix scheme.
 
 ## Not in scope yet
 
+MikroTik NAS onboarding and management is documented in
+[`docs/mikrotik-nas.md`](docs/mikrotik-nas.md).
+
 Full CRM (Milestone 1), provisioning/orchestration (Milestone 2), and
 everything after are later milestones; use the Django admin for supporting
 data entry in the meantime.

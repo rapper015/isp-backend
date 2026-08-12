@@ -2,6 +2,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from . import services
+from network.models import FreeRadiusClient
+from network.secrets import decrypt_secret
 from .exceptions import AppError
 from .permissions import HasInternalApiKey
 
@@ -66,3 +68,14 @@ class DisconnectView(InternalAaaView):
 class CoaView(InternalAaaView):
     def post(self, request):
         return Response(services.coa(request.data))
+
+
+class NasClientLookupView(InternalAaaView):
+    """Internal-only dynamic FreeRADIUS client lookup; never routed under /api/v1."""
+
+    def post(self, request):
+        source_ip = request.data.get("source_ip") or request.data.get("NAS-IP-Address")
+        client = FreeRadiusClient.objects.select_related("nas").filter(source_ip=source_ip, enabled=True, nas__deleted_at__isnull=True).first()
+        if client is None:
+            raise AppError("RADIUS client not found", 404)
+        return Response({"source_ip": client.source_ip, "short_name": client.short_name, "nas_type": client.nas_type, "secret": decrypt_secret(client.secret_encrypted)})

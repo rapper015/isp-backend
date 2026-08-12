@@ -9,4 +9,5 @@ urlpatterns = [
     path("post-auth", views.PostAuthView.as_view()),
     path("disconnect", views.DisconnectView.as_view()),
     path("coa", views.CoaView.as_view()),
+    path("nas-client", views.NasClientLookupView.as_view()),
 ]

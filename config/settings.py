@@ -118,6 +118,20 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Subscriber imports are stored outside STATIC_ROOT and are only served through
+# authenticated API views. Production storage should use an equally private backend.
+MEDIA_ROOT = BASE_DIR / "private_media"
+MEDIA_URL = "/private-media/"
+SUBSCRIBER_IMPORT_MAX_BYTES = int(os.environ.get("SUBSCRIBER_IMPORT_MAX_BYTES", 10 * 1024 * 1024))
+
+# Router management security. Generate the Fernet key once with:
+# python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+NAS_ENCRYPTION_KEY = os.environ.get("NAS_ENCRYPTION_KEY", "")
+NAS_ALLOWED_NETWORKS = [item.strip() for item in os.environ.get("NAS_ALLOWED_NETWORKS", "").split(",") if item.strip()]
+NAS_ALLOW_PRIVATE_NETWORKS = os.environ.get("NAS_ALLOW_PRIVATE_NETWORKS", "false").lower() == "true"
+NAS_ALLOW_INSECURE_TLS = os.environ.get("NAS_ALLOW_INSECURE_TLS", "false").lower() == "true"
+RADIUS_SERVER_IP = os.environ.get("RADIUS_SERVER_IP", "")
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
@@ -150,6 +164,7 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_RATES": {"nas_connection_test": "10/hour"},
 }
 
 SPECTACULAR_SETTINGS = {

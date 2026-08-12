@@ -18,6 +18,7 @@ class AdminUser(models.Model):
     last_login_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    franchises = models.ManyToManyField("customers.Franchise", blank=True, related_name="admin_users")
 
     def __str__(self) -> str:
         return f"{self.email} ({self.role})"

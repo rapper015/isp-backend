@@ -30,6 +30,9 @@ class Plan(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    franchise = models.ForeignKey("customers.Franchise", null=True, blank=True, on_delete=models.PROTECT, related_name="plans")
+    source_name = models.CharField(max_length=255, blank=True)
+    source_sub_package = models.CharField(max_length=255, blank=True)
 
     def __str__(self) -> str:
         return f"{self.plan_code} - {self.name}"

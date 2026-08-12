@@ -321,9 +321,11 @@ def accounting(payload: dict) -> dict:
         terminate_cause=normalized["terminate_cause"],
         payload=normalized["raw"],
         event_at=normalized["event_at"],
+        nas=NasDevice.objects.filter(radius_source_ip=normalized["nas_ip_address"],deleted_at__isnull=True).first(),
     )
 
     NasDevice.objects.update_or_create(
+        franchise=None,
         nas_ip_address=normalized["nas_ip_address"],
         defaults={
             "nas_identifier": normalized["nas_identifier"],
@@ -354,6 +356,7 @@ def accounting(payload: dict) -> dict:
                 "download_bytes": int(round(normalized["output_octets"])),
                 "session_time_seconds": int(round(normalized["session_time_seconds"])),
                 "status": "online",
+                "nas": NasDevice.objects.filter(radius_source_ip=normalized["nas_ip_address"],deleted_at__isnull=True).first(),
             },
         )
         subscriber.last_online_at = normalized["event_at"]

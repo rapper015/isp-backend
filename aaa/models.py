@@ -29,6 +29,7 @@ class ActiveSession(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    nas = models.ForeignKey("network.NasDevice", null=True, blank=True, on_delete=models.PROTECT, related_name="active_sessions")
 
     def __str__(self) -> str:
         return f"{self.username} - {self.session_id}"
@@ -63,6 +64,7 @@ class AccountingRecord(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    nas = models.ForeignKey("network.NasDevice", null=True, blank=True, on_delete=models.PROTECT, related_name="accounting_records")
 
     def __str__(self) -> str:
         return f"{self.username} - {self.session_id} - {self.event_type}"

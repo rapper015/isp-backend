@@ -15,6 +15,7 @@ def _sync_nas_devices_from_sessions() -> None:
         # unique, so a device coming back online must revive its existing row
         # (via deleted_at=None below) rather than collide on a fresh insert.
         NasDevice.objects.update_or_create(
+            franchise=None,
             nas_ip_address=session.nas_ip_address,
             defaults={
                 "nas_identifier": session.nas_identifier,

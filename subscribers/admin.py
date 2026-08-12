@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
 
-from .models import Subscriber
+from .models import Subscriber, SubscriberImportBatch, SubscriberImportRow
 from .services import hash_password
 
 
@@ -41,3 +41,17 @@ class SubscriberAdmin(admin.ModelAdmin):
         elif not change:
             raise forms.ValidationError("A password is required when creating a subscriber.")
         super().save_model(request, obj, form, change)
+
+
+@admin.register(SubscriberImportBatch)
+class SubscriberImportBatchAdmin(admin.ModelAdmin):
+    list_display = ("id", "franchise", "original_filename", "status", "total_rows", "created_rows", "failed_rows", "created_at")
+    list_filter = ("status", "franchise")
+    readonly_fields = tuple(field.name for field in SubscriberImportBatch._meta.fields)
+
+
+@admin.register(SubscriberImportRow)
+class SubscriberImportRowAdmin(admin.ModelAdmin):
+    list_display = ("import_batch", "source_row_number", "external_id", "username", "action", "target_subscriber")
+    list_filter = ("action",)
+    readonly_fields = tuple(field.name for field in SubscriberImportRow._meta.fields)
