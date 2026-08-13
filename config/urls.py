@@ -5,9 +5,12 @@ from django.utils import timezone
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 from customers.views import CustomerListCreateView
+from kyc.views import KycDocumentListCreateView
 from leads.views import LeadListCreateView
+from lifecycle.views import LifecycleAnalyticsView
 from payments.views import PaymentListCreateView
 from plans.views import PlanListCreateView
+from resellers.views import BranchListCreateView, FranchiseListCreateView
 from subscribers.views import SubscriberListCreateView
 
 
@@ -50,4 +53,22 @@ urlpatterns = [
     path("api/v1/nas/", include("network.nas_urls")),
     path("api/v1/leads", LeadListCreateView.as_view()),
     path("api/v1/leads/", include("leads.urls")),
+    path("api/v1/kyc-documents", KycDocumentListCreateView.as_view()),
+    path("api/v1/kyc-documents/", include("kyc.urls")),
+    path("api/v1/customers/<int:customer_id>/lifecycle/", include("lifecycle.urls")),
+    path("api/v1/lifecycle/analytics", LifecycleAnalyticsView.as_view()),
+    path("api/v1/", include("resources.urls")),
+    path("api/v1/", include("orders.urls")),
+    path("api/v1/franchises", FranchiseListCreateView.as_view()),
+    path("api/v1/franchises/", include("resellers.urls")),
+    path("api/v1/branches", BranchListCreateView.as_view()),
+    path("api/v1/branches/", include("resellers.urls_branches")),
+    # Duplicate mounts for the two routes above that don't already start
+    # with "api/" - so a reverse proxy that forwards the full incoming path
+    # under an "/api" prefix (e.g. "location /api/ { proxy_pass
+    # http://backend; }" without stripping the prefix) still reaches them.
+    # "api/v1/*"/"api/schema"/"api/docs"/"api/redoc" above already match
+    # what such a proxy would send, so they don't need a duplicate.
+    path("api/health", health),
+    path("api/internal/aaa/", include("aaa.urls")),
 ]

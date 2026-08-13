@@ -4,8 +4,6 @@ from .models import Lead
 
 
 class LeadSerializer(serializers.ModelSerializer):
-    franchise = serializers.CharField(min_length=1, max_length=128)
-    branch = serializers.CharField(min_length=1, max_length=128)
     customer_name = serializers.CharField(min_length=2, max_length=255)
     mobile = serializers.CharField(min_length=6, max_length=32)
     notes = serializers.CharField(max_length=100, required=False, allow_blank=True)

@@ -59,6 +59,7 @@ class Area(models.Model):
 
 class Customer(models.Model):
     class Status(models.TextChoices):
+        ONBOARDING = "onboarding", "Onboarding"
         ACTIVE = "active", "Active"
         INACTIVE = "inactive", "Inactive"
         SUSPENDED = "suspended", "Suspended"

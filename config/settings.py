@@ -43,6 +43,11 @@ INSTALLED_APPS = [
     "payments",
     "dashboard",
     "leads",
+    "kyc",
+    "lifecycle",
+    "resellers",
+    "resources",
+    "orders",
 ]
 
 MIDDLEWARE = [
@@ -118,8 +123,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Subscriber imports are stored outside STATIC_ROOT and are only served through
-# authenticated API views. Production storage should use an equally private backend.
+# Subscriber imports and KYC documents are stored outside STATIC_ROOT and are
+# only served through authenticated API views. Production storage should use an
+# equally private backend.
 MEDIA_ROOT = BASE_DIR / "private_media"
 MEDIA_URL = "/private-media/"
 SUBSCRIBER_IMPORT_MAX_BYTES = int(os.environ.get("SUBSCRIBER_IMPORT_MAX_BYTES", 10 * 1024 * 1024))

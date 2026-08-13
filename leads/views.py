@@ -5,6 +5,7 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from accounts.views import AdminAPIView
 from aaa.exceptions import AppError
 from common.casing import normalize_keys
+from resellers.scoping import get_scope, resolve_lead_source, scope_lead_queryset
 
 from .models import Lead
 from .serializers import LeadSerializer
@@ -14,7 +15,9 @@ _TRUE_VALUES = {"1", "true", "yes"}
 
 class LeadListCreateView(AdminAPIView):
     def get(self, request):
-        leads = Lead.objects.filter(deleted_at__isnull=True).order_by("-created_at")
+        leads = scope_lead_queryset(
+            Lead.objects.filter(deleted_at__isnull=True), get_scope(request)
+        ).order_by("-created_at")
 
         status_param = request.query_params.get("status")
         if status_param:
@@ -35,7 +38,15 @@ class LeadListCreateView(AdminAPIView):
         return Response(LeadSerializer(leads, many=True).data)
 
     def post(self, request):
-        serializer = LeadSerializer(data=normalize_keys(request.data))
+        scope = get_scope(request)
+        data = normalize_keys(request.data)
+        franchise_id, branch_id = resolve_lead_source(
+            scope, data.get("franchise"), data.get("branch")
+        )
+        data["franchise"] = franchise_id
+        data["branch"] = branch_id
+
+        serializer = LeadSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         admin = request.user or {}
         admin_id = admin.get("userId")
@@ -44,25 +55,27 @@ class LeadListCreateView(AdminAPIView):
 
 
 class LeadDetailView(AdminAPIView):
-    def get(self, request, lead_id):
-        lead = Lead.objects.filter(id=lead_id, deleted_at__isnull=True).first()
+    def _get(self, request, lead_id):
+        lead = scope_lead_queryset(
+            Lead.objects.filter(id=lead_id, deleted_at__isnull=True), get_scope(request)
+        ).first()
         if lead is None:
             raise AppError("Lead not found", 404)
+        return lead
+
+    def get(self, request, lead_id):
+        lead = self._get(request, lead_id)
         return Response(LeadSerializer(lead).data)
 
     def patch(self, request, lead_id):
-        lead = Lead.objects.filter(id=lead_id, deleted_at__isnull=True).first()
-        if lead is None:
-            raise AppError("Lead not found", 404)
+        lead = self._get(request, lead_id)
         serializer = LeadSerializer(lead, data=normalize_keys(request.data), partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
     def delete(self, request, lead_id):
-        lead = Lead.objects.filter(id=lead_id, deleted_at__isnull=True).first()
-        if lead is None:
-            raise AppError("Lead not found", 404)
+        lead = self._get(request, lead_id)
         lead.deleted_at = timezone.now()
         lead.save(update_fields=["deleted_at"])
         return Response(status=HTTP_204_NO_CONTENT)
