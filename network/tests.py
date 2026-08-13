@@ -129,6 +129,14 @@ class NasModuleTests(TestCase):
     def test_unauthorized_api(self):
         client=APIClient();self.assertEqual(client.get("/api/v1/nas/").status_code,401)
 
+    def test_authenticated_connection_endpoint_reaches_view_through_throttle(self):
+        client=APIClient()
+        token=__import__('accounts.jwt',fromlist=['sign_admin_token']).sign_admin_token({"userId":str(self.super.id),"email":self.super.email,"role":self.super.role})
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+        with mock.patch("network.nas_services.test_connection",return_value={"success":True}):
+            response=client.post("/api/v1/nas/test-connection/",self.payload,format="json")
+        self.assertEqual(response.status_code,200)
+
     def test_noc_api_tenant_scope_and_no_secret_output(self):
         nas=self.create();client=APIClient();client.force_authenticate(user={"userId":self.noc.id,"role":"noc_admin"});response=client.get("/api/v1/nas/")
         self.assertEqual(response.status_code,200);self.assertEqual(response.data[0]["id"],str(nas.public_id));self.assertNotIn("encrypted_api_password",response.data[0])

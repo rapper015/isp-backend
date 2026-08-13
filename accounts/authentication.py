@@ -5,6 +5,18 @@ from rest_framework.exceptions import AuthenticationFailed
 from .jwt import decode_admin_token
 
 
+class AdminPrincipal(dict):
+    """JWT claims with the authentication interface expected by DRF."""
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def pk(self):
+        return self.get("userId")
+
+
 class AdminBearerAuthentication(BaseAuthentication):
     """Stateless admin JWT auth, mirroring authenticateAdmin.ts.
 
@@ -23,7 +35,7 @@ class AdminBearerAuthentication(BaseAuthentication):
         except pyjwt.PyJWTError:
             raise AuthenticationFailed("Invalid or expired token")
 
-        return payload, token
+        return AdminPrincipal(payload), token
 
     def authenticate_header(self, request):
         # Presence of this (non-empty) return value keeps DRF from downgrading
