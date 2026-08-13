@@ -4,6 +4,13 @@ from django.db import models
 class Franchise(models.Model):
     name = models.CharField(max_length=255)
     normalized_name = models.CharField(max_length=255, db_index=True)
+    reseller_franchise = models.OneToOneField(
+        "resellers.Franchise",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="import_tenant",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

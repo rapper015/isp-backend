@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from customers.franchises import public_franchise_id
+
 from .models import SubscriberImportBatch, SubscriberImportRow
 
 
@@ -43,7 +45,7 @@ class ImportRowSerializer(serializers.ModelSerializer):
 
 
 class ImportBatchSerializer(serializers.ModelSerializer):
-    franchise_id = serializers.IntegerField(read_only=True)
+    franchise_id = serializers.SerializerMethodField()
     created_by_id = serializers.IntegerField(read_only=True)
     error_download_url = serializers.SerializerMethodField()
 
@@ -55,3 +57,6 @@ class ImportBatchSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         path = f"/api/v1/subscriber-imports/{obj.id}/errors/download/"
         return request.build_absolute_uri(path) if request else path
+
+    def get_franchise_id(self, obj):
+        return public_franchise_id(obj.franchise)

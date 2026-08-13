@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from customers.franchises import public_franchise_id
+
 from .models import NasAuditLog, NasDevice
 
 
@@ -56,11 +58,13 @@ class NasPatchSerializer(serializers.Serializer):
 class NasSerializer(serializers.ModelSerializer):
     id=serializers.UUIDField(source="public_id",read_only=True)
     host=serializers.CharField(source="nas_ip_address",read_only=True)
-    franchise_id=serializers.IntegerField(read_only=True)
+    franchise_id=serializers.SerializerMethodField()
     health=serializers.JSONField(source="cached_health",read_only=True)
     class Meta:
         model=NasDevice
         fields=("id","franchise_id","name","short_name","description","vendor","nas_type","host","radius_source_ip","api_port","api_protocol","api_username","radius_auth_port","radius_accounting_port","coa_port","routeros_version","architecture","board_name","serial_number","system_identity","lifecycle_status","last_connection_at","last_sync_at","last_error_code","last_error_message","connection_timeout","verify_tls","certificate_fingerprint","enabled","selected_radius_services","health","created_at","updated_at")
+
+    def get_franchise_id(self,obj): return public_franchise_id(obj.franchise)
 
 
 class NasAuditSerializer(serializers.ModelSerializer):

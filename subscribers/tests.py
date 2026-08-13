@@ -11,6 +11,7 @@ from accounts.models import AdminUser
 from common.passwords import hash_password
 from customers.models import Customer, Franchise
 from plans.models import Plan
+from resellers.models import Franchise as SystemFranchise
 
 from .importing.parser import CSVStructureError, normalize_row, read_csv
 from .importing.services import commit_import, validate_upload
@@ -132,6 +133,17 @@ class SubscriberImportTests(TestCase):
         response=client.post("/api/v1/subscriber-imports/validate/",{"file":csv_upload([{}]),"franchise_id":self.franchise.id},format="multipart")
         self.assertEqual(response.status_code,201)
         listed=client.get(f"/api/v1/subscriber-imports/?franchise_id={self.other.id}"); self.assertEqual(listed.data["count"],0)
+
+    def test_api_accepts_canonical_system_franchise_id(self):
+        system_franchise=SystemFranchise.objects.create(franchise_code="TENANT-A",name="Tenant A")
+        client=APIClient(); client.force_authenticate(user={"userId":self.admin.id,"role":"super_admin"})
+        response=client.post("/api/v1/subscriber-imports/validate/",{"file":csv_upload([{}]),"franchise_id":system_franchise.id},format="multipart")
+        self.assertEqual(response.status_code,201)
+        self.franchise.refresh_from_db()
+        self.assertEqual(self.franchise.reseller_franchise_id,system_franchise.id)
+        self.assertEqual(response.data["import_id"],str(SubscriberImportBatch.objects.get().id))
+        detail=client.get(f'/api/v1/subscriber-imports/{response.data["import_id"]}/')
+        self.assertEqual(detail.data["franchise_id"],system_franchise.id)
 
     def test_error_csv_escapes_formula_injection(self):
         batch=self.validate([{"Status":"=bad"}])

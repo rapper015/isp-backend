@@ -6,7 +6,8 @@ from django.db.models import Q
 from django.utils import timezone
 
 from aaa.models import AccountingRecord, ActiveSession
-from customers.models import Franchise
+from accounts.models import AdminUser
+from customers.franchises import resolve_franchise
 
 from .models import FreeRadiusClient, NasAuditLog, NasDevice
 from .routeros import MikroTikRouterClient
@@ -37,7 +38,11 @@ def validate_routeros_version(resources):
 def scoped_nas(user_payload):
     qs=NasDevice.objects.select_related("franchise").filter(deleted_at__isnull=True)
     if user_payload.get("role")=="super_admin": return qs
-    return qs.filter(franchise__admin_users__id=user_payload.get("userId")).distinct()
+    admin=AdminUser.objects.filter(id=user_payload.get("userId"),is_active=True).first()
+    if not admin:return qs.none()
+    scope=Q(franchise__admin_users=admin)
+    if admin.franchise_id:scope|=Q(franchise__reseller_franchise_id=admin.franchise_id)
+    return qs.filter(scope).distinct()
 
 
 def get_nas(public_id,user_payload):
@@ -106,9 +111,9 @@ def sync_freeradius(nas):
 
 @transaction.atomic
 def create_nas(data,user):
-    franchise=Franchise.objects.filter(id=data["franchise_id"]).first()
+    franchise=resolve_franchise(data["franchise_id"])
     if not franchise: raise NasServiceError("FRANCHISE_NOT_FOUND","Franchise not found")
-    if user.role!="super_admin" and not user.franchises.filter(id=franchise.id).exists(): raise NasServiceError("TENANT_ACCESS_DENIED","Franchise access denied",403)
+    if user.role!="super_admin" and user.franchise_id!=franchise.reseller_franchise_id and not user.franchises.filter(id=franchise.id).exists(): raise NasServiceError("TENANT_ACCESS_DENIED","Franchise access denied",403)
     if NasDevice.objects.filter(franchise=franchise,nas_ip_address=data["host"],deleted_at__isnull=True).exists(): raise NasServiceError("DUPLICATE_NAS","A NAS with this management host already exists",409)
     if NasDevice.objects.filter(franchise=franchise,radius_source_ip=data["radius_source_ip"],deleted_at__isnull=True).exists(): raise NasServiceError("DUPLICATE_RADIUS_SOURCE","A NAS with this RADIUS source IP already exists",409)
     discovery=discover(config=data)

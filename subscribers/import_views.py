@@ -11,7 +11,7 @@ from rest_framework.status import HTTP_201_CREATED
 from aaa.exceptions import AppError
 from accounts.models import AdminUser
 from accounts.views import AdminAPIView
-from customers.models import Franchise
+from customers.franchises import resolve_franchise
 
 from .import_permissions import CanImportSubscribers
 from .import_serializers import ImportBatchSerializer, ImportCommitSerializer, ImportRowSerializer, ImportUploadSerializer
@@ -50,7 +50,7 @@ class ImportValidateView(ImportAPIView):
     def post(self, request):
         serializer=ImportUploadSerializer(data=request.data, context={"max_size":settings.SUBSCRIBER_IMPORT_MAX_BYTES}); serializer.is_valid(raise_exception=True)
         data=serializer.validated_data
-        franchise=Franchise.objects.filter(id=data["franchise_id"]).first()
+        franchise=resolve_franchise(data["franchise_id"])
         if not franchise: raise AppError("Franchise not found", 400)
         options={k:data[k] for k in ("update_existing","create_missing_packages","create_missing_locations","dry_run")}
         try: batch=validate_upload(data["file"],franchise,_admin(request),options)
@@ -62,8 +62,10 @@ class ImportValidateView(ImportAPIView):
 class ImportListView(ImportAPIView):
     def get(self,request):
         qs=SubscriberImportBatch.objects.select_related("franchise","created_by").order_by("-created_at")
-        if request.query_params.get("franchise_id"): qs=qs.filter(franchise_id=request.query_params["franchise_id"])
-        if request.query_params.get("tenant_id"): qs=qs.filter(franchise_id=request.query_params["tenant_id"])
+        requested_franchise=request.query_params.get("franchise_id") or request.query_params.get("tenant_id")
+        if requested_franchise:
+            franchise=resolve_franchise(requested_franchise)
+            qs=qs.filter(franchise=franchise) if franchise else qs.none()
         if request.query_params.get("status"): qs=qs.filter(status=request.query_params["status"].upper())
         if parse_date(request.query_params.get("date_from", "")): qs=qs.filter(created_at__date__gte=parse_date(request.query_params["date_from"]))
         if parse_date(request.query_params.get("date_to", "")): qs=qs.filter(created_at__date__lte=parse_date(request.query_params["date_to"]))
