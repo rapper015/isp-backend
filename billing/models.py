@@ -1,3 +1,5 @@
+import uuid
+
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
@@ -82,12 +84,25 @@ class Invoice(models.Model):
     )
     notes = models.CharField(max_length=255, blank=True)
     line_items = models.JSONField(default=list, encoder=DjangoJSONEncoder)
+    source_system = models.CharField(max_length=64, blank=True, db_index=True)
+    source_invoice_number = models.CharField(max_length=128, blank=True, db_index=True)
+    source_order_number = models.CharField(max_length=128, blank=True)
+    import_metadata = models.JSONField(default=dict, blank=True, encoder=DjangoJSONEncoder)
     deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         return self.invoice_number
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("subscriber", "source_system", "source_invoice_number"),
+                condition=~models.Q(source_invoice_number=""),
+                name="uq_invoice_subscriber_source_number",
+            )
+        ]
 
 
 class LedgerEntry(models.Model):
@@ -136,3 +151,65 @@ class SequenceCounter(models.Model):
 
     def __str__(self) -> str:
         return f"{self.prefix}-{self.period}: {self.last_value}"
+
+
+def invoice_import_upload_to(instance, filename):
+    return f"invoice_imports/{instance.id}/{filename}"
+
+
+class InvoiceImportBatch(models.Model):
+    class Status(models.TextChoices):
+        UPLOADED = "UPLOADED", "Uploaded"
+        VALIDATING = "VALIDATING", "Validating"
+        VALIDATED = "VALIDATED", "Validated"
+        PROCESSING = "PROCESSING", "Processing"
+        COMPLETED = "COMPLETED", "Completed"
+        PARTIAL = "PARTIAL", "Partial"
+        FAILED = "FAILED", "Failed"
+        CANCELLED = "CANCELLED", "Cancelled"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    franchise = models.ForeignKey("customers.Franchise", on_delete=models.PROTECT, related_name="invoice_imports")
+    original_filename = models.CharField(max_length=255)
+    file = models.FileField(upload_to=invoice_import_upload_to)
+    file_hash = models.CharField(max_length=64, db_index=True)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.UPLOADED, db_index=True)
+    total_rows = models.PositiveIntegerField(default=0)
+    valid_rows = models.PositiveIntegerField(default=0)
+    invalid_rows = models.PositiveIntegerField(default=0)
+    created_rows = models.PositiveIntegerField(default=0)
+    updated_rows = models.PositiveIntegerField(default=0)
+    skipped_rows = models.PositiveIntegerField(default=0)
+    failed_rows = models.PositiveIntegerField(default=0)
+    duplicate_rows = models.PositiveIntegerField(default=0)
+    validation_summary = models.JSONField(default=dict, blank=True)
+    column_mapping = models.JSONField(default=dict, blank=True)
+    options = models.JSONField(default=dict, blank=True)
+    created_by = models.ForeignKey("accounts.AdminUser", on_delete=models.PROTECT, related_name="invoice_imports")
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+
+class InvoiceImportRow(models.Model):
+    class Action(models.TextChoices):
+        CREATE = "CREATE", "Create"
+        UPDATE = "UPDATE", "Update"
+        SKIP = "SKIP", "Skip"
+        ERROR = "ERROR", "Error"
+
+    import_batch = models.ForeignKey(InvoiceImportBatch, on_delete=models.CASCADE, related_name="rows")
+    source_row_number = models.PositiveIntegerField()
+    source_invoice_number = models.CharField(max_length=128, blank=True)
+    username = models.CharField(max_length=128, blank=True)
+    raw_data = models.JSONField(default=dict)
+    normalized_data = models.JSONField(default=dict)
+    action = models.CharField(max_length=8, choices=Action.choices, db_index=True)
+    validation_errors = models.JSONField(default=list, blank=True)
+    processing_error = models.TextField(blank=True)
+    target_invoice = models.ForeignKey(Invoice, null=True, blank=True, on_delete=models.SET_NULL, related_name="import_rows")
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=("import_batch", "source_row_number"), name="uq_invoice_import_batch_row")]
+        ordering = ("source_row_number",)

@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from aaa.admin import ReadOnlyAdmin
 
-from .models import BillingAccount, BillingSettings, Invoice, LedgerEntry
+from .models import BillingAccount, BillingSettings, Invoice, InvoiceImportBatch, InvoiceImportRow, LedgerEntry
 
 
 @admin.register(BillingSettings)
@@ -36,7 +36,7 @@ class InvoiceAdmin(ReadOnlyAdmin):
         "due_date",
     )
     list_filter = ("status",)
-    search_fields = ("invoice_number",)
+    search_fields = ("invoice_number", "source_invoice_number", "source_order_number")
     date_hierarchy = "due_date"
 
 
@@ -45,3 +45,7 @@ class LedgerEntryAdmin(ReadOnlyAdmin):
     list_display = ("customer", "subscriber", "entry_type", "debit", "credit", "posted_at")
     list_filter = ("entry_type",)
     date_hierarchy = "posted_at"
+
+
+admin.site.register(InvoiceImportBatch, ReadOnlyAdmin)
+admin.site.register(InvoiceImportRow, ReadOnlyAdmin)

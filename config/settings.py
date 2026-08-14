@@ -129,6 +129,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_ROOT = BASE_DIR / "private_media"
 MEDIA_URL = "/private-media/"
 SUBSCRIBER_IMPORT_MAX_BYTES = int(os.environ.get("SUBSCRIBER_IMPORT_MAX_BYTES", 10 * 1024 * 1024))
+INVOICE_IMPORT_MAX_BYTES = int(os.environ.get("INVOICE_IMPORT_MAX_BYTES", 10 * 1024 * 1024))
 
 # Router management security. Generate the Fernet key once with:
 # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"

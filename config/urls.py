@@ -42,6 +42,7 @@ urlpatterns = [
     path("api/v1/subscribers", SubscriberListCreateView.as_view()),
     path("api/v1/subscribers/", include("subscribers.urls")),
     path("api/v1/subscriber-imports/", include("subscribers.import_urls")),
+    path("api/v1/invoice-imports/", include("billing.import_urls")),
     path("api/v1/plans", PlanListCreateView.as_view()),
     path("api/v1/plans/", include("plans.urls")),
     path("api/v1/", include("aaa.admin_urls")),

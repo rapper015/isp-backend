@@ -65,6 +65,10 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "status",
             "notes",
             "line_items",
+            "source_system",
+            "source_invoice_number",
+            "source_order_number",
+            "import_metadata",
             "created_at",
             "updated_at",
         )
