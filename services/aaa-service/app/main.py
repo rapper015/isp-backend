@@ -8,7 +8,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import AccountingEvent, ActiveSession, Credential, IpLease, IpPool, Nas, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
+from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLease, IpPool, Nas, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
@@ -367,6 +367,11 @@ def list_usage(tenant_id: UUID, session: Session = Depends(db)):
 @app.get("/api/aaa/usage/subscribers/{subscriber_id}", dependencies=[Depends(internal_service_auth)])
 def subscriber_usage(subscriber_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     return [{"period": item.period, "input_octets": item.input_octets, "output_octets": item.output_octets, "fup_active": item.fup_active} for item in session.scalars(select(UsageProjection).where(UsageProjection.tenant_id == tenant_id, UsageProjection.subscriber_id == subscriber_id).limit(100))]
+@app.get("/api/aaa/audit", dependencies=[Depends(internal_service_auth)])
+def list_audit(tenant_id: UUID, action: str | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    statement = select(AuditLog).where(AuditLog.tenant_id == tenant_id)
+    if action: statement = statement.where(AuditLog.action == action)
+    return [{"id": str(item.id), "action": item.action, "target_type": item.target_type, "target_id": item.target_id, "correlation_id": item.correlation_id, "detail": item.detail, "created_at": item.created_at} for item in session.scalars(statement.order_by(AuditLog.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))]
 @app.post("/api/aaa/usage/subscribers/{subscriber_id}/reset", dependencies=[Depends(internal_service_auth)])
 def reset_subscriber_usage(subscriber_id: UUID, tenant_id: UUID, payload: QuotaResetIn, session: Session = Depends(db)):
     period = payload.period or datetime.now().strftime("%Y-%m")
