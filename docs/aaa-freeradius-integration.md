@@ -36,11 +36,17 @@ the private network:
 - POST /internal/radius/v1/post-auth
 - GET /internal/radius/v1/health
 - GET /internal/radius/v1/readiness
+- GET /internal/radius/v1/metrics
 
 Each request has a correlation_id, optional idempotency_key, and an attributes
 object. Authentication uses User-Password for PAP. The service validates and
 allowlists attributes, resolves the NAS first, obtains the tenant solely from
 that trusted NAS record, and never falls back to another tenant.
+
+The service also accepts `X-Correlation-Id` when a JSON correlation ID is not
+provided, returns it in the response header, and carries it into AAA events.
+Private metrics are intentionally low-cardinality counters only; they never use
+subscriber identities, session IDs, IP addresses, or MAC addresses as labels.
 
 Successful authorization replies are limited to supported attributes, including
 Mikrotik-Rate-Limit, Framed-IP-Address, Framed-Pool, Session-Timeout,

@@ -4,7 +4,7 @@ from os import getenv
 from uuid import UUID
 import bcrypt
 from datetime import datetime
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
@@ -16,6 +16,7 @@ from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequ
 from .security import encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
 from .services import accounting, audit, authenticate, authorize, correlation, outbox
 from .reconciliation import reconcile_nas_sessions
+from .metrics import increment, snapshot
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -26,6 +27,17 @@ async def lifespan(_: FastAPI):
     yield
 
 app = FastAPI(title="AAA Service (private)", version="1.0.0", docs_url="/internal/docs", openapi_url="/internal/openapi.json", lifespan=lifespan)
+@app.middleware("http")
+async def correlation_id_middleware(request: Request, call_next):
+    request_id = request.headers.get("X-Correlation-Id", "")[:64] or correlation(None)
+    try:
+        response = await call_next(request)
+    except Exception:
+        increment("aaa_http_errors_total")
+        raise
+    response.headers["X-Correlation-Id"] = request_id
+    increment(f"aaa_http_{response.status_code // 100}xx_total")
+    return response
 def db():
     session = SessionLocal()
     try: yield session
@@ -52,20 +64,23 @@ def radius_health(): return {"status": "ok", "service": "aaa", "freeradius_manag
 @app.get("/internal/radius/v1/readiness", dependencies=[Depends(internal_service_auth)])
 def readiness(session: Session = Depends(db)):
     session.execute(select(Tenant.id).limit(1)); return {"status": "ready", "database": "ok"}
+@app.get("/internal/radius/v1/metrics", dependencies=[Depends(internal_service_auth)])
+def metrics(): return {"service": "aaa", "metrics": snapshot()}
 
 @app.post("/internal/radius/v1/authenticate", response_model=RadiusResponse, dependencies=[Depends(internal_service_auth)])
-def internal_authenticate(payload: AuthenticationRequest, session: Session = Depends(db)):
-    attributes, _ = attrs(payload); request_id = correlation(payload.correlation_id)
-    decision, reply = authenticate(session, attributes, request_id); session.commit(); return decision_response(decision, reply, request_id)
+def internal_authenticate(payload: AuthenticationRequest, request: Request, session: Session = Depends(db)):
+    attributes, _ = attrs(payload); request_id = correlation(payload.correlation_id or request.headers.get("X-Correlation-Id"))
+    decision, reply = authenticate(session, attributes, request_id); increment("aaa_authentication_accepts_total" if decision == "ACCEPT" else "aaa_authentication_rejects_total"); session.commit(); return decision_response(decision, reply, request_id)
 @app.post("/internal/radius/v1/authorize", response_model=RadiusResponse, dependencies=[Depends(internal_service_auth)])
-def internal_authorize(payload: AuthorizationRequest, session: Session = Depends(db)):
-    attributes, _ = attrs(payload); request_id = correlation(payload.correlation_id)
-    decision, reply = authorize(session, attributes, request_id); session.commit(); return decision_response(decision, reply, request_id)
+def internal_authorize(payload: AuthorizationRequest, request: Request, session: Session = Depends(db)):
+    attributes, _ = attrs(payload); request_id = correlation(payload.correlation_id or request.headers.get("X-Correlation-Id"))
+    decision, reply = authorize(session, attributes, request_id); increment("aaa_authorization_accepts_total" if decision == "ACCEPT" else "aaa_authorization_rejects_total"); session.commit(); return decision_response(decision, reply, request_id)
 @app.post("/internal/radius/v1/accounting", response_model=RadiusResponse, dependencies=[Depends(internal_service_auth)])
-def internal_accounting(payload: AccountingRequest, session: Session = Depends(db)):
-    attributes, diagnostic = attrs(payload); request_id = correlation(payload.correlation_id)
+def internal_accounting(payload: AccountingRequest, request: Request, session: Session = Depends(db)):
+    attributes, diagnostic = attrs(payload); request_id = correlation(payload.correlation_id or request.headers.get("X-Correlation-Id"))
     decision, durable = accounting(session, attributes, diagnostic, request_id, payload.idempotency_key)
-    if not durable: session.rollback(); return RadiusResponse(outcome="Access-Reject", decision=decision, correlation_id=request_id)
+    if not durable: increment("aaa_accounting_rejected_total"); session.rollback(); return RadiusResponse(outcome="Access-Reject", decision=decision, correlation_id=request_id)
+    increment("aaa_accounting_duplicates_total" if decision == "DUPLICATE" else "aaa_accounting_events_total")
     session.commit(); return RadiusResponse(outcome="OK", decision=decision, correlation_id=request_id)
 @app.post("/internal/radius/v1/post-auth", response_model=RadiusResponse, dependencies=[Depends(internal_service_auth)])
 def post_auth(payload: PostAuthRequest): return RadiusResponse(outcome="OK", decision="ACKNOWLEDGED", correlation_id=correlation(payload.correlation_id))
