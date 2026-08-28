@@ -65,6 +65,17 @@ class RadiusServerUpdateIn(StrictModel):
     weight: int | None = Field(default=None, ge=0, le=10000)
     notes: str | None = Field(default=None, max_length=4000)
     version_metadata: dict[str, Any] | None = None
+class RadiusServerGroupIn(StrictModel):
+    name: str = Field(min_length=1, max_length=128)
+    tenant_id: UUID | None = None
+    region: str | None = Field(default=None, max_length=64)
+    minimum_healthy: int = Field(default=1, ge=1, le=100)
+    failover_policy: dict[str, Any] = Field(default_factory=dict, max_length=32)
+class RadiusServerGroupUpdateIn(StrictModel):
+    region: str | None = Field(default=None, max_length=64)
+    minimum_healthy: int | None = Field(default=None, ge=1, le=100)
+    enabled: bool | None = None
+    failover_policy: dict[str, Any] | None = Field(default=None, max_length=32)
 class HeartbeatIn(StrictModel):
     version_metadata: dict[str, Any] = Field(default_factory=dict)
 class PasswordRotationIn(StrictModel):

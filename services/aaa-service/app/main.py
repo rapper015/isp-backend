@@ -4,15 +4,15 @@ from os import getenv
 from uuid import UUID
 import bcrypt
 from datetime import datetime
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import AccountingEvent, ActiveSession, Credential, IpPool, Nas, RadiusCommand, RadiusServer, Tenant, UsageProjection
+from .models import AccountingEvent, ActiveSession, Credential, IpPool, Nas, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
-from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, NasIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, RadiusResponse, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
+from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, NasIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
 from .security import encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
 from .services import accounting, audit, authenticate, authorize, correlation, outbox
 from .reconciliation import reconcile_nas_sessions
@@ -210,6 +210,32 @@ def list_ip_pools(tenant_id: UUID, session: Session = Depends(db)):
 def create_radius_server(payload: RadiusServerIn, session: Session = Depends(db)):
     item = RadiusServer(**payload.model_dump(exclude={"internal_api_key"}), api_key_hash=hash_api_key(payload.internal_api_key))
     session.add(item); session.commit(); return {"id": str(item.id), "name": item.name, "host": item.host, "api_key_stored": True}
+@app.post("/api/aaa/radius-server-groups", dependencies=[Depends(internal_service_auth)])
+def create_radius_server_group(payload: RadiusServerGroupIn, session: Session = Depends(db)):
+    if payload.tenant_id and not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
+    item = RadiusServerGroup(**payload.model_dump()); session.add(item)
+    request_id = record_audit(session, item.tenant_id, "radius_server_group.created", str(item.id), {"name": item.name}); session.commit()
+    return {"id": str(item.id), "correlation_id": request_id}
+@app.get("/api/aaa/radius-server-groups", dependencies=[Depends(internal_service_auth)])
+def list_radius_server_groups(tenant_id: UUID | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    statement = select(RadiusServerGroup)
+    if tenant_id: statement = statement.where((RadiusServerGroup.tenant_id == tenant_id) | RadiusServerGroup.tenant_id.is_(None))
+    return [{"id": str(item.id), "name": item.name, "tenant_id": str(item.tenant_id) if item.tenant_id else None, "region": item.region, "minimum_healthy": item.minimum_healthy, "enabled": item.enabled, "failover_policy": item.failover_policy} for item in session.scalars(statement.order_by(RadiusServerGroup.name).offset(max(offset, 0)).limit(bounded(limit)))]
+@app.patch("/api/aaa/radius-server-groups/{group_id}", dependencies=[Depends(internal_service_auth)])
+def update_radius_server_group(group_id: UUID, payload: RadiusServerGroupUpdateIn, session: Session = Depends(db)):
+    item = session.get(RadiusServerGroup, group_id)
+    if not item: raise HTTPException(404, "RADIUS server group not found")
+    updates = payload.model_dump(exclude_unset=True)
+    for key, value in updates.items(): setattr(item, key, value)
+    request_id = record_audit(session, item.tenant_id, "radius_server_group.updated", str(item.id), {"fields": sorted(updates)}); session.commit()
+    return {"id": str(item.id), "correlation_id": request_id}
+@app.delete("/api/aaa/radius-server-groups/{group_id}", dependencies=[Depends(internal_service_auth)])
+def delete_radius_server_group(group_id: UUID, session: Session = Depends(db)):
+    item = session.get(RadiusServerGroup, group_id)
+    if not item: raise HTTPException(404, "RADIUS server group not found")
+    if session.scalar(select(Nas.id).where(Nas.radius_group_id == item.id).limit(1)) or session.scalar(select(RadiusServer.id).where(RadiusServer.group_id == item.id).limit(1)): raise HTTPException(409, "remove assignments before deleting group")
+    request_id = record_audit(session, item.tenant_id, "radius_server_group.deleted", str(item.id), {"name": item.name}); session.delete(item); session.commit()
+    return {"id": str(group_id), "deleted": True, "correlation_id": request_id}
 @app.get("/api/aaa/radius-servers", dependencies=[Depends(internal_service_auth)])
 def list_radius_servers(session: Session = Depends(db)):
     return [{"id": str(item.id), "name": item.name, "host": item.host, "enabled": item.enabled, "draining": item.draining, "health": item.health, "last_heartbeat_at": item.last_heartbeat_at} for item in session.scalars(select(RadiusServer).order_by(RadiusServer.name).limit(100))]
