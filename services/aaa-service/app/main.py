@@ -130,7 +130,8 @@ def create_registration_reveal(nas_id: UUID, assignment_id: UUID, tenant_id: UUI
 def reveal_registration_package(nas_id: UUID, assignment_id: UUID, tenant_id: UUID, reveal_token: str, session: Session = Depends(db)):
     nas = tenant_item(session, Nas, nas_id, tenant_id, "NAS"); assignment = session.scalar(select(NasRadiusAssignment).where(NasRadiusAssignment.id == assignment_id, NasRadiusAssignment.nas_id == nas.id))
     reveal = session.scalar(select(NasSecretReveal).where(NasSecretReveal.assignment_id == assignment_id, NasSecretReveal.token_hash == hashlib.sha256(reveal_token.encode()).hexdigest()))
-    if not assignment or not reveal or reveal.accessed_at or reveal.expires_at < datetime.now(timezone.utc): raise HTTPException(404, "reveal token is invalid or expired")
+    expires_at = reveal.expires_at.replace(tzinfo=timezone.utc) if reveal and reveal.expires_at.tzinfo is None else reveal.expires_at if reveal else None
+    if not assignment or not reveal or reveal.accessed_at or expires_at < datetime.now(timezone.utc): raise HTTPException(404, "reveal token is invalid or expired")
     server = session.get(RadiusServer, assignment.radius_server_id); reveal.accessed_at = datetime.now(timezone.utc)
     request_id = record_audit(session, tenant_id, "nas.registration_package_accessed", str(assignment.id), {"secret_version": assignment.secret_version}); session.commit()
     return {"nas_name": nas.name, "nas_source_ip": nas.source_ip, "nas_identifier": nas.nas_identifier, "radius_server": server.host, "authentication_port": server.auth_port, "accounting_port": server.accounting_port, "coa_port": server.coa_port, "services": assignment.services, "shared_secret": decrypt_secret(assignment.secret_ciphertext), "secret_version": assignment.secret_version, "display_once": True, "correlation_id": request_id}
