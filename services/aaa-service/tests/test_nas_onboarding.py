@@ -24,3 +24,17 @@ def test_radius_assignment_never_returns_its_shared_secret(monkeypatch):
         created = client.post(f"/api/nas/{nas_id}/radius-assignments?tenant_id={tenant_id}", headers=headers, json={"radius_server_id": server_id, "role": "primary", "services": ["pppoe"]})
         assert created.status_code == 200
         assert "secret" not in created.text.replace("secret_displayed", "")
+
+def test_registration_package_token_can_reveal_secret_only_once(monkeypatch):
+    monkeypatch.setenv("AAA_ENCRYPTION_KEY", "K2HWufrlmhAt4fF3tP7i3VFUXupdsxhhlRP9Aw7-Ctg=")
+    monkeypatch.setenv("NAS_APPROVED_NETWORKS", "10.50.0.0/16")
+    headers = {"X-AAA-Service-Key": "test-internal-key"}
+    with TestClient(app) as client:
+        tenant_id = client.post("/api/aaa/tenants", json={"name": f"reveal-{uuid4().hex}"}, headers=headers).json()["id"]
+        nas = client.post("/api/nas", headers=headers, json={"tenant_id": tenant_id, "name": "router", "management_host": "10.50.1.4", "routeros_username": "u", "routeros_password": "p", "radius_source_ip": "10.50.1.4"}).json()["id"]
+        server = client.post("/api/aaa/radius-servers", headers=headers, json={"name": f"radius-{uuid4().hex}", "host": "192.0.2.41", "internal_api_key": "not-a-real-radius-server-key"}).json()["id"]
+        assignment = client.post(f"/api/nas/{nas}/radius-assignments?tenant_id={tenant_id}", headers=headers, json={"radius_server_id": server}).json()["id"]
+        token = client.post(f"/api/nas/{nas}/radius-assignments/{assignment}/registration-package?tenant_id={tenant_id}", headers=headers).json()["reveal_token"]
+        revealed = client.post(f"/api/nas/{nas}/radius-assignments/{assignment}/registration-package/reveal?tenant_id={tenant_id}&reveal_token={token}", headers=headers)
+        assert revealed.status_code == 200 and revealed.json()["display_once"] is True
+        assert client.post(f"/api/nas/{nas}/radius-assignments/{assignment}/registration-package/reveal?tenant_id={tenant_id}&reveal_token={token}", headers=headers).status_code == 404
