@@ -5,6 +5,7 @@ from uuid import UUID
 import bcrypt
 from datetime import datetime
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
@@ -30,6 +31,10 @@ app = FastAPI(title="AAA Service (private)", version="1.0.0", docs_url="/interna
 @app.middleware("http")
 async def correlation_id_middleware(request: Request, call_next):
     request_id = request.headers.get("X-Correlation-Id", "")[:64] or correlation(None)
+    maximum = int(getenv("AAA_REQUEST_MAX_BYTES", "65536"))
+    if request.headers.get("content-length", "0").isdigit() and int(request.headers.get("content-length", "0")) > maximum:
+        increment("aaa_http_4xx_total")
+        return JSONResponse(status_code=413, content={"detail": "request body too large"}, headers={"X-Correlation-Id": request_id})
     try:
         response = await call_next(request)
     except Exception:
