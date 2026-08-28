@@ -1,0 +1,6 @@
+ATTRIBUTE	User-Name	1	string
+ATTRIBUTE	NAS-IP-Address	4	ipaddr
+ATTRIBUTE	Framed-IP-Address	8	ipaddr
+ATTRIBUTE	Filter-Id	11	string
+ATTRIBUTE	Calling-Station-Id	31	string
+ATTRIBUTE	Acct-Session-Id	44	string
