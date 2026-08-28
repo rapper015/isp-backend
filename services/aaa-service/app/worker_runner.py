@@ -8,7 +8,7 @@ from os import getenv
 from time import sleep
 from .commands import DisabledRadiusCommandAdapter, PyradCommandAdapter
 from .database import SessionLocal
-from .workers import detect_stale_sessions, evaluate_radius_server_health, flush_outbox, process_radius_command
+from .workers import cleanup_stale_leases, detect_stale_sessions, evaluate_radius_server_health, flush_outbox, process_radius_command
 from .events import consume_command_once, declare_topology
 
 
@@ -27,6 +27,7 @@ def run_once() -> dict[str, int | str | None]:
         return {
             "stale_sessions": detect_stale_sessions(session),
             "radius_health_changes": evaluate_radius_server_health(session),
+            "stale_leases_released": cleanup_stale_leases(session),
             "outbox_published": flush_outbox(session),
             "command_status": asyncio.run(consume_command_once(lambda command_session, command_id: process_radius_command(command_session, command_adapter, command_id))) or asyncio.run(consume_command_once(lambda command_session, command_id: process_radius_command(command_session, command_adapter, command_id), queue_name="aaa.coa")),
         }

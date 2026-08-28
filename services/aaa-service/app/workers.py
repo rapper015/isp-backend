@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from .events import declare_topology, publish_outbox
 from .commands import RadiusCommandAdapter
-from .models import ActiveSession, Nas, RadiusCommand, RadiusServer
+from .models import ActiveSession, IpLease, Nas, RadiusCommand, RadiusServer
 from .security import decrypt_secret
 from .services import correlation, outbox
 
@@ -30,6 +30,18 @@ def evaluate_radius_server_health(session: Session, heartbeat_after_seconds: int
             outbox(session, "aaa.radius_server.health_changed.v1", None, correlation(None), {"radius_server_id": str(item.id), "health": health})
     session.commit()
     return changed
+
+def cleanup_stale_leases(session: Session) -> int:
+    """Release non-reserved leases whose attached session has ended or vanished."""
+    released = 0
+    for lease in session.scalars(select(IpLease).where(IpLease.reservation.is_(False), IpLease.released_at.is_(None), IpLease.active_session_id.is_not(None))):
+        active = session.get(ActiveSession, lease.active_session_id)
+        if active is None or active.status == "STOPPED":
+            lease.active_session_id = None
+            lease.released_at = datetime.now(timezone.utc)
+            released += 1
+    session.commit()
+    return released
 
 def flush_outbox(session: Session) -> int:
     return publish_outbox(session, limit=int(getenv("AAA_OUTBOX_BATCH_SIZE", "100")))

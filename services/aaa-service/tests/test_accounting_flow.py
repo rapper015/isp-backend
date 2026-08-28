@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import uuid4
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
@@ -22,3 +23,14 @@ def test_start_interim_duplicate_and_stop_project_one_monotonic_session():
     assert active.status == "STOPPED"
     assert (active.input_octets, active.output_octets) == (20, 40)
     assert (usage.input_octets, usage.output_octets) == (20, 40)
+
+def test_accounting_on_marks_existing_nas_sessions_stale_without_losing_history():
+    engine = create_engine("sqlite://"); Base.metadata.create_all(engine); session = sessionmaker(bind=engine)()
+    tenant = Tenant(name="nas-reboot"); session.add(tenant); session.flush()
+    nas = Nas(tenant_id=tenant.id, name="edge", source_ip="10.0.0.9"); session.add(nas); session.flush()
+    active = ActiveSession(tenant_id=tenant.id, nas_id=nas.id, username="alice", session_id="before-reboot", started_at=datetime.now(timezone.utc), status="ACTIVE")
+    session.add(active); session.commit()
+    result = accounting(session, {"NAS-IP-Address": "10.0.0.9", "Acct-Status-Type": "accounting-on"}, {}, "reboot", "reboot")
+    session.commit()
+    assert result == ("OK", True)
+    assert active.status == "STALE"

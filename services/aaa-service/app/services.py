@@ -96,6 +96,13 @@ def accounting(session: Session, attributes: dict, diagnostic: dict, correlation
     except IntegrityError:
         session.rollback(); return "DUPLICATE", True
     nas.last_accounting_at = now
+    if event_type in {"accounting-on", "accounting-off"}:
+        # A NAS lifecycle signal makes existing database sessions suspect; it
+        # does not invent a Stop event or discard their accounting history.
+        affected = list(session.scalars(select(ActiveSession).where(ActiveSession.tenant_id == nas.tenant_id, ActiveSession.nas_id == nas.id, ActiveSession.status.in_(["STARTING", "ACTIVE", "DISCONNECT_REQUESTED", "DISCONNECT_SENT"]))))
+        for active in affected:
+            active.status = "STALE"
+            outbox(session, "aaa.session.stale.v1", nas.tenant_id, correlation_id, {"session_id": str(active.id), "nas_id": str(nas.id), "reason": allowed[event_type]})
     if session_id and event_type in {"start", "interim-update", "stop"}:
         active = session.scalar(select(ActiveSession).where(ActiveSession.tenant_id == nas.tenant_id, ActiveSession.session_id == session_id))
         if not active:
