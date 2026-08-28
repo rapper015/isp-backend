@@ -3,7 +3,7 @@ import ipaddress
 import re
 from typing import Any
 
-ATTRIBUTE_LIMITS = {"User-Name": 128, "User-Password": 512, "CHAP-Password": 512, "NAS-IP-Address": 45, "NAS-Identifier": 128, "Called-Station-Id": 128, "Calling-Station-Id": 64, "Service-Type": 32, "Acct-Session-Id": 255, "Acct-Status-Type": 32, "Framed-IP-Address": 45, "Event-Timestamp": 64, "Acct-Terminate-Cause": 128, "Acct-Unique-Session-Id": 255}
+ATTRIBUTE_LIMITS = {"User-Name": 128, "User-Password": 512, "CHAP-Password": 512, "MS-CHAP-Password": 512, "MS-CHAP2-Response": 512, "NAS-IP-Address": 45, "NAS-Identifier": 128, "Called-Station-Id": 128, "Calling-Station-Id": 64, "Service-Type": 32, "Acct-Session-Id": 255, "Acct-Status-Type": 32, "Framed-IP-Address": 45, "Event-Timestamp": 64, "Acct-Terminate-Cause": 128, "Acct-Unique-Session-Id": 255}
 NUMERIC = {"Acct-Input-Octets", "Acct-Output-Octets", "Acct-Input-Gigawords", "Acct-Output-Gigawords", "Acct-Session-Time"}
 REPLY_ALLOWLIST = {"Mikrotik-Rate-Limit", "Mikrotik-Group", "Mikrotik-Address-List", "Mikrotik-Mark-Id", "Framed-IP-Address", "Framed-IP-Netmask", "Framed-IPv6-Prefix", "Framed-Pool", "Framed-IPv6-Pool", "Framed-Protocol", "Session-Timeout", "Idle-Timeout", "Acct-Interim-Interval", "Simultaneous-Use", "Filter-Id", "Reply-Message", "Tunnel-Type", "Tunnel-Medium-Type", "Tunnel-Private-Group-Id"}
 SECRET_KEYS = {"User-Password", "CHAP-Password", "MS-CHAP-Password", "Cleartext-Password", "shared_secret", "password"}

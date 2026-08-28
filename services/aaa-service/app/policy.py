@@ -14,7 +14,7 @@ class EffectivePolicy:
         reply = dict(value.get("reply_attributes", {}))
         upload, download = value.get("upload_kbps"), value.get("download_kbps")
         if upload is not None and download is not None: reply["Mikrotik-Rate-Limit"] = f"{int(upload)}k/{int(download)}k"
-        mappings = {"static_ipv4": "Framed-IP-Address", "ipv4_pool": "Framed-Pool", "ipv6_pool": "Framed-IPv6-Pool", "session_timeout": "Session-Timeout", "idle_timeout": "Idle-Timeout", "interim_interval": "Acct-Interim-Interval", "simultaneous_limit": "Simultaneous-Use", "filter_id": "Filter-Id", "address_list": "Mikrotik-Address-List", "vlan": "Tunnel-Private-Group-Id"}
+        mappings = {"static_ipv4": "Framed-IP-Address", "static_ipv6": "Framed-IPv6-Prefix", "ipv4_pool": "Framed-Pool", "ipv6_pool": "Framed-IPv6-Pool", "framed_protocol": "Framed-Protocol", "session_timeout": "Session-Timeout", "idle_timeout": "Idle-Timeout", "interim_interval": "Acct-Interim-Interval", "simultaneous_limit": "Simultaneous-Use", "filter_id": "Filter-Id", "address_list": "Mikrotik-Address-List", "mikrotik_group": "Mikrotik-Group", "mikrotik_mark_id": "Mikrotik-Mark-Id", "vlan": "Tunnel-Private-Group-Id"}
         for source, target in mappings.items():
             if value.get(source) is not None: reply[target] = value[source]
         return safe_reply(reply)

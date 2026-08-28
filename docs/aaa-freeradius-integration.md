@@ -47,6 +47,12 @@ Idle-Timeout, Acct-Interim-Interval, Filter-Id, and VLAN tunnel attributes.
 Unknown inbound attributes are excluded from decisions and replies; they may only
 appear in redacted diagnostics.
 
+PAP is the currently implemented credential-verification method. MAC access is
+available only for an explicitly MAC-bound credential and NAS that permits it.
+CHAP and MS-CHAPv2 are deliberately rejected until a protocol-specific verifier
+and encrypted recoverable secret workflow are configured; a one-way bcrypt hash
+must never be treated as valid CHAP/MS-CHAP secret material.
+
 ## Sanitized contracts
 
 Authentication request example:
@@ -107,6 +113,23 @@ aaa.dead.v1. Accounting and command workers use durable work queues with
 event ID, type, schema version, timestamps, tenant ID, correlation ID,
 idempotency key, producer, and payload. Credential and shared-secret material
 must never be added to an event payload.
+
+## AAA worker and management APIs
+
+`aaa-worker` is a separate bounded worker process. It detects stale sessions,
+evaluates registered RADIUS-server heartbeats, publishes the transactional
+outbox, and delivers at most one queued CoA/Disconnect command per cycle. NAS
+packet delivery is disabled by default. Set `AAA_ENABLE_RADIUS_COMMANDS=true`
+only after the NAS inventory and encrypted shared secret are deliberately
+configured; it does not alter FreeRADIUS.
+
+Privileged management endpoints live under `/api/aaa/`. They include tenant
+scoped NAS CRUD and activity, credential lifecycle, policy previews and safe
+eligibility simulations, session search/detail/reconciliation planning, command
+queueing, accounting replay, usage, IP pools, and logical RADIUS registration.
+Use `tenant_id` on tenant-owned resources. The reconciliation endpoint accepts a
+trusted RouterOS snapshot supplied by an authorized caller and returns a plan;
+it never connects to RouterOS or modifies a router itself.
 
 Before connecting an external RADIUS service, create the tenant, NAS inventory
 record, subscriber credential, plan policy, and any required IP pool through

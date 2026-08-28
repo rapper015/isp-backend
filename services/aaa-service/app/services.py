@@ -28,7 +28,8 @@ def authenticate(session: Session, attributes: dict, correlation_id: str) -> tup
     if not nas: return "REJECT_UNKNOWN_NAS", {}
     tenant = session.get(Tenant, nas.tenant_id)
     if not tenant or not tenant.enabled: return "REJECT_TENANT_DISABLED", {}
-    service, method = attributes.get("Service-Type", "pppoe").casefold(), "pap"
+    service = attributes.get("Service-Type", "pppoe").casefold()
+    method = "mschapv2" if "MS-CHAP-Password" in attributes else "chap" if "CHAP-Password" in attributes else "mac" if service == "mac" else "pap"
     if service not in nas.allowed_services: return "REJECT_SERVICE_NOT_ALLOWED", {}
     username = attributes.get("User-Name", "")
     credential = session.scalar(select(Credential).where(Credential.tenant_id == nas.tenant_id, Credential.username_normalized == username))
@@ -48,8 +49,19 @@ def authenticate(session: Session, attributes: dict, correlation_id: str) -> tup
         period = datetime.now(timezone.utc).strftime("%Y-%m")
         usage = session.scalar(select(UsageProjection).where(UsageProjection.tenant_id == nas.tenant_id, UsageProjection.subscriber_id == credential.subscriber_id, UsageProjection.period == period))
         if usage and (usage.input_octets + usage.output_octets) >= int(quota_bytes): return "REJECT_QUOTA_EXHAUSTED", {}
-    password = attributes.get("User-Password")
-    if not password or not credential.password_hash or not bcrypt.checkpw(password.encode(), credential.password_hash.encode()): return "REJECT_INVALID_CREDENTIALS", {}
+    # CHAP/MS-CHAP verification needs protocol-specific, recoverable material
+    # and the complete challenge fields.  This REST contract intentionally
+    # fails closed until a dedicated verifier is configured; it must never
+    # pretend a bcrypt PAP hash can verify either protocol.
+    if method in {"chap", "mschapv2"}: return "REJECT_METHOD_NOT_ALLOWED", {}
+    if method == "mac":
+        if credential.mac_address and calling_mac == credential.mac_address:
+            password = "mac-bound"
+        else:
+            return "REJECT_MAC_MISMATCH", {}
+    else:
+        password = attributes.get("User-Password")
+    if method != "mac" and (not password or not credential.password_hash or not bcrypt.checkpw(password.encode(), credential.password_hash.encode())): return "REJECT_INVALID_CREDENTIALS", {}
     nas.last_auth_at = datetime.now(timezone.utc)
     reply = policy.reply_attributes()
     outbox(session, "aaa.authentication.accepted.v1", nas.tenant_id, correlation_id, {"subscriber_id": str(credential.subscriber_id), "nas_id": str(nas.id), "decision": "ACCEPT"})
