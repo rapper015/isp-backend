@@ -18,12 +18,19 @@ def hash_api_key(value: str) -> str: return hashlib.sha256(value.encode()).hexdi
 
 ROLE_PERMISSIONS = {
     "super_admin": {"*"},
-    "noc_admin": {"aaa.nas.view", "aaa.nas.manage", "aaa.nas.rotate_secret", "aaa.radius_server.view", "aaa.radius_server.manage", "aaa.subscriber_policy.view", "aaa.subscriber_policy.manage", "aaa.session.view", "aaa.session.disconnect", "aaa.session.coa", "aaa.accounting.view", "aaa.usage.view", "aaa.audit.view"},
+    "noc_admin": {"aaa.nas.view", "aaa.nas.manage", "aaa.nas.rotate_secret", "aaa.radius_server.view", "aaa.radius_server.manage", "aaa.subscriber_policy.view", "aaa.subscriber_policy.manage", "aaa.session.view", "aaa.session.disconnect", "aaa.session.coa", "aaa.accounting.view", "aaa.usage.view", "aaa.audit.view", "nas.view", "nas.create", "nas.update", "nas.connection.test", "nas.discovery.run", "nas.configuration.view", "nas.configuration.plan", "nas.radius_assignment.manage", "nas.audit.view"},
     "billing_admin": {"aaa.subscriber_policy.view", "aaa.usage.view", "aaa.accounting.view"},
     "support_admin": {"aaa.subscriber_policy.view", "aaa.session.view", "aaa.accounting.view", "aaa.usage.view"},
 }
 
 def management_permission(method: str, path: str) -> str | None:
+    if path == "/api/nas" or path.startswith("/api/nas/"):
+        if method == "GET": return "nas.view"
+        if method == "POST" and path == "/api/nas": return "nas.create"
+        if path.endswith("/test-connection"): return "nas.connection.test"
+        if path.endswith("/discover"): return "nas.discovery.run"
+        if path.endswith("/plan"): return "nas.configuration.plan"
+        return "nas.update"
     if not path.startswith("/api/aaa/"): return None
     if "/nas" in path: return "aaa.nas.view" if method == "GET" else "aaa.nas.rotate_secret" if path.endswith("/rotate-secret") else "aaa.nas.manage"
     if "radius-server" in path: return "aaa.radius_server.view" if method == "GET" else "aaa.radius_server.manage"
@@ -61,7 +68,7 @@ async def internal_service_auth(request: Request) -> None:
     expected = [value.strip() for value in configured.split(",") if value.strip()]
     service_key_valid = bool(expected and any(secrets.compare_digest(item, supplied) for item in expected))
     if not service_key_valid:
-        if request.url.path.startswith("/api/aaa/"):
+        if request.url.path.startswith(("/api/aaa/", "/api/nas")):
             await _jwt_management_auth(request)
             return
         raise HTTPException(401, "internal service authentication failed")

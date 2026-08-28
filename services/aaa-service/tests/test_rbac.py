@@ -22,3 +22,5 @@ def test_management_jwt_enforces_permissions_and_tenant_scope(monkeypatch):
         assert client.get(f"/api/aaa/usage?tenant_id={first}", headers=billing).status_code == 200
         assert client.get(f"/api/aaa/usage?tenant_id={second}", headers=billing).status_code == 403
         assert client.post("/api/aaa/nas", json={"tenant_id": first, "name": "denied", "source_ip": "203.0.113.201"}, headers=billing).status_code == 403
+        support = {"Authorization": f"Bearer {token(secret, 'support_admin', first)}"}
+        assert client.post("/api/nas", json={"tenant_id": first, "name": "denied", "management_host": "10.0.0.1", "routeros_username": "u", "routeros_password": "p", "radius_source_ip": "10.0.0.1"}, headers=support).status_code == 403
