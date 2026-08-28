@@ -22,7 +22,13 @@ ROLE_PERMISSIONS = {
                    "nas.view", "nas.create", "nas.update", "nas.delete", "nas.enable", "nas.disable", "nas.decommission", "nas.credentials.manage", "nas.connection.test", "nas.discovery.run",
                    "nas.configuration.view", "nas.configuration.plan", "nas.configuration.approve", "nas.configuration.apply", "nas.configuration.rollback",
                    "nas.radius_assignment.manage", "nas.radius_secret.generate", "nas.radius_secret.view_once", "nas.radius_secret.rotate",
-                   "nas.radius_registration.confirm", "nas.radius_registration.verify", "nas.drift.view", "nas.drift.reconcile", "nas.audit.view"},
+                   "nas.radius_registration.confirm", "nas.radius_registration.verify", "nas.drift.view", "nas.drift.reconcile", "nas.audit.view",
+                   # Milestone 3 network control
+                   "aaa.policy.view", "aaa.policy.manage", "aaa.policy.explain", "aaa.session.reapply", "aaa.session.force_reauth",
+                   "aaa.control.view", "aaa.control.manage", "aaa.router.readiness", "aaa.router.manage", "aaa.fup.view", "aaa.fup.manage",
+                   "aaa.ip.view", "aaa.ip.regulatory_lookup", "aaa.reconcile.run"},
+    "network_operator": {"aaa.policy.view", "aaa.policy.explain", "aaa.session.view", "aaa.session.disconnect", "aaa.session.coa", "aaa.session.reapply",
+                         "aaa.control.view", "aaa.control.manage", "aaa.router.readiness", "aaa.fup.view", "aaa.ip.view", "aaa.reconcile.run", "aaa.accounting.view", "aaa.audit.view"},
     "billing_admin": {"aaa.subscriber_policy.view", "aaa.usage.view", "aaa.accounting.view"},
     "support_admin": {"aaa.subscriber_policy.view", "aaa.session.view", "aaa.accounting.view", "aaa.usage.view"},
 }
@@ -67,6 +73,25 @@ def management_permission(method: str, path: str) -> str | None:
     if "/subscribers" in path: return "aaa.subscriber_policy.view" if method == "GET" or path.endswith(("preview-policy", "test-eligibility")) else "aaa.session.coa" if path.endswith("/coa") else "aaa.session.disconnect" if path.endswith("/disconnect") else "aaa.subscriber_policy.manage"
     if "/credentials" in path or "/ip-pools" in path: return "aaa.secret.manage"
     if path.endswith("/tenants"): return "aaa.secret.manage"
+    # Milestone 3 network-control paths.
+    if "/policies" in path or "/bandwidth-profiles" in path or "/traffic-classes" in path or "/qos-profiles" in path or "/fup-policies" in path:
+        return "aaa.policy.manage" if method == "POST" else "aaa.policy.view"
+    if "/policy-assignment" in path or "/overrides" in path: return "aaa.policy.manage"
+    if path.endswith("/effective-policy/explain") or "effective-policy" in path: return "aaa.policy.explain" if method == "GET" or method == "POST" else "aaa.policy.view"
+    if "/network/sessions" in path:
+        if method == "GET": return "aaa.session.view"
+        if path.endswith("/disconnect") or path.endswith("/disconnect-all"): return "aaa.session.disconnect"
+        if path.endswith("/reapply"): return "aaa.session.reapply"
+        if path.endswith("/force-reauth"): return "aaa.session.force_reauth"
+        return "aaa.session.view"
+    if "/control-actions" in path:
+        return "aaa.control.manage" if method == "POST" or path.endswith(("/retry", "/cancel", "/outcome")) else "aaa.control.view"
+    if "/network-readiness" in path or "/network-setup-requirements" in path: return "aaa.router.readiness"
+    if "/managed-config" in path: return "aaa.router.manage" if method == "POST" else "aaa.router.readiness"
+    if "/policy-drift" in path: return "aaa.router.readiness"
+    if "/network/reconcile" in path: return "aaa.reconcile.run"
+    if "/fup/" in path: return "aaa.fup.manage" if method == "POST" else "aaa.fup.view"
+    if "/ip-identity/" in path: return "aaa.ip.regulatory_lookup" if path.endswith("/regulatory") else "aaa.ip.view"
     return "aaa.audit.view"
 
 async def _jwt_management_auth(request: Request) -> None:

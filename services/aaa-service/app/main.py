@@ -27,6 +27,7 @@ from .nas_registration import confirm_manual_registration, generate_registration
 from .nas_rotation import apply_secret_to_router, confirm_freeradius_update, expire_old_secret, reveal_rotation_secret, rollback_secret, rotation_registration_package, start_secret_rotation, verify_rotation
 from .nas_drift import detect_drift
 from .workers import process_nas_job, queue_nas_job
+from .network_control.router import router as network_control_router
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -56,6 +57,8 @@ def db():
     session = SessionLocal()
     try: yield session
     finally: session.close()
+
+app.include_router(network_control_router)
 def decision_response(decision: str, reply: dict, request_id: str) -> RadiusResponse:
     return RadiusResponse(outcome="Access-Accept" if decision == "ACCEPT" else "Access-Reject", decision=decision, reply_attributes=reply, correlation_id=request_id)
 def attrs(payload):

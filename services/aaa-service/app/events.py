@@ -38,6 +38,48 @@ NAS_EVENTS = (
     "nas.radius_secret_rotation.failed.v1",
 )
 
+# Milestone 3 — Advanced Network Control event contracts (produced from the
+# transactional outbox; consumed idempotently by other bounded contexts).
+NETWORK_CONTROL_EVENTS = (
+    # policy
+    "policy.decision_created.v1",
+    "policy.assigned.v1",
+    "policy.activated.v1",
+    "policy.enforcement_requested.v1",
+    "policy.enforcement_succeeded.v1",
+    "policy.enforcement_failed.v1",
+    "policy.drift_detected.v1",
+    # fup
+    "fup.threshold_reached.v1",
+    "fup.restriction_applied.v1",
+    "fup.restriction_removed.v1",
+    # session
+    "session.started.v1",
+    "session.updated.v1",
+    "session.stopped.v1",
+    "session.disconnected.v1",
+    "session.orphaned.v1",
+    # coa / control
+    "coa.requested.v1",
+    "coa.acknowledged.v1",
+    "coa.rejected.v1",
+    "coa.timed_out.v1",
+    # router
+    "router.configuration_applied.v1",
+    "router.configuration_failed.v1",
+    "router.drift_detected.v1",
+    # identity
+    "network.identity_assigned.v1",
+    # legacy aaa aliases kept for compatibility
+    "aaa.coa.requested.v1",
+    "aaa.coa.acknowledged.v1",
+    "aaa.coa.rejected.v1",
+    "aaa.coa.timed_out.v1",
+    "aaa.disconnect.requested.v1",
+    "aaa.disconnect.acknowledged.v1",
+    "aaa.disconnect.rejected.v1",
+)
+
 async def declare_topology() -> None:
     """Declare durable queues once per worker start; safe to call repeatedly."""
     connection = await aio_pika.connect_robust(getenv("RABBITMQ_URL", "amqp://guest:guest@127.0.0.1/"), timeout=2)
