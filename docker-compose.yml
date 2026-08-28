@@ -114,6 +114,16 @@ services:
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
     environment: {<<: *domain-environment, SERVICE_NAME: aaa-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/aaa}
 
+  aaa-worker:
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
+    command: ["python", "-m", "app.worker_runner"]
+    environment: {<<: *domain-environment, SERVICE_NAME: aaa-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/aaa}
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      valkey: {condition: service_healthy}
+    networks: [platform]
+
   nms-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: nms-service}}

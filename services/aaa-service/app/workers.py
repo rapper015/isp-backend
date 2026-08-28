@@ -40,7 +40,8 @@ def ensure_event_topology() -> None:
 
 def process_radius_command(session: Session, adapter: RadiusCommandAdapter) -> str | None:
     """Execute one queued command. A queue acknowledgement is never a session stop."""
-    command = session.scalar(select(RadiusCommand).where(RadiusCommand.status == "QUEUED").order_by(RadiusCommand.created_at).limit(1))
+    maximum_attempts = int(getenv("AAA_COMMAND_MAX_ATTEMPTS", "3"))
+    command = session.scalar(select(RadiusCommand).where(RadiusCommand.status == "QUEUED", RadiusCommand.attempts < maximum_attempts).order_by(RadiusCommand.created_at).limit(1))
     if not command: return None
     command.status = "SENDING"; command.attempts += 1; session.commit()
     nas = session.get(Nas, command.nas_id)
