@@ -9,12 +9,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
 from .models import Invoice, Payment, Plan
+from .revenue.router import router as revenue_router
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     Base.metadata.create_all(bind=engine)
     yield
-app = FastAPI(title="BSS Service", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="BSS Service", version="2.0.0", lifespan=lifespan)
+app.include_router(revenue_router)
 def db_session():
     db = SessionLocal()
     try: yield db
