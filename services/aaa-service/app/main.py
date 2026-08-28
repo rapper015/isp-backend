@@ -3,17 +3,19 @@ from contextlib import asynccontextmanager
 from os import getenv
 from uuid import UUID
 import bcrypt
-from fastapi import Depends, FastAPI, HTTPException
-from sqlalchemy import select
+from datetime import datetime
+from fastapi import Depends, FastAPI, HTTPException, Query
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
 from .models import AccountingEvent, ActiveSession, Credential, IpPool, Nas, RadiusCommand, RadiusServer, Tenant, UsageProjection
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
-from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, HeartbeatIn, IpPoolIn, NasIn, PasswordRotationIn, PostAuthRequest, RadiusResponse, RadiusServerIn, TenantIn
+from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, NasIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, RadiusResponse, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
 from .security import encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
-from .services import accounting, authenticate, authorize, correlation, outbox
+from .services import accounting, audit, authenticate, authorize, correlation, outbox
+from .reconciliation import reconcile_nas_sessions
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -30,6 +32,13 @@ def decision_response(decision: str, reply: dict, request_id: str) -> RadiusResp
 def attrs(payload):
     try: return normalize_attributes(payload.attributes)
     except AttributeValidationError as error: raise HTTPException(422, detail=str(error)) from error
+def bounded(limit: int) -> int: return min(max(limit, 1), 100)
+def tenant_item(session: Session, model, item_id: UUID, tenant_id: UUID, label: str):
+    item = session.scalar(select(model).where(model.id == item_id, model.tenant_id == tenant_id))
+    if not item: raise HTTPException(404, f"{label} not found")
+    return item
+def record_audit(session: Session, tenant_id: UUID | None, action: str, target: str, detail: dict) -> str:
+    request_id = correlation(None); audit(session, tenant_id, action, target, request_id, detail); return request_id
 
 @app.get("/health")
 def health(): return {"status": "ok", "service": getenv("SERVICE_NAME", "aaa-service")}
@@ -65,35 +74,76 @@ def create_tenant(payload: TenantIn, session: Session = Depends(db)):
 def create_credential(payload: CredentialIn, session: Session = Depends(db)):
     if not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
     credential = Credential(tenant_id=payload.tenant_id, subscriber_id=payload.subscriber_id, username=payload.username, username_normalized=normalize_username(payload.username), password_hash=bcrypt.hashpw(payload.password.encode(), bcrypt.gensalt()).decode(), allowed_methods=payload.allowed_methods, mac_address=normalize_mac(payload.mac_address) if payload.mac_address else None)
-    session.add(credential); session.commit(); return {"id": str(credential.id)}
+    session.add(credential); request_id = record_audit(session, payload.tenant_id, "credential.created", str(payload.subscriber_id), {"methods": payload.allowed_methods}); session.commit(); return {"id": str(credential.id), "correlation_id": request_id}
+@app.patch("/api/aaa/credentials/{credential_id}", dependencies=[Depends(internal_service_auth)])
+def update_credential(credential_id: UUID, tenant_id: UUID, payload: CredentialUpdateIn, session: Session = Depends(db)):
+    item = tenant_item(session, Credential, credential_id, tenant_id, "credential")
+    updates = payload.model_dump(exclude_unset=True)
+    if "mac_address" in updates and updates["mac_address"]: updates["mac_address"] = normalize_mac(updates["mac_address"])
+    if "expires_at" in updates and updates["expires_at"]: updates["expires_at"] = datetime.fromisoformat(updates["expires_at"].replace("Z", "+00:00"))
+    for key, value in updates.items(): setattr(item, key, value)
+    request_id = record_audit(session, tenant_id, "credential.updated", str(item.subscriber_id), {"fields": sorted(updates)})
+    session.commit(); return {"id": str(item.id), "correlation_id": request_id}
+@app.post("/api/aaa/credentials/{credential_id}/revoke", dependencies=[Depends(internal_service_auth)])
+def revoke_credential(credential_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    item = tenant_item(session, Credential, credential_id, tenant_id, "credential"); item.status = "revoked"
+    request_id = record_audit(session, tenant_id, "credential.revoked", str(item.subscriber_id), {})
+    session.commit(); return {"id": str(item.id), "status": item.status, "correlation_id": request_id}
 @app.post("/api/aaa/nas", dependencies=[Depends(internal_service_auth)])
 def create_nas(payload: NasIn, session: Session = Depends(db)):
     if not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
-    nas = Nas(**payload.model_dump()); session.add(nas); session.commit(); return {"id": str(nas.id), "secret_displayed": False}
+    nas = Nas(**payload.model_dump()); session.add(nas); request_id = record_audit(session, payload.tenant_id, "nas.created", str(nas.id), {"source_ip": nas.source_ip}); session.commit(); return {"id": str(nas.id), "secret_displayed": False, "correlation_id": request_id}
 @app.get("/api/aaa/nas", dependencies=[Depends(internal_service_auth)])
-def list_nas(tenant_id: UUID, session: Session = Depends(db)):
-    return [{"id": str(n.id), "name": n.name, "source_ip": n.source_ip, "enabled": n.enabled, "health": n.health} for n in session.scalars(select(Nas).where(Nas.tenant_id == tenant_id).limit(100))]
+def list_nas(tenant_id: UUID, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    return [{"id": str(n.id), "name": n.name, "source_ip": n.source_ip, "enabled": n.enabled, "health": n.health} for n in session.scalars(select(Nas).where(Nas.tenant_id == tenant_id).order_by(Nas.name).offset(max(offset, 0)).limit(bounded(limit)))]
 @app.get("/api/aaa/sessions", dependencies=[Depends(internal_service_auth)])
-def list_sessions(tenant_id: UUID, session: Session = Depends(db)):
-    from .models import ActiveSession
-    return [{"id": str(item.id), "session_id": item.session_id, "status": item.status, "username": item.username} for item in session.scalars(select(ActiveSession).where(ActiveSession.tenant_id == tenant_id).limit(100))]
+def list_sessions(tenant_id: UUID, username: str | None = None, framed_ip: str | None = None, status: str | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    statement = select(ActiveSession).where(ActiveSession.tenant_id == tenant_id)
+    if username: statement = statement.where(ActiveSession.username == normalize_username(username))
+    if framed_ip: statement = statement.where(ActiveSession.framed_ip == framed_ip)
+    if status: statement = statement.where(ActiveSession.status == status)
+    return [{"id": str(item.id), "session_id": item.session_id, "status": item.status, "username": item.username, "framed_ip": item.framed_ip, "input_octets": item.input_octets, "output_octets": item.output_octets} for item in session.scalars(statement.order_by(ActiveSession.started_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))]
+@app.get("/api/aaa/sessions/{session_id}", dependencies=[Depends(internal_service_auth)])
+def get_session(session_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    item = tenant_item(session, ActiveSession, session_id, tenant_id, "session")
+    return {"id": str(item.id), "session_id": item.session_id, "status": item.status, "username": item.username, "framed_ip": item.framed_ip, "input_octets": item.input_octets, "output_octets": item.output_octets, "started_at": item.started_at, "last_interim_at": item.last_interim_at, "termination_cause": item.termination_cause, "policy_snapshot": item.policy_snapshot}
 
 @app.get("/api/aaa/nas/{nas_id}", dependencies=[Depends(internal_service_auth)])
 def get_nas(nas_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     item = session.scalar(select(Nas).where(Nas.id == nas_id, Nas.tenant_id == tenant_id))
     if not item: raise HTTPException(404, "NAS not found")
     return {"id": str(item.id), "name": item.name, "source_ip": item.source_ip, "nas_identifier": item.nas_identifier, "enabled": item.enabled, "health": item.health, "allowed_services": item.allowed_services}
+@app.patch("/api/aaa/nas/{nas_id}", dependencies=[Depends(internal_service_auth)])
+def update_nas(nas_id: UUID, tenant_id: UUID, payload: NasUpdateIn, session: Session = Depends(db)):
+    item = tenant_item(session, Nas, nas_id, tenant_id, "NAS"); updates = payload.model_dump(exclude_unset=True)
+    for key, value in updates.items(): setattr(item, key, value)
+    request_id = record_audit(session, tenant_id, "nas.updated", str(item.id), {"fields": sorted(updates)}); session.commit()
+    return {"id": str(item.id), "correlation_id": request_id}
+@app.delete("/api/aaa/nas/{nas_id}", dependencies=[Depends(internal_service_auth)])
+def delete_nas(nas_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    item = tenant_item(session, Nas, nas_id, tenant_id, "NAS")
+    if session.scalar(select(ActiveSession.id).where(ActiveSession.nas_id == item.id, ActiveSession.status != "STOPPED").limit(1)): raise HTTPException(409, "cannot delete NAS with active sessions")
+    request_id = record_audit(session, tenant_id, "nas.deleted", str(item.id), {"name": item.name}); session.delete(item); session.commit()
+    return {"id": str(nas_id), "deleted": True, "correlation_id": request_id}
 @app.post("/api/aaa/nas/{nas_id}/enable", dependencies=[Depends(internal_service_auth)])
 def enable_nas(nas_id: UUID, tenant_id: UUID, enabled: bool = True, session: Session = Depends(db)):
     item = session.scalar(select(Nas).where(Nas.id == nas_id, Nas.tenant_id == tenant_id))
     if not item: raise HTTPException(404, "NAS not found")
-    item.enabled = enabled; session.commit(); return {"id": str(item.id), "enabled": item.enabled}
+    item.enabled = enabled; request_id = record_audit(session, tenant_id, "nas.enabled" if enabled else "nas.disabled", str(item.id), {}); session.commit(); return {"id": str(item.id), "enabled": item.enabled, "correlation_id": request_id}
+@app.post("/api/aaa/nas/{nas_id}/disable", dependencies=[Depends(internal_service_auth)])
+def disable_nas(nas_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    return enable_nas(nas_id, tenant_id, False, session)
 @app.post("/api/aaa/nas/{nas_id}/rotate-secret", dependencies=[Depends(internal_service_auth)])
 def rotate_nas_secret(nas_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     item = session.scalar(select(Nas).where(Nas.id == nas_id, Nas.tenant_id == tenant_id))
     if not item: raise HTTPException(404, "NAS not found")
-    secret = new_shared_secret(); item.secret_ciphertext = encrypt_secret(secret); item.secret_version += 1; session.commit()
-    return {"id": str(item.id), "secret": secret, "secret_version": item.secret_version, "display_once": True}
+    secret = new_shared_secret(); item.secret_ciphertext = encrypt_secret(secret); item.secret_version += 1; request_id = record_audit(session, tenant_id, "nas.secret_rotated", str(item.id), {"version": item.secret_version}); session.commit()
+    return {"id": str(item.id), "secret": secret, "secret_version": item.secret_version, "display_once": True, "correlation_id": request_id}
+@app.get("/api/aaa/nas/{nas_id}/activity", dependencies=[Depends(internal_service_auth)])
+def nas_activity(nas_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    item = tenant_item(session, Nas, nas_id, tenant_id, "NAS")
+    active = session.scalar(select(func.count()).select_from(ActiveSession).where(ActiveSession.nas_id == item.id, ActiveSession.status != "STOPPED"))
+    return {"nas_id": str(item.id), "last_auth_at": item.last_auth_at, "last_accounting_at": item.last_accounting_at, "last_coa_at": item.last_coa_at, "active_sessions": active}
 @app.post("/api/aaa/sessions/{session_id}/disconnect", dependencies=[Depends(internal_service_auth)])
 def disconnect(session_id: UUID, tenant_id: UUID, idempotency_key: str, session: Session = Depends(db)):
     active = session.scalar(select(ActiveSession).where(ActiveSession.id == session_id, ActiveSession.tenant_id == tenant_id))
@@ -103,6 +153,13 @@ def disconnect(session_id: UUID, tenant_id: UUID, idempotency_key: str, session:
     request_id = correlation(None); command = RadiusCommand(tenant_id=tenant_id, nas_id=active.nas_id, session_id=active.id, subscriber_id=active.subscriber_id, command_type="DISCONNECT", status="QUEUED", idempotency_key=idempotency_key, correlation_id=request_id, attributes={"Acct-Session-Id": active.session_id})
     active.status = "DISCONNECT_REQUESTED"; session.add(command); outbox(session, "aaa.disconnect.requested.v1", tenant_id, request_id, {"command_id": str(command.id), "session_id": str(active.id)}, idempotency_key); session.commit()
     return {"id": str(command.id), "status": command.status}
+@app.post("/api/aaa/subscribers/{subscriber_id}/disconnect", dependencies=[Depends(internal_service_auth)])
+def disconnect_subscriber(subscriber_id: UUID, tenant_id: UUID, idempotency_key: str, session: Session = Depends(db)):
+    sessions = list(session.scalars(select(ActiveSession).where(ActiveSession.tenant_id == tenant_id, ActiveSession.subscriber_id == subscriber_id, ActiveSession.status != "STOPPED").limit(100)))
+    if not sessions: raise HTTPException(404, "active subscriber sessions not found")
+    result = []
+    for index, item in enumerate(sessions): result.append(disconnect(item.id, tenant_id, f"{idempotency_key}:{index}", session))
+    return {"subscriber_id": str(subscriber_id), "commands": result}
 @app.post("/api/aaa/sessions/{session_id}/coa", dependencies=[Depends(internal_service_auth)])
 def coa_session(session_id: UUID, tenant_id: UUID, payload: CoAIn, session: Session = Depends(db)):
     active = session.scalar(select(ActiveSession).where(ActiveSession.id == session_id, ActiveSession.tenant_id == tenant_id))
@@ -113,6 +170,20 @@ def coa_session(session_id: UUID, tenant_id: UUID, payload: CoAIn, session: Sess
     command = RadiusCommand(tenant_id=tenant_id, nas_id=active.nas_id, session_id=active.id, subscriber_id=active.subscriber_id, command_type="COA", status="QUEUED", idempotency_key=payload.idempotency_key, correlation_id=request_id, attributes=payload.attributes)
     session.add(command); outbox(session, "aaa.coa.requested.v1", tenant_id, request_id, {"command_id": str(command.id), "session_id": str(active.id)}, payload.idempotency_key); session.commit()
     return {"id": str(command.id), "status": command.status}
+@app.post("/api/aaa/subscribers/{subscriber_id}/coa", dependencies=[Depends(internal_service_auth)])
+def coa_subscriber(subscriber_id: UUID, tenant_id: UUID, payload: CoAIn, session: Session = Depends(db)):
+    sessions = list(session.scalars(select(ActiveSession).where(ActiveSession.tenant_id == tenant_id, ActiveSession.subscriber_id == subscriber_id, ActiveSession.status != "STOPPED").limit(100)))
+    if not sessions: raise HTTPException(404, "active subscriber sessions not found")
+    result = []
+    for index, item in enumerate(sessions): result.append(coa_session(item.id, tenant_id, CoAIn(idempotency_key=f"{payload.idempotency_key}:{index}", attributes=payload.attributes), session))
+    return {"subscriber_id": str(subscriber_id), "commands": result}
+@app.post("/api/aaa/sessions/reconcile", dependencies=[Depends(internal_service_auth)])
+def reconcile_sessions(tenant_id: UUID, payload: SessionReconcileIn, session: Session = Depends(db)):
+    nas = tenant_item(session, Nas, payload.nas_id, tenant_id, "NAS")
+    plan = reconcile_nas_sessions(session, tenant_id, nas.id, set(payload.active_session_ids))
+    request_id = record_audit(session, tenant_id, "sessions.reconciliation_planned", str(nas.id), {"database_only": len(plan["database_only"]), "router_only": len(plan["router_only"])})
+    session.commit()
+    return {"nas_id": str(nas.id), **plan, "simulation": True, "correlation_id": request_id}
 @app.get("/api/aaa/accounting-events", dependencies=[Depends(internal_service_auth)])
 def list_accounting(tenant_id: UUID, limit: int = 100, session: Session = Depends(db)):
     limit = min(max(limit, 1), 100)
@@ -147,11 +218,28 @@ def get_radius_server(server_id: UUID, session: Session = Depends(db)):
     item = session.get(RadiusServer, server_id)
     if not item: raise HTTPException(404, "RADIUS server not found")
     return {"id": str(item.id), "name": item.name, "host": item.host, "environment": item.environment, "region": item.region, "enabled": item.enabled, "draining": item.draining, "health": item.health, "version_metadata": item.version_metadata}
+@app.patch("/api/aaa/radius-servers/{server_id}", dependencies=[Depends(internal_service_auth)])
+def update_radius_server(server_id: UUID, payload: RadiusServerUpdateIn, session: Session = Depends(db)):
+    item = session.get(RadiusServer, server_id)
+    if not item: raise HTTPException(404, "RADIUS server not found")
+    updates = payload.model_dump(exclude_unset=True)
+    for key, value in updates.items(): setattr(item, key, value)
+    request_id = record_audit(session, None, "radius_server.updated", str(item.id), {"fields": sorted(updates)}); session.commit()
+    return {"id": str(item.id), "correlation_id": request_id}
+@app.delete("/api/aaa/radius-servers/{server_id}", dependencies=[Depends(internal_service_auth)])
+def delete_radius_server(server_id: UUID, session: Session = Depends(db)):
+    item = session.get(RadiusServer, server_id)
+    if not item: raise HTTPException(404, "RADIUS server not found")
+    request_id = record_audit(session, None, "radius_server.deleted", str(item.id), {"name": item.name}); session.delete(item); session.commit()
+    return {"id": str(server_id), "deleted": True, "correlation_id": request_id}
 @app.post("/api/aaa/radius-servers/{server_id}/enable", dependencies=[Depends(internal_service_auth)])
 def set_radius_server_enabled(server_id: UUID, enabled: bool = True, session: Session = Depends(db)):
     item = session.get(RadiusServer, server_id)
     if not item: raise HTTPException(404, "RADIUS server not found")
-    item.enabled = enabled; session.commit(); return {"id": str(item.id), "enabled": item.enabled}
+    item.enabled = enabled; request_id = record_audit(session, None, "radius_server.enabled" if enabled else "radius_server.disabled", str(item.id), {}); session.commit(); return {"id": str(item.id), "enabled": item.enabled, "correlation_id": request_id}
+@app.post("/api/aaa/radius-servers/{server_id}/disable", dependencies=[Depends(internal_service_auth)])
+def disable_radius_server(server_id: UUID, session: Session = Depends(db)):
+    return set_radius_server_enabled(server_id, False, session)
 @app.post("/api/aaa/radius-servers/{server_id}/heartbeat", dependencies=[Depends(internal_service_auth)])
 def heartbeat_radius_server(server_id: UUID, payload: HeartbeatIn, session: Session = Depends(db)):
     from datetime import datetime, timezone
@@ -166,6 +254,26 @@ def effective_policy(subscriber_id: UUID, tenant_id: UUID, session: Session = De
     tenant = session.get(Tenant, tenant_id)
     policy = calculate_policy({"tenant": tenant.policy.get("default_policy", {})})
     return {"subscriber_id": str(subscriber_id), "policy": policy.values, "provenance": policy.provenance, "reply_attributes": policy.reply_attributes(), "simulation": True}
+@app.post("/api/aaa/subscribers/{subscriber_id}/preview-policy", dependencies=[Depends(internal_service_auth)])
+def preview_policy(subscriber_id: UUID, tenant_id: UUID, payload: PolicyPreviewIn, session: Session = Depends(db)):
+    credential = session.scalar(select(Credential).where(Credential.tenant_id == tenant_id, Credential.subscriber_id == subscriber_id))
+    tenant = session.get(Tenant, tenant_id)
+    if not credential or not tenant: raise HTTPException(404, "subscriber credential not found")
+    layers = {"tenant": tenant.policy.get("default_policy", {}), "subscriber": payload.overrides}
+    if payload.nas_id:
+        nas = tenant_item(session, Nas, payload.nas_id, tenant_id, "NAS"); layers["nas"] = nas.capabilities.get("policy", {})
+    policy = calculate_policy(layers)
+    return {"subscriber_id": str(subscriber_id), "policy": policy.values, "provenance": policy.provenance, "reply_attributes": policy.reply_attributes(), "simulation": True}
+@app.post("/api/aaa/subscribers/{subscriber_id}/test-eligibility", dependencies=[Depends(internal_service_auth)])
+def test_eligibility(subscriber_id: UUID, tenant_id: UUID, payload: PolicyPreviewIn, session: Session = Depends(db)):
+    credential = session.scalar(select(Credential).where(Credential.tenant_id == tenant_id, Credential.subscriber_id == subscriber_id))
+    if not credential: raise HTTPException(404, "subscriber credential not found")
+    if credential.status != "active": return {"eligible": False, "decision": "REJECT_ACCOUNT_DISABLED", "simulation": True}
+    if credential.expires_at and credential.expires_at < datetime.now(credential.expires_at.tzinfo): return {"eligible": False, "decision": "REJECT_ACCOUNT_EXPIRED", "simulation": True}
+    if payload.nas_id:
+        nas = tenant_item(session, Nas, payload.nas_id, tenant_id, "NAS")
+        if not nas.enabled: return {"eligible": False, "decision": "REJECT_NAS_DISABLED", "simulation": True}
+    return {"eligible": True, "decision": "ACCEPT", "simulation": True}
 @app.post("/api/aaa/subscribers/{subscriber_id}/rotate-credential", dependencies=[Depends(internal_service_auth)])
 def rotate_credential(subscriber_id: UUID, tenant_id: UUID, payload: PasswordRotationIn, session: Session = Depends(db)):
     credential = session.scalar(select(Credential).where(Credential.tenant_id == tenant_id, Credential.subscriber_id == subscriber_id))
