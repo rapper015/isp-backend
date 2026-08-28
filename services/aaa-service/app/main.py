@@ -8,11 +8,11 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import AccountingEvent, ActiveSession, Credential, IpPool, Nas, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
+from .models import AccountingEvent, ActiveSession, Credential, IpLease, IpPool, Nas, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
-from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, NasIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
+from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, NasIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
 from .security import encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
 from .services import accounting, audit, authenticate, authorize, correlation, outbox
 from .reconciliation import reconcile_nas_sessions
@@ -216,6 +216,30 @@ def create_ip_pool(payload: IpPoolIn, session: Session = Depends(db)):
 @app.get("/api/aaa/ip-pools", dependencies=[Depends(internal_service_auth)])
 def list_ip_pools(tenant_id: UUID, session: Session = Depends(db)):
     return [{"id": str(item.id), "name": item.name, "cidr": item.cidr, "family": item.address_family, "enabled": item.enabled} for item in session.scalars(select(IpPool).where(IpPool.tenant_id == tenant_id).limit(100))]
+@app.get("/api/aaa/ip-pools/{pool_id}/leases", dependencies=[Depends(internal_service_auth)])
+def list_ip_leases(pool_id: UUID, tenant_id: UUID, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    tenant_item(session, IpPool, pool_id, tenant_id, "IP pool")
+    return [{"id": str(item.id), "address": item.address, "subscriber_id": str(item.subscriber_id) if item.subscriber_id else None, "reservation": item.reservation, "active_session_id": str(item.active_session_id) if item.active_session_id else None, "released_at": item.released_at} for item in session.scalars(select(IpLease).where(IpLease.tenant_id == tenant_id, IpLease.pool_id == pool_id).order_by(IpLease.address).offset(max(offset, 0)).limit(bounded(limit)))]
+@app.post("/api/aaa/ip-pools/{pool_id}/reservations", dependencies=[Depends(internal_service_auth)])
+def reserve_ip(pool_id: UUID, tenant_id: UUID, payload: IpReservationIn, session: Session = Depends(db)):
+    import ipaddress
+    pool = tenant_item(session, IpPool, pool_id, tenant_id, "IP pool")
+    try: address = ipaddress.ip_address(payload.address); network = ipaddress.ip_network(pool.cidr)
+    except ValueError as error: raise HTTPException(422, "invalid reservation address") from error
+    if address not in network or str(address) in pool.excluded: raise HTTPException(422, "address is outside eligible pool range")
+    existing = session.scalar(select(IpLease).where(IpLease.tenant_id == tenant_id, IpLease.address == str(address)))
+    if existing and existing.subscriber_id != payload.subscriber_id: raise HTTPException(409, "address already assigned")
+    item = existing or IpLease(tenant_id=tenant_id, pool_id=pool.id, subscriber_id=payload.subscriber_id, address=str(address), reservation=True)
+    item.reservation, item.released_at = True, None; session.add(item)
+    request_id = record_audit(session, tenant_id, "ip.reserved", str(item.id), {"pool_id": str(pool.id), "subscriber_id": str(payload.subscriber_id)}); session.commit()
+    return {"id": str(item.id), "address": item.address, "reservation": True, "correlation_id": request_id}
+@app.post("/api/aaa/ip-leases/{lease_id}/release", dependencies=[Depends(internal_service_auth)])
+def release_ip(lease_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    item = tenant_item(session, IpLease, lease_id, tenant_id, "IP lease")
+    if item.reservation: raise HTTPException(409, "remove reservation before releasing its address")
+    from .ipam import release
+    release(session, item); request_id = record_audit(session, tenant_id, "ip.released", str(item.id), {"address": item.address}); session.commit()
+    return {"id": str(item.id), "released": True, "correlation_id": request_id}
 @app.post("/api/aaa/radius-servers", dependencies=[Depends(internal_service_auth)])
 def create_radius_server(payload: RadiusServerIn, session: Session = Depends(db)):
     item = RadiusServer(**payload.model_dump(exclude={"internal_api_key"}), api_key_hash=hash_api_key(payload.internal_api_key))

@@ -46,6 +46,9 @@ class IpPoolIn(StrictModel):
     address_family: Literal["ipv4", "ipv6"] = "ipv4"
     cidr: str
     excluded: list[str] = Field(default_factory=list, max_length=1024)
+class IpReservationIn(StrictModel):
+    subscriber_id: UUID
+    address: str = Field(min_length=1, max_length=64)
 class RadiusServerIn(StrictModel):
     name: str = Field(min_length=1, max_length=128)
     host: str = Field(min_length=1, max_length=255)

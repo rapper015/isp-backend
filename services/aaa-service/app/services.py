@@ -6,7 +6,8 @@ import bcrypt
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from .models import AccountingEvent, ActiveSession, AuditLog, Credential, Nas, OutboxEvent, Tenant, UsageProjection
+from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpPool, Nas, OutboxEvent, Tenant, UsageProjection
+from .ipam import PoolExhausted, allocate
 from .policy import calculate_policy
 from .radius import safe_reply, traffic_counter
 
@@ -75,7 +76,14 @@ def authorize(session: Session, attributes: dict, correlation_id: str) -> tuple[
     if not credential: return "REJECT_UNKNOWN_SUBSCRIBER", {}
     tenant = session.get(Tenant, nas.tenant_id)
     if not tenant or not tenant.enabled: return "REJECT_TENANT_DISABLED", {}
-    reply = calculate_policy({"tenant": tenant.policy.get("default_policy", {})}).reply_attributes()
+    policy = calculate_policy({"tenant": tenant.policy.get("default_policy", {})})
+    reply = policy.reply_attributes()
+    pool_name = policy.values.get("ipv4_pool")
+    if pool_name:
+        pool = session.scalar(select(IpPool).where(IpPool.tenant_id == nas.tenant_id, IpPool.name == pool_name, IpPool.address_family == "ipv4", IpPool.enabled.is_(True), (IpPool.nas_id.is_(None)) | (IpPool.nas_id == nas.id)))
+        if not pool: return "REJECT_POLICY", {}
+        try: reply["Framed-IP-Address"] = allocate(session, pool, credential.subscriber_id).address
+        except PoolExhausted: return "REJECT_POLICY", {}
     outbox(session, "aaa.authorization.calculated.v1", nas.tenant_id, correlation_id, {"subscriber_id": str(credential.subscriber_id), "attributes": reply})
     return "ACCEPT", reply
 

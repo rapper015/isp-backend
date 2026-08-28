@@ -151,3 +151,9 @@ manually on the NAS and in the future RADIUS environment. Confirm health and
 readiness endpoints from the private adapter network, then test with a
 non-production subscriber. Do not expose the private OpenAPI endpoint or
 service-key header through the public gateway.
+
+When an effective tenant policy names `ipv4_pool`, authorization allocates a
+durable tenant-owned lease and returns its `Framed-IP-Address`. Operations can
+inspect leases, reserve a static address, or release a non-reserved lease via
+the `/api/aaa/ip-pools/{id}/leases`, `/reservations`, and `/api/aaa/ip-leases`
+management endpoints. This does not configure FreeRADIUS SQL IP pools.
