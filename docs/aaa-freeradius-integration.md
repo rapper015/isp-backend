@@ -163,3 +163,9 @@ durable tenant-owned lease and returns its `Framed-IP-Address`. Operations can
 inspect leases, reserve a static address, or release a non-reserved lease via
 the `/api/aaa/ip-pools/{id}/leases`, `/reservations`, and `/api/aaa/ip-leases`
 management endpoints. This does not configure FreeRADIUS SQL IP pools.
+
+Set `fup_threshold_bytes` and a `fup_policy` object in the tenant default
+policy to apply a final quota-precedence policy layer once monthly usage reaches
+the threshold. For example, `fup_policy` can supply reduced `upload_kbps` and
+`download_kbps`; subsequent access decisions return the corresponding reduced
+`Mikrotik-Rate-Limit` while the FUP projection remains active.

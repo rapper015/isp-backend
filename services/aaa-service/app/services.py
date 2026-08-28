@@ -17,6 +17,14 @@ def outbox(session: Session, event_type: str, tenant_id, correlation_id: str, pa
 def audit(session: Session, tenant_id, action: str, target: str, correlation_id: str, detail: dict) -> None:
     session.add(AuditLog(tenant_id=tenant_id, actor="internal-radius", action=action, target_type="aaa", target_id=target, correlation_id=correlation_id, detail=detail))
 
+def effective_subscriber_policy(session: Session, tenant: Tenant, subscriber_id) -> object:
+    """Apply FUP only as the final quota layer, preserving policy precedence."""
+    base = tenant.policy.get("default_policy", {})
+    period = datetime.now(timezone.utc).strftime("%Y-%m")
+    usage = session.scalar(select(UsageProjection).where(UsageProjection.tenant_id == tenant.id, UsageProjection.subscriber_id == subscriber_id, UsageProjection.period == period))
+    quota_layer = base.get("fup_policy", {}) if usage and usage.fup_active else {}
+    return calculate_policy({"tenant": base, "quota": quota_layer})
+
 def resolve_nas(session: Session, attributes: dict) -> Nas | None:
     source_ip = attributes.get("NAS-IP-Address")
     if not source_ip: return None
@@ -40,7 +48,7 @@ def authenticate(session: Session, attributes: dict, correlation_id: str) -> tup
     if method not in credential.allowed_methods or method not in nas.allowed_methods: return "REJECT_METHOD_NOT_ALLOWED", {}
     calling_mac = attributes.get("Calling-Station-Id")
     if credential.mac_address and calling_mac != credential.mac_address: return "REJECT_MAC_MISMATCH", {}
-    policy = calculate_policy({"tenant": tenant.policy.get("default_policy", {})})
+    policy = effective_subscriber_policy(session, tenant, credential.subscriber_id)
     simultaneous_limit = policy.values.get("simultaneous_limit")
     if simultaneous_limit is not None:
         online = session.scalar(select(func.count()).select_from(ActiveSession).where(ActiveSession.tenant_id == nas.tenant_id, ActiveSession.subscriber_id == credential.subscriber_id, ActiveSession.status.in_(["STARTING", "ACTIVE", "STALE", "DISCONNECT_REQUESTED", "DISCONNECT_SENT"])))
@@ -76,7 +84,7 @@ def authorize(session: Session, attributes: dict, correlation_id: str) -> tuple[
     if not credential: return "REJECT_UNKNOWN_SUBSCRIBER", {}
     tenant = session.get(Tenant, nas.tenant_id)
     if not tenant or not tenant.enabled: return "REJECT_TENANT_DISABLED", {}
-    policy = calculate_policy({"tenant": tenant.policy.get("default_policy", {})})
+    policy = effective_subscriber_policy(session, tenant, credential.subscriber_id)
     reply = policy.reply_attributes()
     pool_name = policy.values.get("ipv4_pool")
     if pool_name:
