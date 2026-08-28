@@ -265,3 +265,11 @@ class NasJob(Base, Timestamped):
     attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     maximum_attempts: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
     safe_result: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+
+class NasSecretReveal(Base):
+    __tablename__ = "nas_secret_reveals"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    assignment_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("nas_radius_assignments.id"), index=True, nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    accessed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

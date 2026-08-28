@@ -2,19 +2,20 @@
 from contextlib import asynccontextmanager
 from os import getenv
 from uuid import UUID
+import hashlib, secrets
 import bcrypt
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLease, IpPool, Nas, NasCredential, NasRadiusAssignment, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
+from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLease, IpPool, Nas, NasCredential, NasRadiusAssignment, NasSecretReveal, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
 from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, NasDraftIn, NasIn, NasRadiusAssignmentIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
-from .security import encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
+from .security import decrypt_secret, encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
 from .services import accounting, audit, authenticate, authorize, correlation, outbox
 from .reconciliation import reconcile_nas_sessions
 from .metrics import increment, snapshot
@@ -118,6 +119,21 @@ def create_nas_radius_assignment(nas_id: UUID, tenant_id: UUID, payload: NasRadi
 def list_nas_radius_assignments(nas_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     tenant_item(session, Nas, nas_id, tenant_id, "NAS")
     return [{"id": str(item.id), "radius_server_id": str(item.radius_server_id), "priority": item.priority, "role": item.role, "services": item.services, "source_address": item.source_address, "secret_version": item.secret_version, "registration_status": item.registration_status, "manual_confirmed": item.manual_confirmed, "applied_status": item.applied_status} for item in session.scalars(select(NasRadiusAssignment).where(NasRadiusAssignment.nas_id == nas_id).order_by(NasRadiusAssignment.priority))]
+@app.post("/api/nas/{nas_id}/radius-assignments/{assignment_id}/registration-package", dependencies=[Depends(internal_service_auth)])
+def create_registration_reveal(nas_id: UUID, assignment_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    nas = tenant_item(session, Nas, nas_id, tenant_id, "NAS"); assignment = session.scalar(select(NasRadiusAssignment).where(NasRadiusAssignment.id == assignment_id, NasRadiusAssignment.nas_id == nas.id))
+    if not assignment: raise HTTPException(404, "RADIUS assignment not found")
+    token = secrets.token_urlsafe(32); session.add(NasSecretReveal(assignment_id=assignment.id, token_hash=hashlib.sha256(token.encode()).hexdigest(), expires_at=datetime.now(timezone.utc) + timedelta(minutes=10)))
+    request_id = record_audit(session, tenant_id, "nas.registration_package_issued", str(assignment.id), {"secret_version": assignment.secret_version}); session.commit()
+    return {"reveal_token": token, "expires_in_seconds": 600, "correlation_id": request_id}
+@app.post("/api/nas/{nas_id}/radius-assignments/{assignment_id}/registration-package/reveal", dependencies=[Depends(internal_service_auth)])
+def reveal_registration_package(nas_id: UUID, assignment_id: UUID, tenant_id: UUID, reveal_token: str, session: Session = Depends(db)):
+    nas = tenant_item(session, Nas, nas_id, tenant_id, "NAS"); assignment = session.scalar(select(NasRadiusAssignment).where(NasRadiusAssignment.id == assignment_id, NasRadiusAssignment.nas_id == nas.id))
+    reveal = session.scalar(select(NasSecretReveal).where(NasSecretReveal.assignment_id == assignment_id, NasSecretReveal.token_hash == hashlib.sha256(reveal_token.encode()).hexdigest()))
+    if not assignment or not reveal or reveal.accessed_at or reveal.expires_at < datetime.now(timezone.utc): raise HTTPException(404, "reveal token is invalid or expired")
+    server = session.get(RadiusServer, assignment.radius_server_id); reveal.accessed_at = datetime.now(timezone.utc)
+    request_id = record_audit(session, tenant_id, "nas.registration_package_accessed", str(assignment.id), {"secret_version": assignment.secret_version}); session.commit()
+    return {"nas_name": nas.name, "nas_source_ip": nas.source_ip, "nas_identifier": nas.nas_identifier, "radius_server": server.host, "authentication_port": server.auth_port, "accounting_port": server.accounting_port, "coa_port": server.coa_port, "services": assignment.services, "shared_secret": decrypt_secret(assignment.secret_ciphertext), "secret_version": assignment.secret_version, "display_once": True, "correlation_id": request_id}
 @app.post("/api/aaa/credentials", dependencies=[Depends(internal_service_auth)])
 def create_credential(payload: CredentialIn, session: Session = Depends(db)):
     if not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
