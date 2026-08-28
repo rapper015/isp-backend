@@ -19,7 +19,10 @@ from .reconciliation import reconcile_nas_sessions
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    # Production schema changes are applied through Alembic.  SQLite remains
+    # convenient for isolated contract tests and explicitly opted-in local use.
+    if getenv("AAA_AUTO_CREATE_SCHEMA", "").lower() == "true" or str(engine.url).startswith("sqlite"):
+        Base.metadata.create_all(bind=engine)
     yield
 
 app = FastAPI(title="AAA Service (private)", version="1.0.0", docs_url="/internal/docs", openapi_url="/internal/openapi.json", lifespan=lifespan)

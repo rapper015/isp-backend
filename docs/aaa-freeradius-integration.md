@@ -17,7 +17,8 @@ template and operational defaults.
 
 Apply database migrations before running the service with Alembic from the AAA
 service directory. The migration never includes plaintext credentials or shared
-secrets.
+secrets. Production startup does not create tables automatically; set
+`AAA_AUTO_CREATE_SCHEMA=true` only for an explicitly local disposable database.
 
 For zero-downtime service-key rotation, set AAA_INTERNAL_API_KEYS to a
 comma-separated list of current and next keys, deploy the adapter with the next
