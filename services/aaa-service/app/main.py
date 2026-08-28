@@ -147,6 +147,13 @@ def nas_activity(nas_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     item = tenant_item(session, Nas, nas_id, tenant_id, "NAS")
     active = session.scalar(select(func.count()).select_from(ActiveSession).where(ActiveSession.nas_id == item.id, ActiveSession.status != "STOPPED"))
     return {"nas_id": str(item.id), "last_auth_at": item.last_auth_at, "last_accounting_at": item.last_accounting_at, "last_coa_at": item.last_coa_at, "active_sessions": active}
+@app.post("/api/aaa/nas/{nas_id}/test-coa", dependencies=[Depends(internal_service_auth)])
+def test_nas_coa(nas_id: UUID, tenant_id: UUID, session_id: UUID, idempotency_key: str, session: Session = Depends(db)):
+    nas = tenant_item(session, Nas, nas_id, tenant_id, "NAS")
+    active = tenant_item(session, ActiveSession, session_id, tenant_id, "session")
+    if active.nas_id != nas.id: raise HTTPException(422, "session does not belong to NAS")
+    result = coa_session(active.id, tenant_id, CoAIn(idempotency_key=idempotency_key, attributes={"Acct-Session-Id": active.session_id}), session)
+    return {**result, "nas_id": str(nas.id), "test_queued": True}
 @app.post("/api/aaa/sessions/{session_id}/disconnect", dependencies=[Depends(internal_service_auth)])
 def disconnect(session_id: UUID, tenant_id: UUID, idempotency_key: str, session: Session = Depends(db)):
     active = session.scalar(select(ActiveSession).where(ActiveSession.id == session_id, ActiveSession.tenant_id == tenant_id))

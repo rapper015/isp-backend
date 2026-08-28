@@ -132,6 +132,11 @@ Use `tenant_id` on tenant-owned resources. The reconciliation endpoint accepts a
 trusted RouterOS snapshot supplied by an authorized caller and returns a plan;
 it never connects to RouterOS or modifies a router itself.
 
+`POST /api/aaa/nas/{nas_id}/test-coa` requires a session belonging to that NAS
+and queues a session-targeted CoA capability request. It is not an implicit UDP
+probe: delivery occurs only when the explicitly enabled Python NAS adapter runs,
+and the result is recorded as a normal command lifecycle event.
+
 Management calls can use the internal service key for trusted platform-to-
 platform work, or a signed platform admin JWT (`Authorization: Bearer ...`).
 Set `AAA_JWT_SECRET` to the existing platform admin-token signing secret. JWT
