@@ -97,3 +97,6 @@ class PolicyPreviewIn(StrictModel):
 class SessionReconcileIn(StrictModel):
     nas_id: UUID
     active_session_ids: list[str] = Field(default_factory=list, max_length=10000)
+class QuotaResetIn(StrictModel):
+    idempotency_key: str = Field(min_length=1, max_length=255)
+    period: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}$")

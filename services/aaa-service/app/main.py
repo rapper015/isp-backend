@@ -12,7 +12,7 @@ from .models import AccountingEvent, ActiveSession, Credential, IpLease, IpPool,
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
-from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, NasIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
+from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, NasIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
 from .security import encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
 from .services import accounting, audit, authenticate, authorize, correlation, outbox
 from .reconciliation import reconcile_nas_sessions
@@ -367,3 +367,19 @@ def list_usage(tenant_id: UUID, session: Session = Depends(db)):
 @app.get("/api/aaa/usage/subscribers/{subscriber_id}", dependencies=[Depends(internal_service_auth)])
 def subscriber_usage(subscriber_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     return [{"period": item.period, "input_octets": item.input_octets, "output_octets": item.output_octets, "fup_active": item.fup_active} for item in session.scalars(select(UsageProjection).where(UsageProjection.tenant_id == tenant_id, UsageProjection.subscriber_id == subscriber_id).limit(100))]
+@app.post("/api/aaa/usage/subscribers/{subscriber_id}/reset", dependencies=[Depends(internal_service_auth)])
+def reset_subscriber_usage(subscriber_id: UUID, tenant_id: UUID, payload: QuotaResetIn, session: Session = Depends(db)):
+    period = payload.period or datetime.now().strftime("%Y-%m")
+    usage = session.scalar(select(UsageProjection).where(UsageProjection.tenant_id == tenant_id, UsageProjection.subscriber_id == subscriber_id, UsageProjection.period == period))
+    if not usage: raise HTTPException(404, "usage projection not found")
+    was_fup = usage.fup_active; usage.input_octets = 0; usage.output_octets = 0; usage.fup_active = False
+    request_id = record_audit(session, tenant_id, "usage.reset", str(subscriber_id), {"period": period, "was_fup": was_fup})
+    if was_fup:
+        tenant = session.get(Tenant, tenant_id); normal = calculate_policy({"tenant": tenant.policy.get("default_policy", {})}).reply_attributes()
+        outbox(session, "aaa.fup.cleared.v1", tenant_id, request_id, {"subscriber_id": str(subscriber_id), "period": period}, payload.idempotency_key)
+        for live in session.scalars(select(ActiveSession).where(ActiveSession.tenant_id == tenant_id, ActiveSession.subscriber_id == subscriber_id, ActiveSession.status.in_(["STARTING", "ACTIVE"]))):
+            key = f"reset:{payload.idempotency_key}:{live.id}"
+            if session.scalar(select(RadiusCommand.id).where(RadiusCommand.tenant_id == tenant_id, RadiusCommand.idempotency_key == key).limit(1)): continue
+            command = RadiusCommand(tenant_id=tenant_id, nas_id=live.nas_id, session_id=live.id, subscriber_id=subscriber_id, command_type="COA", status="QUEUED", idempotency_key=key, correlation_id=request_id, attributes={"Acct-Session-Id": live.session_id, **normal})
+            session.add(command); outbox(session, "aaa.coa.requested.v1", tenant_id, request_id, {"command_id": str(command.id), "session_id": str(live.id), "reason": "fup_cleared"}, key)
+    session.commit(); return {"subscriber_id": str(subscriber_id), "period": period, "reset": True, "correlation_id": request_id}
