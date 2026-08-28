@@ -1,0 +1,154 @@
+name: isp-platform
+
+x-domain-service: &domain-service
+  build:
+    context: .
+    dockerfile: infrastructure/service.Dockerfile
+  environment: &domain-environment
+    RABBITMQ_URL: amqp://isp:isp@rabbitmq:5672/
+    VALKEY_URL: redis://valkey:6379/0
+    LOG_LEVEL: INFO
+  depends_on:
+    postgres:
+      condition: service_healthy
+    rabbitmq:
+      condition: service_healthy
+    valkey:
+      condition: service_healthy
+  expose: ["8000"]
+  healthcheck:
+    test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+    interval: 10s
+    timeout: 3s
+    retries: 10
+  networks: [platform]
+
+services:
+  gateway:
+    image: nginx:1.27-alpine
+    ports:
+      - "${GATEWAY_PORT:-4000}:80"
+    volumes:
+      - ./infrastructure/gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      crm-service:
+        condition: service_healthy
+      bss-service:
+        condition: service_healthy
+      oss-service:
+        condition: service_healthy
+      aaa-service:
+        condition: service_healthy
+      nms-service:
+        condition: service_healthy
+      ipam-service:
+        condition: service_healthy
+      siem-service:
+        condition: service_healthy
+      workforce-service:
+        condition: service_healthy
+      warehouse-service:
+        condition: service_healthy
+      aiops-service:
+        condition: service_healthy
+    networks: [edge, platform]
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: isp
+      POSTGRES_USER: isp
+      POSTGRES_PASSWORD: isp
+      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,nms,ipam,siem,workforce,warehouse,aiops
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U isp -d isp"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [platform]
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: isp
+      RABBITMQ_DEFAULT_PASS: isp
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [platform]
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    command: ["valkey-server", "--appendonly", "yes"]
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [platform]
+
+  crm-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: crm-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: crm-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/crm}
+
+  bss-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: bss-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: bss-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/bss}
+
+  oss-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: oss-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: oss-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/oss}
+
+  aaa-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: aaa-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/aaa}
+
+  nms-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: nms-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: nms-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/nms}
+
+  ipam-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: ipam-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: ipam-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/ipam}
+
+  siem-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: siem-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: siem-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/siem}
+
+  workforce-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: workforce-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: workforce-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/workforce}
+
+  warehouse-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: warehouse-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: warehouse-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/warehouse}
+
+  aiops-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aiops-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: aiops-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/aiops}
+
+networks:
+  edge:
+  platform:
+    internal: true
+
+volumes:
+  postgres-data:
+  valkey-data:

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://isp-platform.local/contracts/event-envelope/v1",
+  "title": "ISP platform event envelope",
+  "type": "object",
+  "required": ["id", "type", "occurred_at", "source", "data"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "type": { "type": "string", "pattern": "^[a-z]+(\\.[a-z0-9_-]+)+\\.v[1-9][0-9]*$" },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "source": { "type": "string" },
+    "correlation_id": { "type": "string", "format": "uuid" },
+    "data": { "type": "object" }
+  },
+  "additionalProperties": false
+}
