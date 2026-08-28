@@ -103,5 +103,10 @@ def accounting(session: Session, attributes: dict, diagnostic: dict, correlation
                 session.add(usage)
             usage.input_octets = (usage.input_octets or 0) + max(0, incoming_in - previous_in)
             usage.output_octets = (usage.output_octets or 0) + max(0, incoming_out - previous_out)
+            tenant = session.get(Tenant, nas.tenant_id)
+            fup_threshold = (tenant.policy.get("default_policy", {}) if tenant else {}).get("fup_threshold_bytes")
+            if fup_threshold is not None and not usage.fup_active and usage.input_octets + usage.output_octets >= int(fup_threshold):
+                usage.fup_active = True
+                outbox(session, "aaa.fup.activated.v1", nas.tenant_id, correlation_id, {"subscriber_id": str(active.subscriber_id), "period": period})
     outbox(session, "aaa.accounting.received.v1", nas.tenant_id, correlation_id, {"accounting_event_id": str(record.id), "event_type": allowed[event_type]}, key)
     return "OK", True
