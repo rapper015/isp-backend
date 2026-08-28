@@ -9,11 +9,11 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLease, IpPool, Nas, NasCredential, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
+from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLease, IpPool, Nas, NasCredential, NasRadiusAssignment, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
-from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, NasDraftIn, NasIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
+from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, NasDraftIn, NasIn, NasRadiusAssignmentIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
 from .security import encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
 from .services import accounting, audit, authenticate, authorize, correlation, outbox
 from .reconciliation import reconcile_nas_sessions
@@ -105,6 +105,19 @@ def create_nas_draft(payload: NasDraftIn, session: Session = Depends(db)):
     session.add(NasCredential(nas_id=nas.id, username_ciphertext=encrypt_secret(payload.routeros_username), secret_ciphertext=encrypt_secret(payload.routeros_password)))
     request_id = record_audit(session, payload.tenant_id, "nas.draft_created", str(nas.id), {"management_host": management_host, "services": payload.services})
     session.commit(); return {"id": str(nas.id), "lifecycle_status": "DRAFT", "correlation_id": request_id}
+@app.post("/api/nas/{nas_id}/radius-assignments", dependencies=[Depends(internal_service_auth)])
+def create_nas_radius_assignment(nas_id: UUID, tenant_id: UUID, payload: NasRadiusAssignmentIn, session: Session = Depends(db)):
+    nas = tenant_item(session, Nas, nas_id, tenant_id, "NAS")
+    server = session.get(RadiusServer, payload.radius_server_id)
+    if not server or not server.enabled: raise HTTPException(422, "RADIUS server is not available")
+    if session.scalar(select(NasRadiusAssignment.id).where(NasRadiusAssignment.nas_id == nas.id, NasRadiusAssignment.radius_server_id == server.id)): raise HTTPException(409, "RADIUS assignment already exists")
+    assignment = NasRadiusAssignment(nas_id=nas.id, radius_server_id=server.id, priority=payload.priority, role=payload.role, services=payload.services, source_address=payload.source_address or nas.source_ip, secret_ciphertext=encrypt_secret(new_shared_secret()), registration_status="INSTRUCTIONS_GENERATED")
+    session.add(assignment); request_id = record_audit(session, tenant_id, "nas.radius_assignment_created", str(assignment.id), {"radius_server_id": str(server.id), "role": payload.role}); outbox(session, "nas.radius_registration.generated.v1", tenant_id, request_id, {"nas_id": str(nas.id), "assignment_id": str(assignment.id), "radius_server_id": str(server.id)})
+    session.commit(); return {"id": str(assignment.id), "registration_status": assignment.registration_status, "secret_displayed": False, "correlation_id": request_id}
+@app.get("/api/nas/{nas_id}/radius-assignments", dependencies=[Depends(internal_service_auth)])
+def list_nas_radius_assignments(nas_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    tenant_item(session, Nas, nas_id, tenant_id, "NAS")
+    return [{"id": str(item.id), "radius_server_id": str(item.radius_server_id), "priority": item.priority, "role": item.role, "services": item.services, "source_address": item.source_address, "secret_version": item.secret_version, "registration_status": item.registration_status, "manual_confirmed": item.manual_confirmed, "applied_status": item.applied_status} for item in session.scalars(select(NasRadiusAssignment).where(NasRadiusAssignment.nas_id == nas_id).order_by(NasRadiusAssignment.priority))]
 @app.post("/api/aaa/credentials", dependencies=[Depends(internal_service_auth)])
 def create_credential(payload: CredentialIn, session: Session = Depends(db)):
     if not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")

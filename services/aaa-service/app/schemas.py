@@ -112,3 +112,9 @@ class NasDraftIn(StrictModel):
     nas_identifier: str | None = Field(default=None, max_length=128)
     radius_group_id: UUID | None = None
     services: list[Literal["pppoe", "hotspot", "login", "wireless", "dot1x", "ipsec"]] = Field(default_factory=list)
+class NasRadiusAssignmentIn(StrictModel):
+    radius_server_id: UUID
+    priority: int = Field(default=100, ge=0, le=10000)
+    role: Literal["primary", "secondary"] = "secondary"
+    services: list[Literal["pppoe", "hotspot", "login", "wireless", "dot1x", "ipsec"]] = Field(default_factory=list)
+    source_address: str | None = Field(default=None, max_length=64)
