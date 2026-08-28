@@ -6,7 +6,7 @@ import bcrypt
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpPool, Nas, OutboxEvent, Tenant, UsageProjection
+from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpPool, Nas, OutboxEvent, RadiusCommand, Tenant, UsageProjection
 from .ipam import PoolExhausted, allocate
 from .policy import calculate_policy
 from .radius import safe_reply, traffic_counter
@@ -143,5 +143,12 @@ def accounting(session: Session, attributes: dict, diagnostic: dict, correlation
             if fup_threshold is not None and not usage.fup_active and usage.input_octets + usage.output_octets >= int(fup_threshold):
                 usage.fup_active = True
                 outbox(session, "aaa.fup.activated.v1", nas.tenant_id, correlation_id, {"subscriber_id": str(active.subscriber_id), "period": period})
+                fup_reply = calculate_policy({"quota": (tenant.policy.get("default_policy", {}) if tenant else {}).get("fup_policy", {})}).reply_attributes()
+                for live in session.scalars(select(ActiveSession).where(ActiveSession.tenant_id == nas.tenant_id, ActiveSession.subscriber_id == active.subscriber_id, ActiveSession.status.in_(["STARTING", "ACTIVE"]))):
+                    command_key = f"fup:{period}:{live.id}"
+                    if session.scalar(select(RadiusCommand.id).where(RadiusCommand.tenant_id == nas.tenant_id, RadiusCommand.idempotency_key == command_key).limit(1)): continue
+                    command = RadiusCommand(tenant_id=nas.tenant_id, nas_id=live.nas_id, session_id=live.id, subscriber_id=live.subscriber_id, command_type="COA", status="QUEUED", idempotency_key=command_key, correlation_id=correlation_id, attributes={"Acct-Session-Id": live.session_id, **fup_reply})
+                    session.add(command)
+                    outbox(session, "aaa.coa.requested.v1", nas.tenant_id, correlation_id, {"command_id": str(command.id), "session_id": str(live.id), "reason": "fup_activated"}, command_key)
     outbox(session, "aaa.accounting.received.v1", nas.tenant_id, correlation_id, {"accounting_event_id": str(record.id), "event_type": allowed[event_type]}, key)
     return "OK", True

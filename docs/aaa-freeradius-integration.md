@@ -169,3 +169,5 @@ policy to apply a final quota-precedence policy layer once monthly usage reaches
 the threshold. For example, `fup_policy` can supply reduced `upload_kbps` and
 `download_kbps`; subsequent access decisions return the corresponding reduced
 `Mikrotik-Rate-Limit` while the FUP projection remains active.
+When the threshold is first crossed, the backend also queues an idempotent
+session-targeted CoA with those reduced attributes for each active session.
