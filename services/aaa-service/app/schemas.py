@@ -46,3 +46,6 @@ class HeartbeatIn(StrictModel):
     version_metadata: dict[str, Any] = Field(default_factory=dict)
 class PasswordRotationIn(StrictModel):
     password: str = Field(min_length=8, max_length=512)
+class CoAIn(StrictModel):
+    idempotency_key: str = Field(min_length=1, max_length=255)
+    attributes: dict[str, str | int] = Field(default_factory=dict, max_length=16)

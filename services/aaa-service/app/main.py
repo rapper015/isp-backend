@@ -11,7 +11,7 @@ from .models import AccountingEvent, ActiveSession, Credential, IpPool, Nas, Rad
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
-from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CredentialIn, HeartbeatIn, IpPoolIn, NasIn, PasswordRotationIn, PostAuthRequest, RadiusResponse, RadiusServerIn, TenantIn
+from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, HeartbeatIn, IpPoolIn, NasIn, PasswordRotationIn, PostAuthRequest, RadiusResponse, RadiusServerIn, TenantIn
 from .security import encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
 from .services import accounting, authenticate, authorize, correlation, outbox
 
@@ -102,6 +102,16 @@ def disconnect(session_id: UUID, tenant_id: UUID, idempotency_key: str, session:
     if existing: return {"id": str(existing.id), "status": existing.status, "idempotent": True}
     request_id = correlation(None); command = RadiusCommand(tenant_id=tenant_id, nas_id=active.nas_id, session_id=active.id, subscriber_id=active.subscriber_id, command_type="DISCONNECT", status="QUEUED", idempotency_key=idempotency_key, correlation_id=request_id, attributes={"Acct-Session-Id": active.session_id})
     active.status = "DISCONNECT_REQUESTED"; session.add(command); outbox(session, "aaa.disconnect.requested.v1", tenant_id, request_id, {"command_id": str(command.id), "session_id": str(active.id)}, idempotency_key); session.commit()
+    return {"id": str(command.id), "status": command.status}
+@app.post("/api/aaa/sessions/{session_id}/coa", dependencies=[Depends(internal_service_auth)])
+def coa_session(session_id: UUID, tenant_id: UUID, payload: CoAIn, session: Session = Depends(db)):
+    active = session.scalar(select(ActiveSession).where(ActiveSession.id == session_id, ActiveSession.tenant_id == tenant_id))
+    if not active: raise HTTPException(404, "session not found")
+    existing = session.scalar(select(RadiusCommand).where(RadiusCommand.tenant_id == tenant_id, RadiusCommand.idempotency_key == payload.idempotency_key))
+    if existing: return {"id": str(existing.id), "status": existing.status, "idempotent": True}
+    request_id = correlation(None)
+    command = RadiusCommand(tenant_id=tenant_id, nas_id=active.nas_id, session_id=active.id, subscriber_id=active.subscriber_id, command_type="COA", status="QUEUED", idempotency_key=payload.idempotency_key, correlation_id=request_id, attributes=payload.attributes)
+    session.add(command); outbox(session, "aaa.coa.requested.v1", tenant_id, request_id, {"command_id": str(command.id), "session_id": str(active.id)}, payload.idempotency_key); session.commit()
     return {"id": str(command.id), "status": command.status}
 @app.get("/api/aaa/accounting-events", dependencies=[Depends(internal_service_auth)])
 def list_accounting(tenant_id: UUID, limit: int = 100, session: Session = Depends(db)):
