@@ -131,6 +131,12 @@ Use `tenant_id` on tenant-owned resources. The reconciliation endpoint accepts a
 trusted RouterOS snapshot supplied by an authorized caller and returns a plan;
 it never connects to RouterOS or modifies a router itself.
 
+Management calls can use the internal service key for trusted platform-to-
+platform work, or a signed platform admin JWT (`Authorization: Bearer ...`).
+Set `AAA_JWT_SECRET` to the existing platform admin-token signing secret. JWT
+roles are mapped to granular AAA permissions; non-super-admin tokens carrying
+`tenant_id`/`tenantId` are restricted to that tenant's query or request body.
+
 Before connecting an external RADIUS service, create the tenant, NAS inventory
 record, subscriber credential, plan policy, and any required IP pool through
 the AAA APIs. Record the NAS source IP and identifier accurately: those trusted
