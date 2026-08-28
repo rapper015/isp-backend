@@ -209,3 +209,59 @@ class AuditLog(Base):
     correlation_id: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     detail: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+class NasCredential(Base, Timestamped):
+    __tablename__ = "nas_credentials"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    nas_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("aaa_nas.id"), index=True, nullable=False)
+    username_ciphertext: Mapped[str] = mapped_column(Text, nullable=False)
+    secret_ciphertext: Mapped[str] = mapped_column(Text, nullable=False)
+    credential_type: Mapped[str] = mapped_column(String(32), default="password", nullable=False)
+    key_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    status: Mapped[str] = mapped_column(String(24), default="active", nullable=False)
+    last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_failure_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+class NasRadiusAssignment(Base, Timestamped):
+    __tablename__ = "nas_radius_assignments"
+    __table_args__ = (UniqueConstraint("nas_id", "radius_server_id", name="uq_nas_radius_assignment"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    nas_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("aaa_nas.id"), index=True, nullable=False)
+    radius_server_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("radius_servers.id"), index=True, nullable=False)
+    priority: Mapped[int] = mapped_column(Integer, default=100, nullable=False)
+    role: Mapped[str] = mapped_column(String(16), default="secondary", nullable=False)
+    services: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    source_address: Mapped[str | None] = mapped_column(String(64))
+    secret_ciphertext: Mapped[str] = mapped_column(Text, nullable=False)
+    secret_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    desired_status: Mapped[str] = mapped_column(String(24), default="pending", nullable=False)
+    applied_status: Mapped[str] = mapped_column(String(24), default="pending", nullable=False)
+    registration_status: Mapped[str] = mapped_column(String(32), default="PENDING", nullable=False)
+    remote_object_id: Mapped[str | None] = mapped_column(String(128))
+    manual_confirmed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    last_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    failure_reason: Mapped[str | None] = mapped_column(String(500))
+
+class NasSnapshot(Base):
+    __tablename__ = "nas_configuration_snapshots"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    nas_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("aaa_nas.id"), index=True, nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    scope: Mapped[str] = mapped_column(String(64), default="radius_aaa", nullable=False)
+    source: Mapped[str] = mapped_column(String(24), nullable=False)
+    sanitized_configuration: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    configuration_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+class NasJob(Base, Timestamped):
+    __tablename__ = "nas_configuration_jobs"
+    __table_args__ = (UniqueConstraint("nas_id", "idempotency_key", name="uq_nas_job_idempotency"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    nas_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("aaa_nas.id"), index=True, nullable=False)
+    job_type: Mapped[str] = mapped_column(String(48), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default="PENDING", nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    correlation_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    maximum_attempts: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    safe_result: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
