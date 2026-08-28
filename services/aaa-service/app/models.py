@@ -2,7 +2,7 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, JSON, String, Text, UniqueConstraint, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base
 
 class Timestamped:
@@ -44,17 +44,39 @@ class RadiusServerGroup(Base, Timestamped):
     failover_policy: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
 class Nas(Base, Timestamped):
+    """Canonical NAS record. Management and RADIUS source addresses are distinct.
+
+    ``source_ip`` is the address the router uses to send RADIUS packets.
+    ``management_host`` is the address the backend uses to reach the router.
+    """
     __tablename__ = "aaa_nas"
     __table_args__ = (UniqueConstraint("tenant_id", "source_ip", name="uq_nas_tenant_source_ip"),)
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("aaa_tenants.id"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     short_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    description: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    site: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    # Management connectivity (backend -> router)
+    management_host: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    management_port: Mapped[int] = mapped_column(Integer, default=8729, nullable=False)
+    management_protocol: Mapped[str] = mapped_column(String(16), default="api_ssl", nullable=False)
+    api_mode: Mapped[str] = mapped_column(String(16), default="auto", nullable=False)
+    tls_verify: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # RADIUS source (router -> FreeRADIUS)
     source_ip: Mapped[str] = mapped_column(String(45), nullable=False, index=True)
     source_cidr: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    radius_source_ipv6: Mapped[str | None] = mapped_column(String(45), nullable=True)
     nas_identifier: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
     vendor: Mapped[str] = mapped_column(String(64), default="generic", nullable=False)
+    model: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    serial_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
     device_type: Mapped[str] = mapped_column(String(64), default="router", nullable=False)
+    routeros_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    architecture: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    board_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    identity: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    time_zone: Mapped[str | None] = mapped_column(String(64), nullable=True)
     auth_port: Mapped[int] = mapped_column(Integer, default=1812, nullable=False)
     accounting_port: Mapped[int] = mapped_column(Integer, default=1813, nullable=False)
     coa_port: Mapped[int] = mapped_column(Integer, default=3799, nullable=False)
@@ -64,10 +86,20 @@ class Nas(Base, Timestamped):
     allowed_methods: Mapped[list] = mapped_column(JSON, default=lambda: ["pap"], nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     radius_group_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("radius_server_groups.id"), nullable=True, index=True)
+    # Lifecycle / orchestration status
+    lifecycle_status: Mapped[str] = mapped_column(String(32), default="DRAFT", nullable=False, index=True)
+    connection_status: Mapped[str] = mapped_column(String(24), default="UNKNOWN", nullable=False)
+    configuration_status: Mapped[str] = mapped_column(String(24), default="NONE", nullable=False)
+    registration_status: Mapped[str] = mapped_column(String(32), default="NOT_REQUIRED", nullable=False)
+    last_connected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_discovery_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_configuration_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_auth_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_accounting_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_coa_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     health: Mapped[str] = mapped_column(String(24), default="unknown", nullable=False)
+    failure_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
     capabilities: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
 class RadiusServer(Base, Timestamped):
@@ -218,11 +250,20 @@ class NasCredential(Base, Timestamped):
     secret_ciphertext: Mapped[str] = mapped_column(Text, nullable=False)
     credential_type: Mapped[str] = mapped_column(String(32), default="password", nullable=False)
     key_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    api_port: Mapped[int] = mapped_column(Integer, default=8729, nullable=False)
+    tls_settings: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    certificate_reference: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(24), default="active", nullable=False)
+    last_rotated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_failure_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 class NasRadiusAssignment(Base, Timestamped):
+    """Relationship between a NAS and a logical RADIUS server.
+
+    The shared secret is assignment-specific because primary and secondary
+    servers may use different secrets. Only the encrypted form is persisted.
+    """
     __tablename__ = "nas_radius_assignments"
     __table_args__ = (UniqueConstraint("nas_id", "radius_server_id", name="uq_nas_radius_assignment"),)
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
@@ -231,6 +272,10 @@ class NasRadiusAssignment(Base, Timestamped):
     priority: Mapped[int] = mapped_column(Integer, default=100, nullable=False)
     role: Mapped[str] = mapped_column(String(16), default="secondary", nullable=False)
     services: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    auth_port: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    accounting_port: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    coa_port: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    timeout_seconds: Mapped[int] = mapped_column(Integer, default=3000, nullable=False)
     source_address: Mapped[str | None] = mapped_column(String(64))
     secret_ciphertext: Mapped[str] = mapped_column(Text, nullable=False)
     secret_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
@@ -239,8 +284,66 @@ class NasRadiusAssignment(Base, Timestamped):
     registration_status: Mapped[str] = mapped_column(String(32), default="PENDING", nullable=False)
     remote_object_id: Mapped[str | None] = mapped_column(String(128))
     manual_confirmed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    last_synchronized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     failure_reason: Mapped[str | None] = mapped_column(String(500))
+    radius_server: Mapped["RadiusServer | None"] = relationship(foreign_keys=[radius_server_id], lazy="joined")
+
+class NasCapability(Base, Timestamped):
+    """Detected RouterOS capabilities for a NAS. Flags are stored normalized."""
+    __tablename__ = "nas_capabilities"
+    __table_args__ = (UniqueConstraint("nas_id", "version", name="uq_nas_capability_version"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    nas_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("aaa_nas.id"), index=True, nullable=False)
+    version: Mapped[str] = mapped_column(String(32), default="0", nullable=False)
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    flags: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    raw: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+
+class NasHealthCheck(Base):
+    """Append-only health check result. Diagnostics are sanitized before store."""
+    __tablename__ = "nas_health_checks"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    nas_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("aaa_nas.id"), index=True, nullable=False)
+    check_type: Mapped[str] = mapped_column(String(48), index=True, nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    latency_ms: Mapped[float | None] = mapped_column(nullable=True)
+    diagnostic: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    failure_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+class NasRemoteObject(Base, Timestamped):
+    """Backend-observed RouterOS objects. Ownership decides reconcile behaviour."""
+    __tablename__ = "nas_remote_objects"
+    __table_args__ = (UniqueConstraint("nas_id", "object_type", "remote_object_id", name="uq_nas_remote_object"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    nas_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("aaa_nas.id"), index=True, nullable=False)
+    object_type: Mapped[str] = mapped_column(String(48), nullable=False)
+    remote_object_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    backend_assignment_id: Mapped[uuid.UUID | None] = mapped_column(index=True, nullable=True)
+    last_observed_attributes: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    last_observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    ownership: Mapped[str] = mapped_column(String(24), default="UNKNOWN", nullable=False)
+
+class NasSecretRotation(Base, Timestamped):
+    """Staged shared-secret rotation between the manually hosted FreeRADIUS and
+    the router. Old and new secrets are stored encrypted; never returned.
+    """
+    __tablename__ = "nas_secret_rotations"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    nas_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("aaa_nas.id"), index=True, nullable=False)
+    assignment_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("nas_radius_assignments.id"), index=True, nullable=False)
+    state: Mapped[str] = mapped_column(String(40), default="ROTATION_DRAFT", nullable=False)
+    old_secret_ciphertext: Mapped[str | None] = mapped_column(Text, nullable=True)
+    old_secret_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    new_secret_ciphertext: Mapped[str] = mapped_column(Text, nullable=False)
+    new_secret_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    freeradius_confirmations: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    created_by: Mapped[str] = mapped_column(String(128), default="internal-radius", nullable=False)
+    rollback_available_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    failure_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
 class NasSnapshot(Base):
     __tablename__ = "nas_configuration_snapshots"
@@ -266,10 +369,48 @@ class NasJob(Base, Timestamped):
     maximum_attempts: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
     safe_result: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
+class NasDesiredConfiguration(Base, Timestamped):
+    """Versioned, secret-free desired state for the AAA-managed router scope."""
+    __tablename__ = "nas_desired_configurations"
+    __table_args__ = (UniqueConstraint("nas_id", "version", name="uq_nas_desired_configuration_version"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    nas_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("aaa_nas.id"), index=True, nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    configuration: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    status: Mapped[str] = mapped_column(String(24), default="active", nullable=False)
+    created_by: Mapped[str] = mapped_column(String(128), default="internal-radius", nullable=False)
+
+class NasChangePlan(Base, Timestamped):
+    """An immutable preview. Applying always re-checks expiry and desired version."""
+    __tablename__ = "nas_change_plans"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    nas_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("aaa_nas.id"), index=True, nullable=False)
+    desired_configuration_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("nas_desired_configurations.id"), nullable=False)
+    current_snapshot_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("nas_configuration_snapshots.id"), nullable=True)
+    planned_changes: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    risk: Mapped[str] = mapped_column(String(24), default="low", nullable=False)
+    validation: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    requires_approval: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    status: Mapped[str] = mapped_column(String(24), default="DRAFT", nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    approved_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
 class NasSecretReveal(Base):
     __tablename__ = "nas_secret_reveals"
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     assignment_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("nas_radius_assignments.id"), index=True, nullable=False)
+    rotation_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("nas_secret_rotations.id"), nullable=True, index=True)
+    secret_ciphertext: Mapped[str | None] = mapped_column(Text, nullable=True)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     accessed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+class NasOperationLock(Base):
+    """Database-level per-NAS lock used when Redis is unavailable. Never the
+    permanent source of truth; Redis remains the primary lock store."""
+    __tablename__ = "nas_operation_locks"
+    nas_id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
+    owner: Mapped[str] = mapped_column(String(64), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

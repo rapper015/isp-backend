@@ -8,8 +8,8 @@ from os import getenv
 from time import sleep
 from .commands import DisabledRadiusCommandAdapter, PyradCommandAdapter
 from .database import SessionLocal
-from .workers import cleanup_stale_leases, detect_stale_sessions, evaluate_radius_server_health, flush_outbox, process_radius_command
-from .events import consume_command_once, declare_topology
+from .workers import cleanup_stale_leases, detect_stale_sessions, evaluate_radius_server_health, flush_outbox, process_nas_job, process_radius_command, run_nas_health_checks
+from .events import consume_command_once, consume_nas_job_once, declare_topology
 
 
 def adapter():
@@ -24,11 +24,14 @@ def run_once() -> dict[str, int | str | None]:
     try:
         asyncio.run(declare_topology())
         command_adapter = adapter()
+        nas_status = asyncio.run(consume_nas_job_once(lambda nas_session, job_id: process_nas_job(nas_session, job_id)))
         return {
             "stale_sessions": detect_stale_sessions(session),
             "radius_health_changes": evaluate_radius_server_health(session),
             "stale_leases_released": cleanup_stale_leases(session),
             "outbox_published": flush_outbox(session),
+            "nas_job_status": nas_status,
+            "nas_health_jobs_queued": run_nas_health_checks(session),
             "command_status": asyncio.run(consume_command_once(lambda command_session, command_id: process_radius_command(command_session, command_adapter, command_id))) or asyncio.run(consume_command_once(lambda command_session, command_id: process_radius_command(command_session, command_adapter, command_id), queue_name="aaa.coa")),
         }
     finally:

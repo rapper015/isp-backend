@@ -18,18 +18,45 @@ def hash_api_key(value: str) -> str: return hashlib.sha256(value.encode()).hexdi
 
 ROLE_PERMISSIONS = {
     "super_admin": {"*"},
-    "noc_admin": {"aaa.nas.view", "aaa.nas.manage", "aaa.nas.rotate_secret", "aaa.radius_server.view", "aaa.radius_server.manage", "aaa.subscriber_policy.view", "aaa.subscriber_policy.manage", "aaa.session.view", "aaa.session.disconnect", "aaa.session.coa", "aaa.accounting.view", "aaa.usage.view", "aaa.audit.view", "nas.view", "nas.create", "nas.update", "nas.connection.test", "nas.discovery.run", "nas.configuration.view", "nas.configuration.plan", "nas.radius_assignment.manage", "nas.audit.view"},
+    "noc_admin": {"aaa.nas.view", "aaa.nas.manage", "aaa.nas.rotate_secret", "aaa.radius_server.view", "aaa.radius_server.manage", "aaa.subscriber_policy.view", "aaa.subscriber_policy.manage", "aaa.session.view", "aaa.session.disconnect", "aaa.session.coa", "aaa.accounting.view", "aaa.usage.view", "aaa.audit.view",
+                   "nas.view", "nas.create", "nas.update", "nas.delete", "nas.enable", "nas.disable", "nas.decommission", "nas.credentials.manage", "nas.connection.test", "nas.discovery.run",
+                   "nas.configuration.view", "nas.configuration.plan", "nas.configuration.approve", "nas.configuration.apply", "nas.configuration.rollback",
+                   "nas.radius_assignment.manage", "nas.radius_secret.generate", "nas.radius_secret.view_once", "nas.radius_secret.rotate",
+                   "nas.radius_registration.confirm", "nas.radius_registration.verify", "nas.drift.view", "nas.drift.reconcile", "nas.audit.view"},
     "billing_admin": {"aaa.subscriber_policy.view", "aaa.usage.view", "aaa.accounting.view"},
     "support_admin": {"aaa.subscriber_policy.view", "aaa.session.view", "aaa.accounting.view", "aaa.usage.view"},
 }
 
 def management_permission(method: str, path: str) -> str | None:
     if path == "/api/nas" or path.startswith("/api/nas/"):
-        if method == "GET": return "nas.view"
-        if method == "POST" and path == "/api/nas": return "nas.create"
+        if path == "/api/nas":
+            return "nas.view" if method == "GET" else "nas.create" if method == "POST" else "nas.update"
+        if method == "GET":
+            return "nas.audit.view" if path.endswith("/audit") else "nas.configuration.view" if ("/snapshots" in path or "/jobs" in path or "/plans/" in path or path.endswith("/current-radius-configuration") or path.endswith("/desired-configuration") or path.endswith("/radius-registration-status")) else "nas.view"
+        if method == "PATCH":
+            return "nas.credentials.manage" if "/credentials" in path else "nas.radius_assignment.manage" if "radius-assignments" in path else "nas.update"
+        if method == "DELETE":
+            return "nas.radius_assignment.manage" if "radius-assignments" in path else "nas.delete"
+        # POST below this point.
+        if path.endswith("/enable"): return "nas.enable"
+        if path.endswith("/disable"): return "nas.disable"
+        if path.endswith("/decommission"): return "nas.decommission"
+        if path.endswith("/credentials/rotate"): return "nas.credentials.manage"
         if path.endswith("/test-connection"): return "nas.connection.test"
         if path.endswith("/discover"): return "nas.discovery.run"
+        if path.endswith("/approve"): return "nas.configuration.approve"
+        if path.endswith("/cancel"): return "nas.configuration.apply"
+        if path.endswith("/apply"): return "nas.configuration.apply"
         if path.endswith("/plan"): return "nas.configuration.plan"
+        if path.endswith("/rollback"): return "nas.configuration.rollback"
+        if path.endswith("/detect-drift"): return "nas.drift.view"
+        if path.endswith("/reconcile"): return "nas.drift.reconcile"
+        if path.endswith("/registration-package/reveal"): return "nas.radius_secret.view_once"
+        if path.endswith("/registration-package"): return "nas.radius_secret.generate"
+        if path.endswith("/rotate-secret") or path.endswith("/confirm-freeradius-update") or path.endswith("/apply-secret") or path.endswith("/rollback-secret"): return "nas.radius_secret.rotate"
+        if path.endswith("/confirm-registration"): return "nas.radius_registration.confirm"
+        if path.endswith("/verify"): return "nas.radius_registration.verify" if "/radius-assignments/" in path else "nas.configuration.apply"
+        if "radius-assignments" in path: return "nas.radius_assignment.manage"
         return "nas.update"
     if not path.startswith("/api/aaa/"): return None
     if "/nas" in path: return "aaa.nas.view" if method == "GET" else "aaa.nas.rotate_secret" if path.endswith("/rotate-secret") else "aaa.nas.manage"

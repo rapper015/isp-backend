@@ -103,18 +103,109 @@ class QuotaResetIn(StrictModel):
 class NasDraftIn(StrictModel):
     tenant_id: UUID
     name: str = Field(min_length=1, max_length=128)
-    management_host: str = Field(min_length=1, max_length=64)
+    description: str | None = Field(default=None, max_length=500)
+    site: str | None = Field(default=None, max_length=128)
+    management_host: str = Field(min_length=1, max_length=253)
     management_port: int = Field(default=8729, ge=1, le=65535)
     management_protocol: Literal["api", "api_ssl"] = "api_ssl"
+    api_mode: Literal["auto", "legacy", "new"] = "auto"
+    tls_verify: bool = True
+    tls_settings: dict[str, Any] = Field(default_factory=dict, max_length=16)
     routeros_username: str = Field(min_length=1, max_length=128)
     routeros_password: str = Field(min_length=1, max_length=512)
     radius_source_ip: str = Field(min_length=1, max_length=64)
+    radius_source_ipv6: str | None = Field(default=None, max_length=64)
     nas_identifier: str | None = Field(default=None, max_length=128)
+    short_name: str | None = Field(default=None, max_length=64)
+    vendor: str = Field(default="mikrotik", max_length=64)
+    model: str | None = Field(default=None, max_length=64)
     radius_group_id: UUID | None = None
-    services: list[Literal["pppoe", "hotspot", "login", "wireless", "dot1x", "ipsec"]] = Field(default_factory=list)
+    services: list[Literal["pppoe", "hotspot", "login", "wireless", "dot1x", "ipsec", "dhcp"]] = Field(default_factory=list)
+class NasUpdateManagementIn(StrictModel):
+    name: str | None = Field(default=None, min_length=1, max_length=128)
+    description: str | None = Field(default=None, max_length=500)
+    site: str | None = Field(default=None, max_length=128)
+    short_name: str | None = Field(default=None, max_length=64)
+    management_host: str | None = Field(default=None, max_length=253)
+    management_port: int | None = Field(default=None, ge=1, le=65535)
+    management_protocol: Literal["api", "api_ssl"] | None = None
+    api_mode: Literal["auto", "legacy", "new"] | None = None
+    tls_verify: bool | None = None
+    radius_source_ip: str | None = Field(default=None, max_length=64)
+    radius_source_ipv6: str | None = Field(default=None, max_length=64)
+    nas_identifier: str | None = Field(default=None, max_length=128)
+    model: str | None = Field(default=None, max_length=64)
+    serial_number: str | None = Field(default=None, max_length=64)
+    time_zone: str | None = Field(default=None, max_length=64)
+    radius_group_id: UUID | None = None
+    services: list[Literal["pppoe", "hotspot", "login", "wireless", "dot1x", "ipsec", "dhcp"]] | None = None
+class NasCredentialIn(StrictModel):
+    username: str = Field(min_length=1, max_length=128)
+    password: str = Field(min_length=1, max_length=512)
+    api_port: int = Field(default=8729, ge=1, le=65535)
+    tls_settings: dict[str, Any] = Field(default_factory=dict, max_length=16)
+    certificate_reference: str | None = Field(default=None, max_length=255)
+class NasCredentialRotateIn(StrictModel):
+    username: str | None = Field(default=None, min_length=1, max_length=128)
+    password: str = Field(min_length=1, max_length=512)
+    idempotency_key: str = Field(min_length=1, max_length=255)
 class NasRadiusAssignmentIn(StrictModel):
     radius_server_id: UUID
     priority: int = Field(default=100, ge=0, le=10000)
     role: Literal["primary", "secondary"] = "secondary"
-    services: list[Literal["pppoe", "hotspot", "login", "wireless", "dot1x", "ipsec"]] = Field(default_factory=list)
+    services: list[Literal["pppoe", "hotspot", "login", "wireless", "dot1x", "ipsec", "dhcp"]] = Field(default_factory=list)
+    auth_port: int | None = Field(default=None, ge=1, le=65535)
+    accounting_port: int | None = Field(default=None, ge=1, le=65535)
+    coa_port: int | None = Field(default=None, ge=1, le=65535)
+    timeout_seconds: int = Field(default=3000, ge=500, le=60000)
     source_address: str | None = Field(default=None, max_length=64)
+class NasRadiusAssignmentUpdateIn(StrictModel):
+    priority: int | None = Field(default=None, ge=0, le=10000)
+    role: Literal["primary", "secondary"] | None = None
+    services: list[Literal["pppoe", "hotspot", "login", "wireless", "dot1x", "ipsec", "dhcp"]] | None = None
+    auth_port: int | None = Field(default=None, ge=1, le=65535)
+    accounting_port: int | None = Field(default=None, ge=1, le=65535)
+    coa_port: int | None = Field(default=None, ge=1, le=65535)
+    timeout_seconds: int | None = Field(default=None, ge=500, le=60000)
+    source_address: str | None = Field(default=None, max_length=64)
+    desired_status: Literal["enabled", "disabled"] | None = None
+class NasHotspotProfileIn(StrictModel):
+    name: str = Field(min_length=1, max_length=128)
+    radius_accounting: bool = True
+    location_name: str | None = Field(default=None, max_length=128)
+class NasDesiredConfigurationIn(StrictModel):
+    services: list[Literal["pppoe", "hotspot", "login", "wireless", "dot1x", "ipsec", "dhcp"]] = Field(default_factory=list)
+    ppp_aaa: bool = False
+    accounting: bool = True
+    hotspot_profiles: list[NasHotspotProfileIn] = Field(default_factory=list, max_length=64)
+    incoming_coa: bool = False
+    coa_port: int = Field(default=3799, ge=1, le=65535)
+    interim_update_seconds: int | None = Field(default=None, ge=60, le=86400)
+    login_radius: bool = False
+    break_glass_verified: bool = False
+    acknowledge_login_risk: bool = False
+    user_aaa_default_group: str | None = Field(default=None, max_length=64)
+    user_aaa_excluded_groups: list[str] = Field(default_factory=list, max_length=64)
+    user_aaa_accounting: bool = False
+class NasPlanApplyIn(StrictModel):
+    idempotency_key: str = Field(min_length=1, max_length=255)
+class NasRegistrationConfirmIn(StrictModel):
+    source_ip_correct: bool = False
+    secret_version_applied: bool = False
+    services_enabled: bool = False
+    primary_configured: bool = False
+    secondary_configured: bool = False
+    notes: str | None = Field(default=None, max_length=2000)
+class NasRegistrationVerifyIn(StrictModel):
+    signal: Literal["authentication_request_observed", "accounting_request_observed", "integration_test_result", "freeradius_callback"]
+    detail: dict[str, Any] = Field(default_factory=dict, max_length=16)
+class NasRotationApplyIn(StrictModel):
+    idempotency_key: str = Field(min_length=1, max_length=255)
+class NasRollbackIn(StrictModel):
+    idempotency_key: str = Field(min_length=1, max_length=255)
+    reason: str | None = Field(default=None, max_length=2000)
+class NasVerifyIn(StrictModel):
+    idempotency_key: str = Field(min_length=1, max_length=255)
+class NasReconcileIn(StrictModel):
+    idempotency_key: str = Field(min_length=1, max_length=255)
+    reconcile_external: bool = False
