@@ -6,7 +6,7 @@ from uuid import UUID
 import aio_pika
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from .models import OutboxEvent
+from .models import ConsumerInbox, OutboxEvent
 
 EXCHANGE = "aaa.events.v1"
 RETRY_EXCHANGE = "aaa.retry.v1"
@@ -49,3 +49,37 @@ def publish_outbox(session: Session, limit: int = 100) -> int:
     now = datetime.now(timezone.utc)
     for item in pending: item.published_at = now; item.attempts += 1
     session.commit(); return len(pending)
+
+async def consume_command_once(processor, queue_name: str = "aaa.commands", timeout: float = 0.25) -> str | None:
+    """Consume one durable CoA/Disconnect event with inbox deduplication.
+
+    `processor` accepts a command UUID and performs the state transition.  The
+    inbox is written before acknowledgement, so a redelivery cannot cause a
+    second command delivery after the database has recorded the event.
+    """
+    from .database import SessionLocal
+    import json
+    connection = await aio_pika.connect_robust(getenv("RABBITMQ_URL", "amqp://guest:guest@127.0.0.1/"), timeout=2)
+    try:
+        channel = await connection.channel()
+        await channel.set_qos(prefetch_count=1)
+        queue = await channel.declare_queue(queue_name, durable=True, arguments={"x-dead-letter-exchange": RETRY_EXCHANGE})
+        message = await queue.get(timeout=timeout, fail=False)
+        if message is None: return None
+        async with message.process(requeue=False):
+            try:
+                payload = json.loads(message.body)
+                event_id, command_id = UUID(payload["event_id"]), UUID(payload["payload"]["command_id"])
+                if not payload.get("event_type", "").startswith(("aaa.disconnect.", "aaa.coa.")): return "ignored"
+            except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+                return "invalid"
+            session = SessionLocal()
+            try:
+                consumer = f"aaa-command-worker:{queue_name}"
+                if session.get(ConsumerInbox, {"event_id": event_id, "consumer": consumer}): return "duplicate"
+                session.add(ConsumerInbox(event_id=event_id, consumer=consumer)); session.commit()
+                return processor(session, command_id) or "missing"
+            finally:
+                session.close()
+    finally:
+        await connection.close()

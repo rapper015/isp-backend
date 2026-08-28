@@ -38,10 +38,12 @@ def ensure_event_topology() -> None:
     import asyncio
     asyncio.run(declare_topology())
 
-def process_radius_command(session: Session, adapter: RadiusCommandAdapter) -> str | None:
+def process_radius_command(session: Session, adapter: RadiusCommandAdapter, command_id=None) -> str | None:
     """Execute one queued command. A queue acknowledgement is never a session stop."""
     maximum_attempts = int(getenv("AAA_COMMAND_MAX_ATTEMPTS", "3"))
-    command = session.scalar(select(RadiusCommand).where(RadiusCommand.status == "QUEUED", RadiusCommand.attempts < maximum_attempts).order_by(RadiusCommand.created_at).limit(1))
+    statement = select(RadiusCommand).where(RadiusCommand.status == "QUEUED", RadiusCommand.attempts < maximum_attempts)
+    if command_id is not None: statement = statement.where(RadiusCommand.id == command_id)
+    command = session.scalar(statement.order_by(RadiusCommand.created_at).limit(1))
     if not command: return None
     command.status = "SENDING"; command.attempts += 1; session.commit()
     nas = session.get(Nas, command.nas_id)
