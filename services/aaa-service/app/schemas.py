@@ -100,3 +100,15 @@ class SessionReconcileIn(StrictModel):
 class QuotaResetIn(StrictModel):
     idempotency_key: str = Field(min_length=1, max_length=255)
     period: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}$")
+class NasDraftIn(StrictModel):
+    tenant_id: UUID
+    name: str = Field(min_length=1, max_length=128)
+    management_host: str = Field(min_length=1, max_length=64)
+    management_port: int = Field(default=8729, ge=1, le=65535)
+    management_protocol: Literal["api", "api_ssl"] = "api_ssl"
+    routeros_username: str = Field(min_length=1, max_length=128)
+    routeros_password: str = Field(min_length=1, max_length=512)
+    radius_source_ip: str = Field(min_length=1, max_length=64)
+    nas_identifier: str | None = Field(default=None, max_length=128)
+    radius_group_id: UUID | None = None
+    services: list[Literal["pppoe", "hotspot", "login", "wireless", "dot1x", "ipsec"]] = Field(default_factory=list)

@@ -9,15 +9,16 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLease, IpPool, Nas, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
+from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLease, IpPool, Nas, NasCredential, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
-from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, NasIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
+from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, NasDraftIn, NasIn, NasUpdateIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
 from .security import encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
 from .services import accounting, audit, authenticate, authorize, correlation, outbox
 from .reconciliation import reconcile_nas_sessions
 from .metrics import increment, snapshot
+from .routeros import validate_management_address
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -93,6 +94,17 @@ def post_auth(payload: PostAuthRequest): return RadiusResponse(outcome="OK", dec
 @app.post("/api/aaa/tenants", dependencies=[Depends(internal_service_auth)])
 def create_tenant(payload: TenantIn, session: Session = Depends(db)):
     tenant = Tenant(**payload.model_dump()); session.add(tenant); session.commit(); return {"id": str(tenant.id)}
+@app.post("/api/nas", dependencies=[Depends(internal_service_auth)])
+def create_nas_draft(payload: NasDraftIn, session: Session = Depends(db)):
+    if not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
+    try: management_host = validate_management_address(payload.management_host)
+    except ValueError as error: raise HTTPException(422, str(error)) from error
+    if payload.radius_group_id and not session.scalar(select(RadiusServerGroup).where(RadiusServerGroup.id == payload.radius_group_id, (RadiusServerGroup.tenant_id == payload.tenant_id) | RadiusServerGroup.tenant_id.is_(None))): raise HTTPException(422, "RADIUS group is not available to tenant")
+    nas = Nas(tenant_id=payload.tenant_id, name=payload.name, short_name=payload.name[:64], source_ip=payload.radius_source_ip, nas_identifier=payload.nas_identifier, vendor="mikrotik", device_type="routeros", radius_group_id=payload.radius_group_id, allowed_services=payload.services, health="unknown", capabilities={"management_host": management_host, "management_port": payload.management_port, "management_protocol": payload.management_protocol, "lifecycle": "DRAFT"})
+    session.add(nas); session.flush()
+    session.add(NasCredential(nas_id=nas.id, username_ciphertext=encrypt_secret(payload.routeros_username), secret_ciphertext=encrypt_secret(payload.routeros_password)))
+    request_id = record_audit(session, payload.tenant_id, "nas.draft_created", str(nas.id), {"management_host": management_host, "services": payload.services})
+    session.commit(); return {"id": str(nas.id), "lifecycle_status": "DRAFT", "correlation_id": request_id}
 @app.post("/api/aaa/credentials", dependencies=[Depends(internal_service_auth)])
 def create_credential(payload: CredentialIn, session: Session = Depends(db)):
     if not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
