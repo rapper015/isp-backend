@@ -20,6 +20,7 @@ current code ("old one is the new base").
 | 2 | **OSS — Service Orders & Provisioning** (event-sourced orders, workflows/sagas, resources, subscriptions) | [`milestone-2-oss.md`](milestone-2-oss.md) |
 | 3 | **Network Control** (policies, sessions, control actions/CoA, RouterOS managed config, FUP, QoS, IP identity) — mounted on `aaa-service` | [`milestone-3-network-control.md`](milestone-3-network-control.md) |
 | 4 | **BSS — Billing & Payments** (billing accounts, invoices, payment intents, webhooks, refunds, reconciliation, dunning, ledger, reports) | [`milestone-4-bss.md`](milestone-4-bss.md) |
+| 7 | **Device Management — TR-069 CPE Control Plane** (device identity/onboarding, vendor-neutral profiles, verified configuration jobs, drift, controlled actions, diagnostics, firmware canary rollouts, ACS instances) | [`milestone-7-device-management.md`](milestone-7-device-management.md) |
 
 ## Conventions
 
@@ -27,7 +28,11 @@ current code ("old one is the new base").
   - `aaa-service`: `X-AAA-Service-Key`
   - `crm-service`: `X-CRM-Service-Key` (management JWT fallback)
   - `oss-service` / `bss-service`: management JWT / `X-BSS-Service-Key` (internal)
+  - `device-management-service`: management JWT (`DEVICE_MANAGEMENT_JWT_SECRET`, RBAC per endpoint) /
+    `X-Internal-API-Key` (inbound event ingestion)
 - **Tenant scoping**: `tenant_id` is passed as a query parameter or in the JSON
-  body; all reads/writes are tenant-isolated.
+  body; all reads/writes are tenant-isolated. The device-management service
+  additionally validates the requested tenant against the authenticated JWT
+  principal.
 - **Idempotency**: financial and provisioning endpoints accept `idempotency_key`.
 - **Correlation**: responses include `X-Correlation-Id`.

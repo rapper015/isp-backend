@@ -18,6 +18,7 @@ capabilities are extracted incrementally.
 | Workforce | field operations | `workforce-service` foundation |
 | Data Warehouse | analytical projections | `warehouse-service` foundation |
 | AIOps | predictive automation | `aiops-service` foundation |
+| Device Management | TR-069 CPE control plane (identity, profiles, verified config, drift, diagnostics, firmware rollouts via GenieACS) | `device-management-service` (Milestone 7) |
 
 New services must be created from `_template`, own their database, expose
 `/health`, and communicate with other services only through versioned HTTP or
