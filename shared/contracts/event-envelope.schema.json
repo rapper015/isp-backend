@@ -1,16 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://isp-platform.local/contracts/event-envelope/v1",
+  "$id": "https://isp-platform.local/contracts/event-envelope/v2",
   "title": "ISP platform event envelope",
+  "description": "Runtime event envelope used by all services. Carries tenant_id so consumers validate tenant before acting (Milestone 8).",
   "type": "object",
-  "required": ["id", "type", "occurred_at", "source", "data"],
+  "required": ["event_id", "event_type", "occurred_at", "producer", "payload"],
   "properties": {
-    "id": { "type": "string", "format": "uuid" },
-    "type": { "type": "string", "pattern": "^[a-z]+(\\.[a-z0-9_-]+)+\\.v[1-9][0-9]*$" },
+    "event_id": { "type": "string", "format": "uuid" },
+    "event_type": { "type": "string", "pattern": "^[a-z]+(\\.[a-z0-9_-]+)+\\.v[1-9][0-9]*$" },
+    "schema_version": { "type": "integer", "minimum": 1 },
     "occurred_at": { "type": "string", "format": "date-time" },
-    "source": { "type": "string" },
-    "correlation_id": { "type": "string", "format": "uuid" },
-    "data": { "type": "object" }
+    "published_at": { "type": ["string", "null"], "format": "date-time" },
+    "tenant_id": { "type": ["string", "null"], "format": "uuid" },
+    "correlation_id": { "type": ["string", "null"] },
+    "causation_id": { "type": ["string", "null"] },
+    "idempotency_key": { "type": ["string", "null"] },
+    "producer": { "type": "string" },
+    "trace_context": { "type": "object" },
+    "payload": { "type": "object" }
   },
   "additionalProperties": false
 }

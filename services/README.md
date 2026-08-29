@@ -19,6 +19,7 @@ capabilities are extracted incrementally.
 | Data Warehouse | analytical projections | `warehouse-service` foundation |
 | AIOps | predictive automation | `aiops-service` foundation |
 | Device Management | TR-069 CPE control plane (identity, profiles, verified config, drift, diagnostics, firmware rollouts via GenieACS) | `device-management-service` (Milestone 7) |
+| Tenancy | franchise & multi-tenant management (tenant registry/lifecycle, config/branding, org hierarchy, partners, scoped RBAC + SoD, commissions, settlements, wallets, tenant-aware reports) | `tenancy-service` (Milestone 8) |
 
 New services must be created from `_template`, own their database, expose
 `/health`, and communicate with other services only through versioned HTTP or

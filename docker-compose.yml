@@ -53,6 +53,8 @@ services:
         condition: service_healthy
       device-management-service:
         condition: service_healthy
+      tenancy-service:
+        condition: service_healthy
     networks: [edge, platform]
 
   postgres:
@@ -61,7 +63,7 @@ services:
       POSTGRES_DB: isp
       POSTGRES_USER: isp
       POSTGRES_PASSWORD: isp
-      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,nms,ipam,siem,workforce,warehouse,aiops,device_management
+      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
@@ -174,6 +176,21 @@ services:
     networks: [platform]
     volumes:
       - device-firmware:/data/firmware
+
+  tenancy-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: tenancy-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: tenancy-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/tenancy}
+
+  tenancy-worker:
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: tenancy-service}}
+    command: ["python", "-m", "app.worker_runner"]
+    environment: {<<: *domain-environment, SERVICE_NAME: tenancy-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/tenancy}
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      valkey: {condition: service_healthy}
+    networks: [platform]
 
 networks:
   edge:
