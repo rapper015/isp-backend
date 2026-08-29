@@ -15,7 +15,7 @@ capabilities are extracted incrementally.
 | NMS | NAS health and network monitoring | `nms-service` foundation |
 | IPAM | IP/VLAN/resource allocation | `ipam-service` foundation |
 | SIEM | security audit/event ingestion | `siem-service` foundation |
-| Workforce | field operations | `workforce-service` foundation |
+| Workforce | field operations | `workforce-service` foundation (Milestone 6) |
 | Data Warehouse | analytical projections | `warehouse-service` foundation |
 | AIOps | predictive automation | `aiops-service` foundation |
 

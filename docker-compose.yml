@@ -142,7 +142,19 @@ services:
   workforce-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: workforce-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: workforce-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/workforce}
+    environment: {<<: *domain-environment, SERVICE_NAME: workforce-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/workforce, WORKFORCE_ATTACHMENT_DIR: /data/attachments, MAPS_PROVIDER: fake}
+    volumes:
+      - workforce-attachments:/data/attachments
+
+  workforce-worker:
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: workforce-service}}
+    command: ["python", "-m", "app.worker_runner"]
+    environment: {<<: *domain-environment, SERVICE_NAME: workforce-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/workforce, WORKFORCE_ATTACHMENT_DIR: /data/attachments, MAPS_PROVIDER: fake}
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      valkey: {condition: service_healthy}
+    networks: [platform]
 
   warehouse-service:
     <<: *domain-service
@@ -162,3 +174,4 @@ networks:
 volumes:
   postgres-data:
   valkey-data:
+  workforce-attachments:
