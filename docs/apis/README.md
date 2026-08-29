@@ -20,6 +20,7 @@ current code ("old one is the new base").
 | 2 | **OSS — Service Orders & Provisioning** (event-sourced orders, workflows/sagas, resources, subscriptions) | [`milestone-2-oss.md`](milestone-2-oss.md) |
 | 3 | **Network Control** (policies, sessions, control actions/CoA, RouterOS managed config, FUP, QoS, IP identity) — mounted on `aaa-service` | [`milestone-3-network-control.md`](milestone-3-network-control.md) |
 | 4 | **BSS — Billing & Payments** (billing accounts, invoices, payment intents, webhooks, refunds, reconciliation, dunning, ledger, reports) | [`milestone-4-bss.md`](milestone-4-bss.md) |
+| 5 | **Support — Ticketing & Service Management** (tickets, lifecycle, SLA, escalation, routing, diagnostics, controlled actions, outage correlation, knowledge, CSAT) | [`milestone-5-support.md`](milestone-5-support.md) |
 
 ## Conventions
 
@@ -27,6 +28,8 @@ current code ("old one is the new base").
   - `aaa-service`: `X-AAA-Service-Key`
   - `crm-service`: `X-CRM-Service-Key` (management JWT fallback)
   - `oss-service` / `bss-service`: management JWT / `X-BSS-Service-Key` (internal)
+  - `support-service`: management JWT (`SUPPORT_JWT_SECRET`) / customer portal JWT
+    (`SUPPORT_CUSTOMER_JWT_SECRET`) / `X-Internal-API-Key` (inbound ingestion)
 - **Tenant scoping**: `tenant_id` is passed as a query parameter or in the JSON
   body; all reads/writes are tenant-isolated.
 - **Idempotency**: financial and provisioning endpoints accept `idempotency_key`.

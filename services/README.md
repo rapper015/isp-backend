@@ -16,6 +16,7 @@ capabilities are extracted incrementally.
 | IPAM | IP/VLAN/resource allocation | `ipam-service` foundation |
 | SIEM | security audit/event ingestion | `siem-service` foundation |
 | Workforce | field operations | `workforce-service` foundation |
+| Support | tickets, complaints, SLA, escalation, CSAT | `support-service` foundation (Milestone 5) |
 | Data Warehouse | analytical projections | `warehouse-service` foundation |
 | AIOps | predictive automation | `aiops-service` foundation |
 
