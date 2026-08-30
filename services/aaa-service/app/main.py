@@ -4,19 +4,18 @@ from os import getenv
 from uuid import UUID
 import hashlib, secrets
 import bcrypt
-import jwt
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLease, IpPool, Nas, NasCapability, NasChangePlan, NasCredential, NasDesiredConfiguration, NasHealthCheck, NasJob, NasRadiusAssignment, NasRemoteObject, NasSecretReveal, NasSecretRotation, NasSnapshot, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection, User
+from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLease, IpPool, Nas, NasCapability, NasChangePlan, NasCredential, NasDesiredConfiguration, NasHealthCheck, NasJob, NasRadiusAssignment, NasRemoteObject, NasSecretReveal, NasSecretRotation, NasSnapshot, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
-from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, LoginIn, NasCredentialIn, NasCredentialRotateIn, NasDesiredConfigurationIn, NasDraftIn, NasIn, NasPlanApplyIn, NasRadiusAssignmentIn, NasRadiusAssignmentUpdateIn, NasReconcileIn, NasRegistrationConfirmIn, NasRegistrationVerifyIn, NasRollbackIn, NasUpdateManagementIn, NasUpdateIn, NasVerifyIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn, UserCreateIn
-from .security import decrypt_secret, encrypt_secret, hash_api_key, hash_password, internal_service_auth, issue_access_token, new_shared_secret, platform_jwt_secret, verify_password
+from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, NasCredentialIn, NasCredentialRotateIn, NasDesiredConfigurationIn, NasDraftIn, NasIn, NasPlanApplyIn, NasRadiusAssignmentIn, NasRadiusAssignmentUpdateIn, NasReconcileIn, NasRegistrationConfirmIn, NasRegistrationVerifyIn, NasRollbackIn, NasUpdateManagementIn, NasUpdateIn, NasVerifyIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
+from .security import decrypt_secret, encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
 from .services import accounting, audit, authenticate, authorize, correlation, outbox
 from .reconciliation import reconcile_nas_sessions
 from .metrics import increment, snapshot
@@ -36,19 +35,6 @@ async def lifespan(_: FastAPI):
     # convenient for isolated contract tests and explicitly opted-in local use.
     if getenv("AAA_AUTO_CREATE_SCHEMA", "").lower() == "true" or str(engine.url).startswith("sqlite"):
         Base.metadata.create_all(bind=engine)
-    # Bootstrap the first platform admin from env if no users exist yet.
-    username = getenv("AAA_BOOTSTRAP_ADMIN_USERNAME", "").strip()
-    password = getenv("AAA_BOOTSTRAP_ADMIN_PASSWORD", "").strip()
-    if username and password:
-        with SessionLocal() as bootstrap:
-            existing = bootstrap.scalar(select(User).where(
-                User.username_normalized == username.lower()))
-            if existing is None:
-                bootstrap.add(User(
-                    username=username, username_normalized=username.lower(),
-                    role="PLATFORM_ADMIN", password_hash=hash_password(password),
-                    status="ACTIVE"))
-                bootstrap.commit()
     yield
 
 app = FastAPI(title="AAA Service (private)", version="1.0.0", docs_url="/internal/docs", openapi_url="/internal/openapi.json", lifespan=lifespan)
@@ -71,90 +57,6 @@ def db():
     session = SessionLocal()
     try: yield session
     finally: session.close()
-
-
-# ---------------------------------------------------------------------------
-# Milestone 0: operator/user management + login (issues platform JWTs)
-# ---------------------------------------------------------------------------
-
-def _do_login(session: Session, username: str, password: str) -> dict:
-    normalized = username.strip().lower()
-    user = session.scalar(select(User).where(User.username_normalized == normalized))
-    if not user or user.status != "ACTIVE" or not verify_password(password, user.password_hash):
-        increment("aaa_http_4xx_total")
-        raise HTTPException(401, "invalid credentials")
-    user.last_login_at = datetime.now(timezone.utc)
-    session.commit()
-    token = issue_access_token(user.id, user.username, user.role, user.tenant_id)
-    record_audit(session, user.tenant_id, "user.login", "User", {"username": user.username})
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "expires_in": int(getenv("AAA_TOKEN_TTL_SECONDS", "43200")),
-        "user": {"id": str(user.id), "username": user.username,
-                 "full_name": user.full_name, "email": user.email, "role": user.role},
-    }
-
-
-@app.post("/api/aaa/login")
-def login(payload: LoginIn, request: Request, session: Session = Depends(db)):
-    return _do_login(session, payload.username, payload.password)
-
-
-@app.post("/admin-login")
-def admin_login(payload: LoginIn, request: Request, session: Session = Depends(db)):
-    return _do_login(session, payload.username, payload.password)
-
-
-@app.post("/api/aaa/users", status_code=201, dependencies=[Depends(internal_service_auth)])
-def create_user(payload: UserCreateIn, request: Request, session: Session = Depends(db)):
-    normalized = payload.username.strip().lower()
-    existing = session.scalar(select(User).where(User.username_normalized == normalized))
-    if existing:
-        raise HTTPException(409, "username already exists")
-    if payload.tenant_id:
-        tenant = session.get(Tenant, payload.tenant_id)
-        if tenant is None:
-            raise HTTPException(404, "tenant not found")
-    user = User(tenant_id=payload.tenant_id, username=payload.username.strip(),
-                username_normalized=normalized, full_name=payload.full_name,
-                email=payload.email, role=payload.role or "READ_ONLY",
-                password_hash=hash_password(payload.password), status="ACTIVE")
-    session.add(user)
-    session.commit()
-    record_audit(session, user.tenant_id, "user.create", "User", {"username": user.username})
-    return {"id": str(user.id), "username": user.username, "full_name": user.full_name,
-            "email": user.email, "role": user.role, "status": user.status}
-
-
-@app.get("/api/aaa/users", dependencies=[Depends(internal_service_auth)])
-def list_users(request: Request, session: Session = Depends(db)):
-    rows = session.scalars(select(User).order_by(User.username)).all()
-    return [{"id": str(u.id), "username": u.username, "full_name": u.full_name,
-             "email": u.email, "role": u.role, "status": u.status} for u in rows]
-
-
-@app.get("/api/aaa/auth/me")
-def auth_me(request: Request, session: Session = Depends(db)):
-    header = request.headers.get("Authorization", "")
-    secret = platform_jwt_secret()
-    if not header.startswith("Bearer ") or not secret:
-        raise HTTPException(401, "missing bearer token")
-    try:
-        claims = jwt.decode(header[7:], secret, algorithms=["HS256"])
-    except jwt.PyJWTError:
-        raise HTTPException(401, "invalid or expired token")
-    try:
-        user_id = UUID(str(claims.get("userId")))
-    except (ValueError, TypeError):
-        raise HTTPException(401, "invalid token payload")
-    user = session.scalar(select(User).where(User.id == user_id))
-    if not user:
-        raise HTTPException(404, "user not found")
-    return {"id": str(user.id), "username": user.username, "full_name": user.full_name,
-            "email": user.email, "role": user.role, "status": user.status,
-            "tenant_id": str(user.tenant_id) if user.tenant_id else None}
-
 
 app.include_router(network_control_router)
 def decision_response(decision: str, reply: dict, request_id: str) -> RadiusResponse:

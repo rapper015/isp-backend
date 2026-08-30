@@ -2,7 +2,6 @@ import hashlib
 import secrets
 from os import getenv
 import jwt
-import bcrypt
 from cryptography.fernet import Fernet
 from fastapi import HTTPException, Request
 from .cache import limited
@@ -16,45 +15,6 @@ def encrypt_secret(value: str) -> str: return Fernet(_key()).encrypt(value.encod
 def decrypt_secret(value: str) -> str: return Fernet(_key()).decrypt(value.encode()).decode()
 def new_shared_secret() -> str: return secrets.token_urlsafe(32)
 def hash_api_key(value: str) -> str: return hashlib.sha256(value.encode()).hexdigest()
-
-# --- Milestone 0: operator/user auth ----------------------------------------
-
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-
-
-def verify_password(password: str, password_hash: str) -> bool:
-    try:
-        return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
-    except (ValueError, TypeError):
-        return False
-
-
-def platform_jwt_secret() -> str:
-    """Login signs with PLATFORM_JWT_SECRET (falls back to AAA_JWT_SECRET).
-    Services verify management JWTs with their own <SVC>_JWT_SECRET; set them
-    all to the same value to make one login token work across the platform."""
-    return getenv("PLATFORM_JWT_SECRET") or getenv("AAA_JWT_SECRET", "")
-
-
-def issue_access_token(user_id, username: str, role: str, tenant_id=None,
-                       expires_in_seconds: int | None = None) -> str:
-    secret = platform_jwt_secret()
-    if not secret or len(secret) < 32:
-        raise HTTPException(503, "management authentication is not securely configured")
-    ttl = int(getenv("AAA_TOKEN_TTL_SECONDS", "43200"))
-    now = int(__import__("time").time())
-    claims = {
-        "userId": str(user_id),
-        "username": username,
-        "role": role,
-        "permissions": sorted(ROLE_PERMISSIONS.get(role, set())),
-        "iat": now,
-        "exp": now + (expires_in_seconds or ttl),
-    }
-    if tenant_id:
-        claims["tenant_id"] = str(tenant_id)
-    return jwt.encode(claims, secret, algorithm="HS256")
 
 ROLE_PERMISSIONS = {
     "super_admin": {"*"},
