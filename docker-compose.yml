@@ -112,12 +112,28 @@ services:
   aaa-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: aaa-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/aaa}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: aaa-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aaa
+      AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:-change-me-aaa-internal-key}
+      AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      AAA_JWT_SECRET: ${AAA_JWT_SECRET:-change-me-aaa-jwt-secret-0123456789abcdef}
+      PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:-}
+      AAA_TOKEN_TTL_SECONDS: ${AAA_TOKEN_TTL_SECONDS:-43200}
+      AAA_BOOTSTRAP_ADMIN_USERNAME: ${AAA_BOOTSTRAP_ADMIN_USERNAME:-}
+      AAA_BOOTSTRAP_ADMIN_PASSWORD: ${AAA_BOOTSTRAP_ADMIN_PASSWORD:-}
 
   aaa-worker:
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
     command: ["python", "-m", "app.worker_runner"]
-    environment: {<<: *domain-environment, SERVICE_NAME: aaa-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/aaa}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: aaa-worker
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aaa
+      AAA_JWT_SECRET: ${AAA_JWT_SECRET:-change-me-aaa-jwt-secret-0123456789abcdef}
+      PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:-}
+      AAA_TOKEN_TTL_SECONDS: ${AAA_TOKEN_TTL_SECONDS:-43200}
     depends_on:
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
