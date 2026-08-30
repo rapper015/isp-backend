@@ -4,9 +4,9 @@
 
 | Status | Count |
 |---|---|
-| PARTIAL | 1191 |
+| PARTIAL | 1188 |
 | BLOCKED_EXTERNAL | 135 |
-| COMPLETE | 122 |
+| COMPLETE | 125 |
 | CONDITIONAL_FUTURE | 52 |
 
 ## By owner
@@ -15,20 +15,20 @@
 | aaa-service | 15 | 6 | 0 | 59 |
 | aiops-service | 1 | 12 | 51 | 119 |
 | bss-service | 5 | 9 | 0 | 178 |
-| core-platform-service | 83 | 38 | 1 | 282 |
+| core-platform-service | 83 | 40 | 1 | 280 |
 | crm-service | 4 | 17 | 0 | 120 |
 | data-warehouse-service | 2 | 9 | 0 | 55 |
 | ipam-service | 2 | 0 | 0 | 6 |
 | nms-service | 5 | 9 | 0 | 100 |
 | oss-service | 15 | 6 | 0 | 143 |
 | siem-service | 2 | 7 | 0 | 100 |
-| workforce-service | 1 | 9 | 0 | 29 |
+| workforce-service | 1 | 10 | 0 | 28 |
 
 ## By priority
 | Priority | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | PARTIAL |
 |---|---|---|---|---|
-| P0 | 93 | 75 | 1 | 841 |
-| P1 | 42 | 46 | 8 | 342 |
+| P0 | 93 | 76 | 1 | 840 |
+| P1 | 42 | 48 | 8 | 340 |
 | P2 | 0 | 1 | 41 | 8 |
 | P3 | 0 | 0 | 2 | 0 |
 
@@ -307,7 +307,6 @@
 - **335** [P1] workforce-service: Digital Signature (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **336** [P1] workforce-service: Photo Upload (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **337** [P0] workforce-service: Device Issuance (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **338** [P0] workforce-service: Spare Parts Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **340** [P0] workforce-service: Mobile Workforce App (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **341** [P1] workforce-service: Offline Mode (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **343** [P1] workforce-service: Geo Fencing (PARTIAL) — read-model API present but acceptance criteria incomplete
@@ -868,12 +867,10 @@
 - **1098** [P0] core-platform-service: Error Spike Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1099** [P0] core-platform-service: Auto Rollback Trigger (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1100** [P0] core-platform-service: Release Health Score (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1101** [P1] core-platform-service: OLT Simulator (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1102** [P1] core-platform-service: ONT Emulator (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1103** [P0] core-platform-service: Traffic Generator (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1104** [P0] core-platform-service: Failover Simulator (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1105** [P1] core-platform-service: Chaos Injection (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1106** [P1] core-platform-service: Latency Emulator (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1107** [P1] core-platform-service: Packet Loss Emulator (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1108** [P0] core-platform-service: Billing Edge Case Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1109** [P1] core-platform-service: Device Certification Lab (PARTIAL) — partial evidence; acceptance criteria incomplete

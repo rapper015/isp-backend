@@ -64,6 +64,8 @@ PUBLISHED_TOPOLOGY = {
     "tenancy.risk.detected.v1",
     "tenancy.strategy.suggested.v1",
     "tenancy.ethics.validated.v1",
+    "tenancy.olt.simulated.v1",
+    "tenancy.latency.simulated.v1",
 }
 
 # Commission basis events consumed from other services (idempotent).

@@ -7,9 +7,9 @@ Recommended owner -> tracked evidence services mapping (repository reality):
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 83 |
-| COMPLETE | 38 |
+| COMPLETE | 40 |
 | CONDITIONAL_FUTURE | 1 |
-| PARTIAL | 282 |
+| PARTIAL | 280 |
 
 Total features: 404
 
@@ -95,9 +95,9 @@ Total features: 109
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 1 |
-| COMPLETE | 9 |
+| COMPLETE | 10 |
 | CONDITIONAL_FUTURE | 0 |
-| PARTIAL | 29 |
+| PARTIAL | 28 |
 
 Total features: 39
 

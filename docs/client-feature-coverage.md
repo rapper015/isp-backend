@@ -1,6 +1,6 @@
 # Client Feature Coverage — 1,500 reconciled rows
 
-Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=122, CONDITIONAL_FUTURE=52, PARTIAL=1191
+Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=125, CONDITIONAL_FUTURE=52, PARTIAL=1188
 
 | ID | Owner | Access | Priority | Module / Submodule | Feature | Status |
 |---|---|---|---|---|---|---|
@@ -341,7 +341,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=122, CONDITIONAL_FUTURE=
 | 335 | workforce-service | FO | P1 | Workforce / Work Orders | Digital Signature | PARTIAL |
 | 336 | workforce-service | FO | P1 | Workforce / Work Orders | Photo Upload | PARTIAL |
 | 337 | workforce-service | FO | P0 | Workforce / Inventory | Device Issuance | PARTIAL |
-| 338 | workforce-service | FO | P0 | Workforce / Inventory | Spare Parts Mgmt | PARTIAL |
+| 338 | workforce-service | FO | P0 | Workforce / Inventory | Spare Parts Mgmt | COMPLETE |
 | 339 | workforce-service | FO | P0 | Workforce / Inventory | Inventory Sync | COMPLETE |
 | 340 | workforce-service | FO | P0 | Workforce / Mobile App | Mobile Workforce App | PARTIAL |
 | 341 | workforce-service | FO | P1 | Workforce / Mobile App | Offline Mode | PARTIAL |
@@ -1104,12 +1104,12 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=122, CONDITIONAL_FUTURE=
 | 1098 | core-platform-service | SYS | P0 | DevOps / Monitoring | Error Spike Detection | PARTIAL |
 | 1099 | core-platform-service | SYS | P0 | DevOps / Monitoring | Auto Rollback Trigger | PARTIAL |
 | 1100 | core-platform-service | SYS | P0 | DevOps / Monitoring | Release Health Score | PARTIAL |
-| 1101 | core-platform-service | SYS | P1 | Testing / Lab | OLT Simulator | PARTIAL |
+| 1101 | core-platform-service | SYS | P1 | Testing / Lab | OLT Simulator | COMPLETE |
 | 1102 | core-platform-service | SYS | P1 | Testing / Lab | ONT Emulator | PARTIAL |
 | 1103 | core-platform-service | SYS | P0 | Testing / Lab | Traffic Generator | PARTIAL |
 | 1104 | core-platform-service | SYS | P0 | Testing / Lab | Failover Simulator | PARTIAL |
 | 1105 | core-platform-service | SYS | P1 | Testing / Lab | Chaos Injection | PARTIAL |
-| 1106 | core-platform-service | SYS | P1 | Testing / Lab | Latency Emulator | PARTIAL |
+| 1106 | core-platform-service | SYS | P1 | Testing / Lab | Latency Emulator | COMPLETE |
 | 1107 | core-platform-service | SYS | P1 | Testing / Lab | Packet Loss Emulator | PARTIAL |
 | 1108 | core-platform-service | SYS | P0 | Testing / Lab | Billing Edge Case Engine | PARTIAL |
 | 1109 | core-platform-service | SYS | P1 | Testing / Certification | Device Certification Lab | PARTIAL |

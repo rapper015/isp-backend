@@ -17,8 +17,8 @@ from .security import _required_permission, get_auth_context, require_permission
 from .services import (ChecklistService, DispatchService, EquipmentOverlayService,
                        EscalationService, ExpertService, FailureVisualizationService,
                        FeedbackService, FieldOpsService, InventoryService,
-                       KpiService, ShiftService, SlaService, TechnicianService,
-                       VisitService, WorkOrderService)
+                       KpiService, ShiftService, SlaService, SparePartService,
+                       TechnicianService, VisitService, WorkOrderService)
 
 
 def _db():
@@ -491,3 +491,37 @@ def list_equipment_overlays(request: Request, db: Session = Depends(_db),
     q = enforce_scope(db.query(models.EquipmentOverlay), models.EquipmentOverlay, ctx)
     return [{"id": str(r.id), "work_order_id": r.work_order_id, "device_id": r.device_id,
              "recognized_model": r.recognized_model} for r in q.all()]
+
+
+# ---------------------------------------------------------------------------
+# Spare parts management (feature 338)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/workforce/v1/spare-parts", status_code=201)
+def register_spare_part(body: dict, request: Request,
+                        db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("inventory.manage"))):
+    p = SparePartService.register(db, ctx, body)
+    return {"id": str(p.id), "part_code": p.part_code, "name": p.name,
+            "quantity": p.quantity, "min_stock": p.min_stock, "status": p.status}
+
+
+@app.get("/api/workforce/v1/spare-parts")
+def list_spare_parts(request: Request, db: Session = Depends(_db),
+                     ctx: TenantContext = Depends(_auth("inventory.view"))):
+    q = enforce_scope(db.query(models.SparePart), models.SparePart, ctx)
+    return [{"id": str(r.id), "part_code": r.part_code, "name": r.name,
+             "quantity": r.quantity, "min_stock": r.min_stock,
+             "used_count": r.used_count, "status": r.status} for r in q.all()]
+
+
+@app.post("/api/workforce/v1/spare-parts/{part_id}/use")
+def use_spare_part(part_id: uuid.UUID, body: dict, request: Request,
+                   db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("inventory.consume"))):
+    try:
+        p = SparePartService.use(db, ctx, part_id, int(body.get("quantity", 1)))
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    return {"id": str(p.id), "part_code": p.part_code, "quantity": p.quantity,
+            "used_count": p.used_count, "status": p.status}

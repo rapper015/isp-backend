@@ -14,8 +14,8 @@ This report fulfils spec §23 "Final completion gate" item 12 and §26 item 7. E
 
 | Status | Count |
 |---|---|
-| COMPLETE | 122 |
-| PARTIAL | 1191 |
+| COMPLETE | 125 |
+| PARTIAL | 1188 |
 | BLOCKED_EXTERNAL | 135 |
 | CONDITIONAL_FUTURE | 52 |
 | **MISSING** | **0** |
@@ -33,15 +33,15 @@ This report fulfils spec §23 "Final completion gate" item 12 and §26 item 7. E
 | aaa-service | 6 | 59 | 15 | 0 | 80 |
 | aiops-service | 12 | 119 | 1 | 51 | 183 |
 | bss-service | 9 | 178 | 5 | 0 | 192 |
-| core-platform-service | 38 | 282 | 83 | 1 | 404 |
+| core-platform-service | 40 | 280 | 83 | 1 | 404 |
 | crm-service | 17 | 120 | 4 | 0 | 141 |
 | data-warehouse-service | 9 | 55 | 2 | 0 | 66 |
 | ipam-service | 0 | 6 | 2 | 0 | 8 |
 | nms-service | 9 | 100 | 5 | 0 | 114 |
 | oss-service | 6 | 143 | 15 | 0 | 164 |
 | siem-service | 7 | 100 | 2 | 0 | 109 |
-| workforce-service | 9 | 29 | 1 | 0 | 39 |
-| **Total** | **122** | **1191** | **135** | **52** | **1500** |
+| workforce-service | 10 | 28 | 1 | 0 | 39 |
+| **Total** | **125** | **1188** | **135** | **52** | **1500** |
 
 ---
 
@@ -70,13 +70,13 @@ Implemented features in their owning tracked services only (spec §18, §26.4). 
 - **aaa-service (6):** 155, 160, 161, 169, 196, 1213
 - **aiops-service (12):** 488, 731, 739, 861, 871, 883, 886, 888, 898, 1289, 1395, 1484
 - **bss-service (9):** 104, 123, 682, 690, 807, 808, 903, 1265, 1497
-- **core-platform-service (38):** 4, 39, 40, 41, 47, 48, 49, 50, 520, 522, 532, 543, 548, 615, 616, 617, 618, 631, 643, 747, 750, 751, 754, 760, 762, 778, 780, 831, 832, 890, 909, 910, 918, 925, 935, 1325, 1476, 1492
+- **core-platform-service (40):** 4, 39, 40, 41, 47, 48, 49, 50, 520, 522, 532, 543, 548, 615, 616, 617, 618, 631, 643, 747, 750, 751, 754, 760, 762, 778, 780, 831, 832, 890, 909, 910, 918, 925, 935, 1101, 1106, 1325, 1476, 1492
 - **crm-service (17):** 51, 55, 61, 67, 71, 72, 76, 88, 312, 392, 821, 826, 1190, 1191, 1323, 1459, 1460
 - **data-warehouse-service (9):** 468, 477, 478, 499, 839, 1178, 1179, 1180, 1340
 - **nms-service (9):** 266, 271, 284, 743, 1082, 1124, 1167, 1286, 1344
 - **oss-service (6):** 246, 247, 659, 1001, 1007, 1134
 - **siem-service (7):** 447, 1236, 1280, 1332, 1370, 1414, 1443
-- **workforce-service (9):** 329, 330, 339, 342, 348, 349, 1487, 1488, 1489
+- **workforce-service (10):** 329, 330, 338, 339, 342, 348, 349, 1487, 1488, 1489
 
 Every COMPLETE row meets the generator's COMPLETE definition: keyword hits ≥ 2 in the owning service, the spec's event token matched by a published outbox event, a matching route, and a passing test.
 
@@ -90,10 +90,7 @@ Breakdown of the evidence gap:
 | Read-model API present but acceptance criteria incomplete (BACKEND API/READ MODEL ONLY rows) | 54 |
 | Deployment manifests present; per-feature service control pending (INFRASTRUCTURE + SERVICE CONTROL rows) | 7 |
 
-Zero PARTIAL rows have full event+route+test evidence, so no feature is falsely withheld. Three PARTIAL rows have no keyword evidence at all and are explicitly tracked:
-- **338** [P0] workforce-service: Spare Parts Mgmt
-- **1101** [P1] core-platform-service: OLT Simulator
-- **1106** [P1] core-platform-service: Latency Emulator
+Zero PARTIAL rows have full event+route+test evidence, so no feature is falsely withheld. The three rows that previously had no keyword evidence (338 Spare Parts Mgmt, 1101 OLT Simulator, 1106 Latency Emulator) were implemented in the follow-up batch and are now COMPLETE — **every feature now has implementation evidence.**
 
 ### 3.3 BLOCKED_EXTERNAL — 135 features
 
@@ -180,7 +177,7 @@ Each suite is hermetic (per-test DB truncation, JWT + internal-key auth fixtures
 - **Fail-closed tenancy** is enforced per service (`management_auth` + `tenant_owned` routing + per-query scoping) and covered by isolation tests; platform-aggregate access requires explicit scope.
 - **Money as `str` in JSON** (bss) and **Decimal quantized to 2dp** for deterministic client output; wallet balances are aggregate (sum credits − debits) because sqlite `func.now()` is second-granular.
 - **sqlite `Uuid` bind** requires `uuid.UUID(...)` wrapping of string ids; `DateTime(timezone=True)` reads back naive — `.replace(tzinfo=None)` before comparisons. Production uses Postgres (psycopg rewrite) where these do not apply.
-- **Coverage is evidence-based, not exhaustive:** PARTIAL rows are conservative; ~90 endpoints/events are test-covered but the spec's acceptance language maps them to PARTIAL. The 3 zero-evidence PARTIAL rows (338, 1101, 1106) are the only genuinely unimplemented items and are P0/P1 candidates for the next sprint.
+- **Coverage is evidence-based, not exhaustive:** PARTIAL rows are conservative; ~95 endpoints/events are test-covered but the spec's acceptance language maps them to PARTIAL. Every feature now has at least some implementation evidence (the 3 zero-evidence rows — 338, 1101, 1106 — were implemented to COMPLETE).
 - **Cross-service contract/E2E suite** (spec §26.6 integration checkpoint) and a full `docker compose up` smoke run are the remaining integration-level validations; service-local regressions are green.
 - **No Rust/rewrite migration** (ADR-010 D8); additive migrations only.
 

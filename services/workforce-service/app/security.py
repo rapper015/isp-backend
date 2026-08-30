@@ -88,8 +88,8 @@ def _required_permission(method: str, path: str) -> str | None:
         return "technicians.view"
     if "/dispatch" in p:
         return "dispatch.manage"
-    if "/inventory" in p or "/consumables" in p:
-        if "/consume" in p:
+    if "/inventory" in p or "/consumables" in p or "/spare" in p:
+        if "/consume" in p or "/use" in p:
             return "inventory.consume"
         if method in ("POST", "PUT", "PATCH") or "/issue" in p or "/return" in p or "/sync" in p:
             return "inventory.manage"

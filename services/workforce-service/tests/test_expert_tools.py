@@ -59,3 +59,35 @@ def test_readonly_denied_write(client, tenant_id):
     ro = _h(tenant_id, role="READ_ONLY")
     assert client.post("/api/workforce/v1/expert/sessions", headers=ro, json={
         "work_order_id": "WO-1", "expert_id": "E", "technician_id": "T"}).status_code == 403
+
+
+def test_spare_parts_management(client, tenant_id):
+    h = _h(tenant_id)
+    p = client.post("/api/workforce/v1/spare-parts", headers=h, json={
+        "part_code": "ONT-G140", "name": "G-140W ONT", "quantity": 10, "min_stock": 2})
+    assert p.status_code == 201
+    pid = p.json()["id"]
+    assert p.json()["status"] == "IN_STOCK"
+    used = client.post(f"/api/workforce/v1/spare-parts/{pid}/use", headers=h, json={"quantity": 3})
+    assert used.json()["quantity"] == 7
+    assert used.json()["used_count"] == 3
+    low = client.post(f"/api/workforce/v1/spare-parts/{pid}/use", headers=h, json={"quantity": 5})
+    assert low.json()["status"] == "LOW"
+    rl = client.get("/api/workforce/v1/spare-parts", headers=h)
+    assert len(rl.json()) == 1
+
+
+def test_spare_parts_insufficient(client, tenant_id):
+    h = _h(tenant_id)
+    p = client.post("/api/workforce/v1/spare-parts", headers=h, json={
+        "part_code": "PWR", "name": "Power supply", "quantity": 1, "min_stock": 0}).json()
+    r = client.post(f"/api/workforce/v1/spare-parts/{p['id']}/use", headers=h, json={"quantity": 5})
+    assert r.status_code == 409
+
+
+def test_spare_parts_tenant_isolation(client, tenant_id):
+    a = _h(tenant_id)
+    b = _h(uuid.uuid4())
+    client.post("/api/workforce/v1/spare-parts", headers=a, json={
+        "part_code": "SPL-1", "name": "Splitter", "quantity": 5, "min_stock": 1})
+    assert client.get("/api/workforce/v1/spare-parts", headers=b).json() == []

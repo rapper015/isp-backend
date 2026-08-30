@@ -608,3 +608,58 @@ class EquipmentOverlayService:
                        tenant_id=tenant_id)
         session.commit()
         return row
+
+
+class SparePartService:
+    """Spare parts management (feature 338): track parts usage."""
+
+    @staticmethod
+    def register(session: Session, ctx: TenantContext, data: dict) -> models.SparePart:
+        tenant_id = ctx.require_tenant()
+        row = session.query(models.SparePart).filter(
+            models.SparePart.tenant_id == tenant_id,
+            models.SparePart.part_code == data.get("part_code", "")).first()
+        if row:
+            row.name = data.get("name", row.name)
+            row.quantity = data.get("quantity", row.quantity)
+            row.min_stock = data.get("min_stock", row.min_stock)
+            row.status = "IN_STOCK" if row.quantity > row.min_stock else ("LOW" if row.quantity else "OUT")
+            row.updated_at = _utcnow()
+        else:
+            qty = int(data.get("quantity", 0))
+            row = models.SparePart(tenant_id=tenant_id, quantity=qty,
+                                   min_stock=int(data.get("min_stock", 0)),
+                                   used_count=0,
+                                   status="IN_STOCK" if qty > int(data.get("min_stock", 0)) else ("LOW" if qty else "OUT"),
+                                   **{k: v for k, v in data.items()
+                                      if k not in ("tenant_id", "quantity", "min_stock", "used_count", "status")})
+            session.add(row)
+        session.commit()
+        record_audit(session, ctx, "spare_part.register", "SparePart", str(row.id))
+        session.commit()
+        return row
+
+    @staticmethod
+    def use(session: Session, ctx: TenantContext, part_id: uuid.UUID, qty: int = 1) -> models.SparePart:
+        """Consume parts in the field and publish PartsUsed."""
+        tenant_id = ctx.require_tenant()
+        row = session.query(models.SparePart).filter(
+            models.SparePart.id == part_id,
+            models.SparePart.tenant_id == tenant_id).first()
+        if not row:
+            raise KeyError("Spare part not found")
+        if row.quantity < qty:
+            raise ValueError("INSUFFICIENT_SPARE_PARTS")
+        row.quantity -= qty
+        row.used_count += qty
+        row.status = "IN_STOCK" if row.quantity > row.min_stock else ("LOW" if row.quantity else "OUT")
+        row.updated_at = _utcnow()
+        session.flush()
+        events.publish(session, "workforce.spareparts.used.v1", "SparePart", row.id,
+                       {"part_code": row.part_code, "used": qty, "remaining": row.quantity,
+                        "status": row.status},
+                       tenant_id=tenant_id)
+        session.commit()
+        record_audit(session, ctx, "spare_part.use", "SparePart", str(row.id))
+        session.commit()
+        return row

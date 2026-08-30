@@ -286,8 +286,23 @@ class EquipmentOverlay(UUIDMixin, Base):
     overlay_data: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
+class SparePart(UUIDMixin, Base):
+    """Spare parts management (feature 338): track parts usage."""
+    __tablename__ = "workforce_spare_part"
+    __table_args__ = (UniqueConstraint("tenant_id", "part_code", name="uq_workforce_spare_part"),)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    part_code: Mapped[str] = mapped_column(String(80), nullable=False)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer, default=0)
+    min_stock: Mapped[int] = mapped_column(Integer, default=0)
+    used_count: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(20), default="IN_STOCK")  # IN_STOCK | LOW | OUT
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 for _t in (Technician, WorkOrder, Assignment, Appointment, Visit, ProofOfWork,
            InventoryItem, Consumable, Consumption, Shift, Feedback, Escalation,
            FieldSLA, TechnicianKPI, ChecklistTemplate, SiteCheck, Handover,
-           WorkforceAuditLog, ExpertSession, FailureVisualization, EquipmentOverlay):
+           WorkforceAuditLog, ExpertSession, FailureVisualization, EquipmentOverlay,
+           SparePart):
     _register(_t.__tablename__)

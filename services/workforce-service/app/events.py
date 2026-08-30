@@ -23,6 +23,7 @@ PUBLISHED_TOPOLOGY = {
     "workforce.expert.session.started.v1": "A remote expert assistance session started.",
     "workforce.failure.visualization.rendered.v1": "An onsite failure visualization was rendered.",
     "workforce.equipment.device.recognized.v1": "A device was recognized for AR overlay.",
+    "workforce.spareparts.used.v1": "A spare part was consumed in the field.",
 }
 
 CONSUMED_TOPOLOGY = {

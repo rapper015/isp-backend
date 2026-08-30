@@ -546,3 +546,53 @@ class CoreAiService:
                        {"ethical": row.ethical})
         session.commit()
         return row
+
+
+class LabService:
+    """Lab / testing simulators (1101 OLT Simulator, 1106 Latency Emulator)."""
+
+    @staticmethod
+    def create_olt_simulator(session: Session, tenant_id, data: dict) -> models.OltSimulator:
+        sim = models.OltSimulator(tenant_id=tenant_id, status="STANDBY", **_no_tenant(data))
+        session.add(sim)
+        session.commit()
+        return sim
+
+    @staticmethod
+    def run_olt_simulator(session: Session, tenant_id, sim_id: uuid.UUID) -> models.OltSimulator:
+        sim = session.query(models.OltSimulator).filter(
+            models.OltSimulator.id == sim_id,
+            models.OltSimulator.tenant_id == tenant_id).first()
+        if not sim:
+            raise KeyError("OLT simulator not found")
+        sim.status = "RUNNING"
+        sim.uptime_pct = 100.0
+        session.flush()
+        publish_outbox(session, "tenancy.olt.simulated.v1", tenant_id, None,
+                       {"sim_name": sim.sim_name, "pon_type": sim.pon_type,
+                        "onu_count": sim.onu_count, "uptime_pct": sim.uptime_pct})
+        session.commit()
+        return sim
+
+    @staticmethod
+    def create_latency_simulator(session: Session, tenant_id, data: dict) -> models.LatencySimulator:
+        sim = models.LatencySimulator(tenant_id=tenant_id, status="STANDBY", **_no_tenant(data))
+        session.add(sim)
+        session.commit()
+        return sim
+
+    @staticmethod
+    def simulate_latency(session: Session, tenant_id, sim_id: uuid.UUID) -> models.LatencySimulator:
+        sim = session.query(models.LatencySimulator).filter(
+            models.LatencySimulator.id == sim_id,
+            models.LatencySimulator.tenant_id == tenant_id).first()
+        if not sim:
+            raise KeyError("Latency simulator not found")
+        sim.status = "RUNNING"
+        session.flush()
+        publish_outbox(session, "tenancy.latency.simulated.v1", tenant_id, None,
+                       {"sim_name": sim.sim_name, "scenario": sim.scenario,
+                        "base_latency_ms": sim.base_latency_ms, "jitter_ms": sim.jitter_ms,
+                        "packet_loss_pct": sim.packet_loss_pct})
+        session.commit()
+        return sim

@@ -104,6 +104,8 @@ from .core_ai import (  # noqa: F401
     ConsensusLeader,
     EthicsValidation,
     IntentExecution,
+    LatencySimulator,
+    OltSimulator,
     RiskAssessment,
     SentimentAnalysis,
     SmartReply,
@@ -135,6 +137,7 @@ _TENANT_OWNED = (
     SentimentAnalysis, SmartReply, ConsensusLeader, BetaRollout,
     CarbonFootprint, IntentExecution, ClauseExtraction, RiskAssessment,
     StrategyPlan, EthicsValidation,
+    OltSimulator, LatencySimulator,
 )
 for _model in _TENANT_OWNED:
     tenant_owned(_model)

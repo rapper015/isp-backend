@@ -100,3 +100,36 @@ def test_tenant_isolation(client, auth_headers):
     client.post("/api/tenancy/governance/sentiment", headers=auth_headers, json={"text": "great"})
     rl = client.get("/api/tenancy/governance/sentiment", headers=other)
     assert rl.json() == []
+
+
+def test_olt_simulator(client, auth_headers):
+    sim = client.post("/api/tenancy/governance/lab/olt-simulators", headers=auth_headers, json={
+        "sim_name": "OLT-LAB-1", "pon_type": "XGPON", "olt_serial": "OLT-0001", "onu_count": 64})
+    assert sim.status_code == 201
+    assert sim.json()["status"] == "STANDBY"
+    sim_id = sim.json()["id"]
+    run = client.post(f"/api/tenancy/governance/lab/olt-simulators/{sim_id}/run", headers=auth_headers)
+    assert run.json()["status"] == "RUNNING"
+    assert run.json()["uptime_pct"] == 100.0
+    rl = client.get("/api/tenancy/governance/lab/olt-simulators", headers=auth_headers)
+    assert len(rl.json()) == 1
+
+
+def test_latency_emulator(client, auth_headers):
+    sim = client.post("/api/tenancy/governance/lab/latency-emulators", headers=auth_headers, json={
+        "sim_name": "LAT-SAT-1", "scenario": "SATELLITE", "base_latency_ms": 480.0,
+        "jitter_ms": 15.0, "packet_loss_pct": 2.5})
+    assert sim.status_code == 201
+    assert sim.json()["status"] == "STANDBY"
+    sim_id = sim.json()["id"]
+    run = client.post(f"/api/tenancy/governance/lab/latency-emulators/{sim_id}/simulate",
+                      headers=auth_headers)
+    assert run.json()["status"] == "RUNNING"
+    rl = client.get("/api/tenancy/governance/lab/latency-emulators", headers=auth_headers)
+    assert len(rl.json()) == 1
+
+
+def test_olt_simulator_not_found(client, auth_headers):
+    r = client.post(f"/api/tenancy/governance/lab/olt-simulators/{uuid.uuid4()}/run",
+                    headers=auth_headers)
+    assert r.status_code == 404

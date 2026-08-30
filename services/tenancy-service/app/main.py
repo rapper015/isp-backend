@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 import secrets as _secrets
 from datetime import datetime
 from os import getenv
+import uuid
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
@@ -82,7 +83,8 @@ from .services import (
     tenant_service,
     wallet_service,
 )
-from .services.governance_service import CampaignService, CoreAiService, GovernanceService, NotificationService
+from .services.governance_service import (CampaignService, CoreAiService, GovernanceService,
+                                          LabService, NotificationService)
 
 
 @asynccontextmanager
@@ -1393,3 +1395,59 @@ def validate_ethics(payload: dict, request: Request, session: Session = Depends(
     row = CoreAiService.validate_ethics(session, _tid(None), payload)
     return {"id": str(row.id), "decision": row.decision, "ethical": row.ethical,
             "reason": row.reason}
+
+
+# ---------------------------------------------------------------------------
+# Lab / testing simulators (1101 OLT, 1106 Latency)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/tenancy/governance/lab/olt-simulators", status_code=201, dependencies=[Depends(management_auth)])
+def create_olt_simulator(payload: dict, request: Request, session: Session = Depends(db)):
+    sim = LabService.create_olt_simulator(session, _tid(None), payload)
+    return {"id": str(sim.id), "sim_name": sim.sim_name, "pon_type": sim.pon_type,
+            "onu_count": sim.onu_count, "status": sim.status}
+
+
+@app.get("/api/tenancy/governance/lab/olt-simulators", dependencies=[Depends(management_auth)])
+def list_olt_simulators(request: Request, session: Session = Depends(db)):
+    rows = session.scalars(select(models.OltSimulator).where(
+        models.OltSimulator.tenant_id == _tid(None))).all()
+    return [{"id": str(r.id), "sim_name": r.sim_name, "pon_type": r.pon_type,
+             "onu_count": r.onu_count, "uptime_pct": r.uptime_pct, "status": r.status}
+            for r in rows]
+
+
+@app.post("/api/tenancy/governance/lab/olt-simulators/{sim_id}/run", dependencies=[Depends(management_auth)])
+def run_olt_simulator(sim_id: uuid.UUID, request: Request, session: Session = Depends(db)):
+    try:
+        sim = LabService.run_olt_simulator(session, _tid(None), sim_id)
+    except KeyError:
+        raise HTTPException(404, "OLT simulator not found")
+    return {"id": str(sim.id), "sim_name": sim.sim_name, "status": sim.status,
+            "uptime_pct": sim.uptime_pct}
+
+
+@app.post("/api/tenancy/governance/lab/latency-emulators", status_code=201, dependencies=[Depends(management_auth)])
+def create_latency_simulator(payload: dict, request: Request, session: Session = Depends(db)):
+    sim = LabService.create_latency_simulator(session, _tid(None), payload)
+    return {"id": str(sim.id), "sim_name": sim.sim_name, "scenario": sim.scenario,
+            "base_latency_ms": sim.base_latency_ms, "status": sim.status}
+
+
+@app.get("/api/tenancy/governance/lab/latency-emulators", dependencies=[Depends(management_auth)])
+def list_latency_simulators(request: Request, session: Session = Depends(db)):
+    rows = session.scalars(select(models.LatencySimulator).where(
+        models.LatencySimulator.tenant_id == _tid(None))).all()
+    return [{"id": str(r.id), "sim_name": r.sim_name, "scenario": r.scenario,
+             "base_latency_ms": r.base_latency_ms, "jitter_ms": r.jitter_ms,
+             "packet_loss_pct": r.packet_loss_pct, "status": r.status} for r in rows]
+
+
+@app.post("/api/tenancy/governance/lab/latency-emulators/{sim_id}/simulate", dependencies=[Depends(management_auth)])
+def simulate_latency(sim_id: uuid.UUID, request: Request, session: Session = Depends(db)):
+    try:
+        sim = LabService.simulate_latency(session, _tid(None), sim_id)
+    except KeyError:
+        raise HTTPException(404, "Latency simulator not found")
+    return {"id": str(sim.id), "sim_name": sim.sim_name, "scenario": sim.scenario,
+            "status": sim.status}

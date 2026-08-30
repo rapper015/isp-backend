@@ -115,3 +115,29 @@ class EthicsValidation(UuidPk, Base, Timestamped):
     decision: Mapped[str] = mapped_column(String(300), nullable=False)
     ethical: Mapped[bool] = mapped_column(Boolean, default=True)
     reason: Mapped[str | None] = mapped_column(Text)
+
+
+class OltSimulator(UuidPk, Base, Timestamped):
+    """OLT Simulator (1101): simulate GPON OLT behavior for lab/testing."""
+    __tablename__ = "ten_olt_simulator"
+    __table_args__ = (UniqueConstraint("tenant_id", "sim_name", name="uq_ten_olt_sim"),)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ten_tenants.id"), index=True, nullable=False)
+    sim_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    pon_type: Mapped[str] = mapped_column(String(20), default="GPON")  # GPON | XGPON
+    olt_serial: Mapped[str | None] = mapped_column(String(120))
+    onu_count: Mapped[int] = mapped_column(Integer, default=0)
+    uptime_pct: Mapped[float] = mapped_column(Float, default=100.0)
+    status: Mapped[str] = mapped_column(String(20), default="STANDBY")  # STANDBY | RUNNING
+
+
+class LatencySimulator(UuidPk, Base, Timestamped):
+    """Latency Emulator (1106): simulate latency scenarios."""
+    __tablename__ = "ten_latency_simulator"
+    __table_args__ = (Index("ix_ten_latency_tenant", "tenant_id"),)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ten_tenants.id"), index=True, nullable=False)
+    sim_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    scenario: Mapped[str] = mapped_column(String(200), default="WAN")
+    base_latency_ms: Mapped[float] = mapped_column(Float, default=10.0)
+    jitter_ms: Mapped[float] = mapped_column(Float, default=0.0)
+    packet_loss_pct: Mapped[float] = mapped_column(Float, default=0.0)
+    status: Mapped[str] = mapped_column(String(20), default="STANDBY")  # STANDBY | RUNNING
