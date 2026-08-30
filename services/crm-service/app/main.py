@@ -718,7 +718,7 @@ def _legacy_tenant(session: Session) -> Tenant:
     return tenant
 
 
-@app.post("/customers", status_code=201)
+@app.post("/customers", status_code=201, dependencies=[Depends(internal_service_auth)])
 def create_customer_legacy(payload: CustomerCreate, session: Session = Depends(db)):
     tenant = _legacy_tenant(session)
     try:
@@ -729,13 +729,13 @@ def create_customer_legacy(payload: CustomerCreate, session: Session = Depends(d
     return {"id": str(customer.id), "customer_code": customer.customer_code, "full_name": customer.full_name, "phone": customer.phone, "email": customer.email, "status": customer.status}
 
 
-@app.get("/customers")
+@app.get("/customers", dependencies=[Depends(internal_service_auth)])
 def list_customers_legacy(limit: int = 100, offset: int = 0, session: Session = Depends(db)):
     tenant = _legacy_tenant(session)
     return [{"id": str(item.id), "customer_code": item.customer_code, "full_name": item.full_name, "phone": item.phone, "email": item.email, "status": item.status} for item in session.scalars(select(Customer).where(Customer.tenant_id == tenant.id).order_by(Customer.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))]
 
 
-@app.get("/customers/by-code/{customer_code}")
+@app.get("/customers/by-code/{customer_code}", dependencies=[Depends(internal_service_auth)])
 def get_customer_by_code_legacy(customer_code: str, session: Session = Depends(db)):
     tenant = _legacy_tenant(session)
     customer = session.scalar(select(Customer).where(Customer.tenant_id == tenant.id, Customer.customer_code == customer_code))
@@ -744,7 +744,7 @@ def get_customer_by_code_legacy(customer_code: str, session: Session = Depends(d
     return {"id": str(customer.id), "customer_code": customer.customer_code, "full_name": customer.full_name, "phone": customer.phone, "email": customer.email, "status": customer.status}
 
 
-@app.get("/customers/{customer_id}")
+@app.get("/customers/{customer_id}", dependencies=[Depends(internal_service_auth)])
 def get_customer_legacy(customer_id: UUID, session: Session = Depends(db)):
     tenant = _legacy_tenant(session)
     customer = session.scalar(select(Customer).where(Customer.tenant_id == tenant.id, Customer.id == customer_id))
@@ -753,7 +753,7 @@ def get_customer_legacy(customer_id: UUID, session: Session = Depends(db)):
     return {"id": str(customer.id), "customer_code": customer.customer_code, "full_name": customer.full_name, "phone": customer.phone, "email": customer.email, "status": customer.status}
 
 
-@app.post("/customers/{customer_id}/lifecycle-events")
+@app.post("/customers/{customer_id}/lifecycle-events", dependencies=[Depends(internal_service_auth)])
 def transition_customer_legacy(customer_id: UUID, payload: LifecycleTransitionIn, session: Session = Depends(db)):
     tenant = _legacy_tenant(session)
     customer = session.scalar(select(Customer).where(Customer.tenant_id == tenant.id, Customer.id == customer_id))
@@ -767,7 +767,7 @@ def transition_customer_legacy(customer_id: UUID, payload: LifecycleTransitionIn
     return {"id": str(customer.id), "status": customer.status, "lifecycle_state": customer.lifecycle_state}
 
 
-@app.get("/customers/{customer_id}/kyc-documents")
+@app.get("/customers/{customer_id}/kyc-documents", dependencies=[Depends(internal_service_auth)])
 def list_kyc_documents_legacy(customer_id: UUID, session: Session = Depends(db)):
     tenant = _legacy_tenant(session)
     customer = session.scalar(select(Customer).where(Customer.tenant_id == tenant.id, Customer.id == customer_id))
@@ -776,13 +776,13 @@ def list_kyc_documents_legacy(customer_id: UUID, session: Session = Depends(db))
     return [{"id": str(item.id), "document_type": item.document_type, "masked_identifier": item.masked_identifier, "verification_state": item.verification_state} for item in session.scalars(select(KycDocument).where(KycDocument.tenant_id == tenant.id, KycDocument.customer_id == customer_id))]
 
 
-@app.get("/leads")
+@app.get("/leads", dependencies=[Depends(internal_service_auth)])
 def list_leads_legacy(limit: int = 100, offset: int = 0, session: Session = Depends(db)):
     tenant = _legacy_tenant(session)
     return [safe_lead(item) for item in session.scalars(select(Lead).where(Lead.tenant_id == tenant.id).order_by(Lead.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))]
 
 
-@app.post("/leads")
+@app.post("/leads", dependencies=[Depends(internal_service_auth)])
 def create_lead_legacy(payload: LeadCreate, session: Session = Depends(db)):
     tenant = _legacy_tenant(session)
     try:
@@ -793,7 +793,7 @@ def create_lead_legacy(payload: LeadCreate, session: Session = Depends(db)):
     return {"id": str(lead.id), "lead_number": lead.lead_number, "status": lead.stage}
 
 
-@app.post("/franchises")
+@app.post("/franchises", dependencies=[Depends(internal_service_auth)])
 def create_franchise_legacy(payload: FranchiseIn, session: Session = Depends(db)):
     tenant = _legacy_tenant(session)
     item = Franchise(tenant_id=tenant.id, **payload.model_dump())
@@ -802,7 +802,7 @@ def create_franchise_legacy(payload: FranchiseIn, session: Session = Depends(db)
     return {"id": str(item.id), "franchise_code": item.franchise_code, "status": item.status}
 
 
-@app.post("/branches")
+@app.post("/branches", dependencies=[Depends(internal_service_auth)])
 def create_branch_legacy(payload: BranchIn, session: Session = Depends(db)):
     tenant = _legacy_tenant(session)
     item = Branch(tenant_id=tenant.id, franchise_id=payload.franchise_id, branch_code=payload.branch_code, name=payload.name)
