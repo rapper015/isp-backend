@@ -21,6 +21,7 @@ capabilities are extracted incrementally.
 | Device Management | TR-069 CPE control plane (identity, profiles, verified config, drift, diagnostics, firmware rollouts via GenieACS) | `device-management-service` (Milestone 7) |
 | Tenancy | franchise & multi-tenant management (tenant registry/lifecycle, config/branding, org hierarchy, partners, scoped RBAC + SoD, commissions, settlements, wallets, tenant-aware reports) | `tenancy-service` (Milestone 8) |
 | Assurance | observability & service assurance (service catalogue, SLI/SLO/error budgets, alert lifecycle, incidents, root cause, postmortems, KPIs, maintenance windows, synthetic checks, reports; governance layer only — raw telemetry lives in Prometheus/Loki/Tempo via OTel Collector) | `assurance-service` (Milestone 9) |
+| Intelligence | AI & intelligence layer (governed ingestion/data contracts/quality, feature store, MLOps registry + deploy/monitor lifecycle, fraud, churn, predictive maintenance, capacity forecasting, recommendations, remediation intents with autonomy levels + approval + kill switch; never mutates domain state directly) | `intelligence-service` (Milestone 10) |
 
 New services must be created from `_template`, own their database, expose
 `/health`, and communicate with other services only through versioned HTTP or

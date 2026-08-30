@@ -57,6 +57,8 @@ services:
         condition: service_healthy
       assurance-service:
         condition: service_healthy
+      intelligence-service:
+        condition: service_healthy
     networks: [edge, platform]
 
   postgres:
@@ -65,7 +67,7 @@ services:
       POSTGRES_DB: isp
       POSTGRES_USER: isp
       POSTGRES_PASSWORD: isp
-      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy,assurance
+      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy,assurance,intelligence
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
@@ -203,6 +205,21 @@ services:
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: assurance-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment: {<<: *domain-environment, SERVICE_NAME: assurance-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/assurance}
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      valkey: {condition: service_healthy}
+    networks: [platform]
+
+  intelligence-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: intelligence-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: intelligence-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/intelligence}
+
+  intelligence-worker:
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: intelligence-service}}
+    command: ["python", "-m", "app.worker_runner"]
+    environment: {<<: *domain-environment, SERVICE_NAME: intelligence-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/intelligence}
     depends_on:
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
