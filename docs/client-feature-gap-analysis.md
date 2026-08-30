@@ -4,11 +4,11 @@
 
 | Status | Count |
 |---|---|
-| PARTIAL | 1081 |
-| MISSING | 210 |
+| PARTIAL | 1106 |
+| MISSING | 179 |
 | BLOCKED_EXTERNAL | 135 |
 | CONDITIONAL_FUTURE | 52 |
-| COMPLETE | 22 |
+| COMPLETE | 28 |
 
 ## By owner
 | Owner | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
@@ -23,13 +23,13 @@
 | nms-service | 5 | 1 | 0 | 8 | 100 |
 | oss-service | 15 | 0 | 0 | 32 | 117 |
 | siem-service | 2 | 1 | 0 | 8 | 98 |
-| workforce-service | 1 | 0 | 0 | 34 | 4 |
+| workforce-service | 1 | 6 | 0 | 3 | 29 |
 
 ## By priority
 | Priority | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
 |---|---|---|---|---|---|
-| P0 | 93 | 18 | 1 | 118 | 780 |
-| P1 | 42 | 4 | 8 | 90 | 294 |
+| P0 | 93 | 24 | 1 | 94 | 798 |
+| P1 | 42 | 4 | 8 | 83 | 301 |
 | P2 | 0 | 0 | 41 | 2 | 7 |
 | P3 | 0 | 0 | 2 | 0 | 0 |
 
@@ -321,27 +321,21 @@
 - **326** [P0] crm-service: Catalog Requests (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **327** [P0] crm-service: Workflow Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **328** [P0] crm-service: Approval Workflow (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **329** [P0] workforce-service: Work Order Creation (MISSING) — no implementation evidence found in owning service
-- **330** [P0] workforce-service: Assignment Dispatch (MISSING) — no implementation evidence found in owning service
-- **331** [P1] workforce-service: Route Optimization (MISSING) — no implementation evidence found in owning service
+- **331** [P1] workforce-service: Route Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **332** [P0] workforce-service: Work Order Status (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **333** [P0] workforce-service: On-site Updates (MISSING) — no implementation evidence found in owning service
-- **334** [P0] workforce-service: Job Completion (MISSING) — no implementation evidence found in owning service
-- **335** [P1] workforce-service: Digital Signature (MISSING) — no implementation evidence found in owning service
-- **336** [P1] workforce-service: Photo Upload (MISSING) — no implementation evidence found in owning service
-- **337** [P0] workforce-service: Device Issuance (MISSING) — no implementation evidence found in owning service
-- **338** [P0] workforce-service: Spare Parts Mgmt (MISSING) — no implementation evidence found in owning service
-- **339** [P0] workforce-service: Inventory Sync (MISSING) — no implementation evidence found in owning service
+- **333** [P0] workforce-service: On-site Updates (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **334** [P0] workforce-service: Job Completion (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **335** [P1] workforce-service: Digital Signature (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **336** [P1] workforce-service: Photo Upload (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **337** [P0] workforce-service: Device Issuance (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **338** [P0] workforce-service: Spare Parts Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **340** [P0] workforce-service: Mobile Workforce App (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **341** [P1] workforce-service: Offline Mode (PARTIAL) — read-model API present but acceptance criteria incomplete
-- **342** [P0] workforce-service: GPS Tracking (MISSING) — 
-- **343** [P1] workforce-service: Geo Fencing (MISSING) — 
-- **344** [P0] workforce-service: Shift Scheduling (MISSING) — no implementation evidence found in owning service
-- **345** [P1] workforce-service: Leave Management (MISSING) — no implementation evidence found in owning service
-- **346** [P0] workforce-service: Technician KPI (MISSING) — no implementation evidence found in owning service
-- **347** [P0] workforce-service: SLA Compliance (MISSING) — no implementation evidence found in owning service
-- **348** [P0] workforce-service: Customer Feedback (MISSING) — no implementation evidence found in owning service
-- **349** [P0] workforce-service: Issue Escalation (MISSING) — no implementation evidence found in owning service
+- **343** [P1] workforce-service: Geo Fencing (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **344** [P0] workforce-service: Shift Scheduling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **345** [P1] workforce-service: Leave Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **346** [P0] workforce-service: Technician KPI (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **347** [P0] workforce-service: SLA Compliance (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **351** [P0] crm-service: Create Reseller (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **352** [P0] crm-service: Update Reseller (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **353** [P0] crm-service: Deactivate Reseller (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -952,15 +946,15 @@
 - **1108** [P0] core-platform-service: Billing Edge Case Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1109** [P1] core-platform-service: Device Certification Lab (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1110** [P1] core-platform-service: Firmware Compliance (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1111** [P0] workforce-service: Installation Checklist (MISSING) — no implementation evidence found in owning service
-- **1112** [P0] workforce-service: Site Feasibility Check (MISSING) — no implementation evidence found in owning service
-- **1113** [P0] workforce-service: Cable Routing Plan (MISSING) — no implementation evidence found in owning service
-- **1114** [P1] workforce-service: Power Availability Check (MISSING) — no implementation evidence found in owning service
-- **1115** [P0] workforce-service: Signal Validation (MISSING) — no implementation evidence found in owning service
-- **1116** [P0] workforce-service: Customer Handover (MISSING) — no implementation evidence found in owning service
-- **1117** [P0] workforce-service: Preventive Maintenance (MISSING) — no implementation evidence found in owning service
-- **1118** [P0] workforce-service: Emergency Repair (MISSING) — no implementation evidence found in owning service
-- **1119** [P0] workforce-service: Site Visit Logs (MISSING) — no implementation evidence found in owning service
+- **1111** [P0] workforce-service: Installation Checklist (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1112** [P0] workforce-service: Site Feasibility Check (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1113** [P0] workforce-service: Cable Routing Plan (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1114** [P1] workforce-service: Power Availability Check (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1115** [P0] workforce-service: Signal Validation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1116** [P0] workforce-service: Customer Handover (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1117** [P0] workforce-service: Preventive Maintenance (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1118** [P0] workforce-service: Emergency Repair (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1119** [P0] workforce-service: Site Visit Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1120** [P0] workforce-service: Asset Condition Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1121** [P0] nms-service: Shift Handover Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1122** [P0] nms-service: War Room Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1247,8 +1241,8 @@
 - **1420** [P0] aiops-service: Profit per Node (MISSING) — no implementation evidence found in owning service
 - **1421** [P0] aiops-service: Customer Acquisition Funnel (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1422** [P0] crm-service: Sales Commission Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1423** [P0] workforce-service: Digital Network Diagrams (MISSING) — 
-- **1424** [P1] workforce-service: AR Installation Assistance (MISSING) — no implementation evidence found in owning service
+- **1423** [P0] workforce-service: Digital Network Diagrams (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1424** [P1] workforce-service: AR Installation Assistance (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1427** [P0] bss-service: Feature Monetization Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1428** [P0] bss-service: Trial Lifecycle Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1429** [P0] bss-service: Subscription Lifecycle (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1307,11 +1301,11 @@
 - **1482** [P0] aiops-service: Product Profitability Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1483** [P0] aiops-service: Cost vs Revenue Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1485** [P0] aiops-service: Market Demand Predictor (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1486** [P0] workforce-service: Interactive Network Map (MISSING) — 
+- **1486** [P0] workforce-service: Interactive Network Map (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1487** [P1] workforce-service: Remote Expert Assistance (MISSING) — no implementation evidence found in owning service
 - **1488** [P1] workforce-service: Failure Visualization (MISSING) — 
 - **1489** [P1] workforce-service: Smart Equipment Overlay (MISSING) — no implementation evidence found in owning service
-- **1490** [P0] workforce-service: Technician Productivity Score (MISSING) — no implementation evidence found in owning service
+- **1490** [P0] workforce-service: Technician Productivity Score (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1496** [P1] bss-service: Expansion Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1497** [P1] bss-service: Viral Growth Engine (MISSING) — no implementation evidence found in owning service
 - **1498** [P0] bss-service: Product Stickiness Score (MISSING) — no implementation evidence found in owning service

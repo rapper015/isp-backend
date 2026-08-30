@@ -1,6 +1,6 @@
 # Client Feature Coverage — 1,500 reconciled rows
 
-Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=22, CONDITIONAL_FUTURE=52, MISSING=210, PARTIAL=1081
+Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=52, MISSING=179, PARTIAL=1106
 
 | ID | Owner | Access | Priority | Module / Submodule | Feature | Status |
 |---|---|---|---|---|---|---|
@@ -332,27 +332,27 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=22, CONDITIONAL_FUTURE=5
 | 326 | crm-service | CSR | P0 | SLA/ITSM / Service Request | Catalog Requests | PARTIAL |
 | 327 | crm-service | SYS | P0 | SLA/ITSM / Workflow | Workflow Engine | PARTIAL |
 | 328 | crm-service | SYS | P0 | SLA/ITSM / Workflow | Approval Workflow | PARTIAL |
-| 329 | workforce-service | FO | P0 | Workforce / Work Orders | Work Order Creation | MISSING |
-| 330 | workforce-service | FO | P0 | Workforce / Work Orders | Assignment Dispatch | MISSING |
-| 331 | workforce-service | FO | P1 | Workforce / Work Orders | Route Optimization | MISSING |
+| 329 | workforce-service | FO | P0 | Workforce / Work Orders | Work Order Creation | COMPLETE |
+| 330 | workforce-service | FO | P0 | Workforce / Work Orders | Assignment Dispatch | COMPLETE |
+| 331 | workforce-service | FO | P1 | Workforce / Work Orders | Route Optimization | PARTIAL |
 | 332 | workforce-service | FO | P0 | Workforce / Work Orders | Work Order Status | PARTIAL |
-| 333 | workforce-service | FO | P0 | Workforce / Work Orders | On-site Updates | MISSING |
-| 334 | workforce-service | FO | P0 | Workforce / Work Orders | Job Completion | MISSING |
-| 335 | workforce-service | FO | P1 | Workforce / Work Orders | Digital Signature | MISSING |
-| 336 | workforce-service | FO | P1 | Workforce / Work Orders | Photo Upload | MISSING |
-| 337 | workforce-service | FO | P0 | Workforce / Inventory | Device Issuance | MISSING |
-| 338 | workforce-service | FO | P0 | Workforce / Inventory | Spare Parts Mgmt | MISSING |
-| 339 | workforce-service | FO | P0 | Workforce / Inventory | Inventory Sync | MISSING |
+| 333 | workforce-service | FO | P0 | Workforce / Work Orders | On-site Updates | PARTIAL |
+| 334 | workforce-service | FO | P0 | Workforce / Work Orders | Job Completion | PARTIAL |
+| 335 | workforce-service | FO | P1 | Workforce / Work Orders | Digital Signature | PARTIAL |
+| 336 | workforce-service | FO | P1 | Workforce / Work Orders | Photo Upload | PARTIAL |
+| 337 | workforce-service | FO | P0 | Workforce / Inventory | Device Issuance | PARTIAL |
+| 338 | workforce-service | FO | P0 | Workforce / Inventory | Spare Parts Mgmt | PARTIAL |
+| 339 | workforce-service | FO | P0 | Workforce / Inventory | Inventory Sync | COMPLETE |
 | 340 | workforce-service | FO | P0 | Workforce / Mobile App | Mobile Workforce App | PARTIAL |
 | 341 | workforce-service | FO | P1 | Workforce / Mobile App | Offline Mode | PARTIAL |
-| 342 | workforce-service | FO | P0 | Workforce / Mobile App | GPS Tracking | MISSING |
-| 343 | workforce-service | FO | P1 | Workforce / Mobile App | Geo Fencing | MISSING |
-| 344 | workforce-service | FO | P0 | Workforce / Scheduling | Shift Scheduling | MISSING |
-| 345 | workforce-service | FO | P1 | Workforce / Scheduling | Leave Management | MISSING |
-| 346 | workforce-service | FO | P0 | Workforce / Performance | Technician KPI | MISSING |
-| 347 | workforce-service | FO | P0 | Workforce / Performance | SLA Compliance | MISSING |
-| 348 | workforce-service | FO | P0 | Workforce / Feedback | Customer Feedback | MISSING |
-| 349 | workforce-service | FO | P0 | Workforce / Feedback | Issue Escalation | MISSING |
+| 342 | workforce-service | FO | P0 | Workforce / Mobile App | GPS Tracking | COMPLETE |
+| 343 | workforce-service | FO | P1 | Workforce / Mobile App | Geo Fencing | PARTIAL |
+| 344 | workforce-service | FO | P0 | Workforce / Scheduling | Shift Scheduling | PARTIAL |
+| 345 | workforce-service | FO | P1 | Workforce / Scheduling | Leave Management | PARTIAL |
+| 346 | workforce-service | FO | P0 | Workforce / Performance | Technician KPI | PARTIAL |
+| 347 | workforce-service | FO | P0 | Workforce / Performance | SLA Compliance | PARTIAL |
+| 348 | workforce-service | FO | P0 | Workforce / Feedback | Customer Feedback | COMPLETE |
+| 349 | workforce-service | FO | P0 | Workforce / Feedback | Issue Escalation | COMPLETE |
 | 350 | workforce-service | SYS | P1 | Workforce / Integration | External Workforce APIs | BLOCKED_EXTERNAL |
 | 351 | crm-service | TA | P0 | Reseller / Reseller Mgmt | Create Reseller | PARTIAL |
 | 352 | crm-service | TA | P0 | Reseller / Reseller Mgmt | Update Reseller | PARTIAL |
@@ -1114,15 +1114,15 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=22, CONDITIONAL_FUTURE=5
 | 1108 | core-platform-service | SYS | P0 | Testing / Lab | Billing Edge Case Engine | PARTIAL |
 | 1109 | core-platform-service | SYS | P1 | Testing / Certification | Device Certification Lab | PARTIAL |
 | 1110 | core-platform-service | SYS | P1 | Testing / Certification | Firmware Compliance | PARTIAL |
-| 1111 | workforce-service | FO | P0 | Field Ops / Installation | Installation Checklist | MISSING |
-| 1112 | workforce-service | FO | P0 | Field Ops / Installation | Site Feasibility Check | MISSING |
-| 1113 | workforce-service | FO | P0 | Field Ops / Installation | Cable Routing Plan | MISSING |
-| 1114 | workforce-service | FO | P1 | Field Ops / Installation | Power Availability Check | MISSING |
-| 1115 | workforce-service | FO | P0 | Field Ops / Installation | Signal Validation | MISSING |
-| 1116 | workforce-service | FO | P0 | Field Ops / Activation | Customer Handover | MISSING |
-| 1117 | workforce-service | FO | P0 | Field Ops / Maintenance | Preventive Maintenance | MISSING |
-| 1118 | workforce-service | FO | P0 | Field Ops / Maintenance | Emergency Repair | MISSING |
-| 1119 | workforce-service | FO | P0 | Field Ops / Maintenance | Site Visit Logs | MISSING |
+| 1111 | workforce-service | FO | P0 | Field Ops / Installation | Installation Checklist | PARTIAL |
+| 1112 | workforce-service | FO | P0 | Field Ops / Installation | Site Feasibility Check | PARTIAL |
+| 1113 | workforce-service | FO | P0 | Field Ops / Installation | Cable Routing Plan | PARTIAL |
+| 1114 | workforce-service | FO | P1 | Field Ops / Installation | Power Availability Check | PARTIAL |
+| 1115 | workforce-service | FO | P0 | Field Ops / Installation | Signal Validation | PARTIAL |
+| 1116 | workforce-service | FO | P0 | Field Ops / Activation | Customer Handover | PARTIAL |
+| 1117 | workforce-service | FO | P0 | Field Ops / Maintenance | Preventive Maintenance | PARTIAL |
+| 1118 | workforce-service | FO | P0 | Field Ops / Maintenance | Emergency Repair | PARTIAL |
+| 1119 | workforce-service | FO | P0 | Field Ops / Maintenance | Site Visit Logs | PARTIAL |
 | 1120 | workforce-service | FO | P0 | Field Ops / Maintenance | Asset Condition Tracking | PARTIAL |
 | 1121 | nms-service | CSR | P0 | Operations / NOC | Shift Handover Logs | PARTIAL |
 | 1122 | nms-service | NOC | P0 | Operations / Incident | War Room Logs | PARTIAL |
@@ -1426,8 +1426,8 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=22, CONDITIONAL_FUTURE=5
 | 1420 | aiops-service | SYS | P0 | Ops / Profitability | Profit per Node | MISSING |
 | 1421 | aiops-service | SYS | P0 | Ops / Analytics | Customer Acquisition Funnel | PARTIAL |
 | 1422 | crm-service | FIN | P0 | Sales / Commission | Sales Commission Automation | PARTIAL |
-| 1423 | workforce-service | FO | P0 | Field Ops / Visualization | Digital Network Diagrams | MISSING |
-| 1424 | workforce-service | FO | P1 | Field Ops / AR | AR Installation Assistance | MISSING |
+| 1423 | workforce-service | FO | P0 | Field Ops / Visualization | Digital Network Diagrams | PARTIAL |
+| 1424 | workforce-service | FO | P1 | Field Ops / AR | AR Installation Assistance | PARTIAL |
 | 1425 | core-platform-service | SYS | P0 | Integration / Govt | Govt KYC Audit Sync | BLOCKED_EXTERNAL |
 | 1426 | core-platform-service | FIN | P0 | Integration / Banking | Bulk Payout API | BLOCKED_EXTERNAL |
 | 1427 | bss-service | SYS | P0 | Product / Monetization | Feature Monetization Engine | PARTIAL |
@@ -1489,11 +1489,11 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=22, CONDITIONAL_FUTURE=5
 | 1483 | aiops-service | SYS | P0 | Operations / Economics | Cost vs Revenue Correlation | PARTIAL |
 | 1484 | aiops-service | SYS | P1 | Operations / Economics | Expansion ROI Optimizer | COMPLETE |
 | 1485 | aiops-service | SYS | P0 | Operations / Economics | Market Demand Predictor | PARTIAL |
-| 1486 | workforce-service | FO | P0 | Field / Visualization | Interactive Network Map | MISSING |
+| 1486 | workforce-service | FO | P0 | Field / Visualization | Interactive Network Map | PARTIAL |
 | 1487 | workforce-service | FO | P1 | Field / AR | Remote Expert Assistance | MISSING |
 | 1488 | workforce-service | FO | P1 | Field / AR | Failure Visualization | MISSING |
 | 1489 | workforce-service | FO | P1 | Field / AR | Smart Equipment Overlay | MISSING |
-| 1490 | workforce-service | FO | P0 | Field / Productivity | Technician Productivity Score | MISSING |
+| 1490 | workforce-service | FO | P0 | Field / Productivity | Technician Productivity Score | PARTIAL |
 | 1491 | core-platform-service | SYS | P0 | Integration / Govt | Regulatory Sync Scheduler | BLOCKED_EXTERNAL |
 | 1492 | core-platform-service | SYS | P0 | Integration / Banking | Settlement Reconciliation Engine | COMPLETE |
 | 1493 | core-platform-service | SYS | P1 | Integration / Banking | Payment Failure Analytics | BLOCKED_EXTERNAL |

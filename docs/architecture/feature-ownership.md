@@ -103,10 +103,10 @@ Total features: 109
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 1 |
-| COMPLETE | 0 |
+| COMPLETE | 6 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 34 |
-| PARTIAL | 4 |
+| MISSING | 3 |
+| PARTIAL | 29 |
 
 Total features: 39
 

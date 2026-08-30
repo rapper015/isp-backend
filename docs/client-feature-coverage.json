@@ -1,9 +1,9 @@
 {
   "total": 1500,
   "status_counts": {
-    "PARTIAL": 1081,
-    "COMPLETE": 22,
-    "MISSING": 210,
+    "PARTIAL": 1106,
+    "COMPLETE": 28,
+    "MISSING": 179,
     "BLOCKED_EXTERNAL": 135,
     "CONDITIONAL_FUTURE": 52
   },
@@ -12954,22 +12954,32 @@
       "dependencies": "301",
       "source_event": "WorkOrderCreated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
-          "services\\workforce-service\\app\\main.py"
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\database.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\routing.py",
+          "services\\workforce-service\\app\\schemas.py"
         ],
         "word_hits": [
-          "work"
+          "work",
+          "order",
+          "create",
+          "orders"
         ],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": null
       }
     },
     {
@@ -12985,18 +12995,32 @@
       "dependencies": "329",
       "source_event": "Dispatched",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
-        "files": [],
-        "word_hits": [],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "files": [
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "assignment",
+          "dispatch",
+          "assign",
+          "field"
+        ],
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": null
       }
     },
     {
@@ -13012,18 +13036,31 @@
       "dependencies": "330",
       "source_event": "RouteOptimized",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\routing.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "route",
+          "technician",
+          "routes"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -13042,19 +13079,29 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\workforce-service\\app\\main.py"
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\database.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\routing.py",
+          "services\\workforce-service\\app\\schemas.py"
         ],
         "word_hits": [
           "work",
-          "status"
+          "order",
+          "status",
+          "job",
+          "progress"
         ],
         "event_hit": false,
         "route_hit": true,
-        "test_hit": false,
-        "hit_count": 2,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
@@ -13071,18 +13118,30 @@
       "dependencies": "332",
       "source_event": "UpdateSubmitted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "site",
+          "field"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -13098,18 +13157,32 @@
       "dependencies": "332",
       "source_event": "JobCompleted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\routing.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py"
+        ],
+        "word_hits": [
+          "job",
+          "close",
+          "field",
+          "jobs"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -13125,18 +13198,32 @@
       "dependencies": "334",
       "source_event": "SignatureCaptured",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\migrations\\0001_workforce_batch2.py"
+        ],
+        "word_hits": [
+          "signature",
+          "customer",
+          "sign",
+          "off"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -13152,18 +13239,31 @@
       "dependencies": "333",
       "source_event": "PhotoUploaded",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\migrations\\0001_workforce_batch2.py",
+          "services\\workforce-service\\tests\\test_fieldops.py"
+        ],
+        "word_hits": [
+          "photo",
+          "upload",
+          "site"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -13179,18 +13279,31 @@
       "dependencies": "OSS-240",
       "source_event": "DeviceIssued",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\migrations\\0001_workforce_batch2.py"
+        ],
+        "word_hits": [
+          "device",
+          "assign",
+          "technicians"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -13206,18 +13319,20 @@
       "dependencies": "337",
       "source_event": "PartsUsed",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
+        "files": [
+          "services\\workforce-service\\tests\\test_inventory.py"
+        ],
         "word_hits": [],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -13233,18 +13348,31 @@
       "dependencies": "OSS-239",
       "source_event": "InventorySynced",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
-        "files": [],
-        "word_hits": [],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\migrations\\0001_workforce_batch2.py"
+        ],
+        "word_hits": [
+          "inventory",
+          "sync",
+          "warehouse"
+        ],
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": null
       }
     },
     {
@@ -13263,19 +13391,27 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\workforce-service\\app\\main.py"
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\database.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\routing.py",
+          "services\\workforce-service\\app\\schemas.py"
         ],
         "word_hits": [
           "workforce",
-          "app"
+          "app",
+          "technician"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "read-model API present but acceptance criteria incomplete"
       }
     },
@@ -13295,18 +13431,26 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\workforce-service\\app\\main.py"
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\database.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\routing.py",
+          "services\\workforce-service\\app\\schemas.py"
         ],
         "word_hits": [
+          "mode",
           "work"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "read-model API present but acceptance criteria incomplete"
       }
     },
@@ -13323,17 +13467,29 @@
       "dependencies": "340",
       "source_event": "LocationUpdated",
       "backend_treatment": "BACKEND API/READ MODEL ONLY: frontend is outside this task",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
-        "files": [],
-        "word_hits": [],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\tests\\test_multitenancy.py"
+        ],
+        "word_hits": [
+          "gps",
+          "location"
+        ],
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": null
       }
     },
@@ -13350,18 +13506,30 @@
       "dependencies": "342",
       "source_event": "GeoValidated",
       "backend_treatment": "BACKEND API/READ MODEL ONLY: frontend is outside this task",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\tests\\test_fieldops.py",
+          "services\\workforce-service\\tests\\test_multitenancy.py"
+        ],
+        "word_hits": [
+          "validate",
+          "location"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": null
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "read-model API present but acceptance criteria incomplete"
       }
     },
     {
@@ -13377,22 +13545,33 @@
       "dependencies": "None",
       "source_event": "ShiftAssigned",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\workforce-service\\app\\main.py"
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\database.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\routing.py",
+          "services\\workforce-service\\app\\schemas.py"
         ],
         "word_hits": [
-          "work"
+          "shift",
+          "scheduling",
+          "assign",
+          "work",
+          "shifts"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -13408,18 +13587,23 @@
       "dependencies": "344",
       "source_event": "LeaveUpdated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\tests\\test_workorders.py"
+        ],
+        "word_hits": [
+          "leave"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -13435,18 +13619,31 @@
       "dependencies": "334",
       "source_event": "KPIUpdated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "technician",
+          "kpi",
+          "job"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -13462,18 +13659,30 @@
       "dependencies": "310",
       "source_event": "SLAEvaluated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\app\\tasks.py",
+          "services\\workforce-service\\app\\worker_runner.py"
+        ],
+        "word_hits": [
+          "sla",
+          "compliance"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -13489,18 +13698,32 @@
       "dependencies": "334",
       "source_event": "FeedbackSubmitted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
-        "files": [],
-        "word_hits": [],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "files": [
+          "services\\workforce-service\\app\\database.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\migrations\\0001_workforce_batch2.py"
+        ],
+        "word_hits": [
+          "customer",
+          "feedback",
+          "post",
+          "rating"
+        ],
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": null
       }
     },
     {
@@ -13516,18 +13739,31 @@
       "dependencies": "311",
       "source_event": "Escalated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
-        "files": [],
-        "word_hits": [],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\migrations\\0001_workforce_batch2.py"
+        ],
+        "word_hits": [
+          "issue",
+          "escalation",
+          "escalate"
+        ],
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": null
       }
     },
     {
@@ -13546,18 +13782,25 @@
       "status": "BLOCKED_EXTERNAL",
       "evidence": {
         "files": [
-          "services\\workforce-service\\app\\main.py"
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\database.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\routing.py",
+          "services\\workforce-service\\app\\schemas.py"
         ],
         "word_hits": [
           "workforce"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 1,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "production adapter requires external provider credentials/infra"
       }
     },
@@ -41968,18 +42211,31 @@
       "dependencies": "Workforce-329",
       "source_event": "ChecklistCompleted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\migrations\\0001_workforce_batch2.py",
+          "services\\workforce-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "installation",
+          "checklist",
+          "install"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -41995,18 +42251,32 @@
       "dependencies": "OSS-224",
       "source_event": "SiteApproved",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\app\\tasks.py",
+          "services\\workforce-service\\migrations\\0001_workforce_batch2.py"
+        ],
+        "word_hits": [
+          "site",
+          "feasibility",
+          "check",
+          "installation"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -42022,18 +42292,27 @@
       "dependencies": "OSS-232",
       "source_event": "RouteApproved",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\migrations\\0001_workforce_batch2.py",
+          "services\\workforce-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "routing",
+          "path"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -42049,18 +42328,31 @@
       "dependencies": "OSS-201",
       "source_event": "PowerChecked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\app\\tasks.py",
+          "services\\workforce-service\\migrations\\0001_workforce_batch2.py"
+        ],
+        "word_hits": [
+          "power",
+          "check",
+          "site"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -42076,18 +42368,23 @@
       "dependencies": "1030",
       "source_event": "SignalValidated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\tests\\test_fieldops.py"
+        ],
+        "word_hits": [
+          "signal"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -42103,18 +42400,32 @@
       "dependencies": "1030",
       "source_event": "HandoverDone",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "customer",
+          "handover",
+          "final",
+          "delivery"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -42130,18 +42441,28 @@
       "dependencies": "OSS-243",
       "source_event": "MaintenanceScheduled",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\tasks.py",
+          "services\\workforce-service\\app\\worker_runner.py",
+          "services\\workforce-service\\tests\\test_performance.py"
+        ],
+        "word_hits": [
+          "preventive",
+          "maintenance",
+          "routine"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -42157,18 +42478,26 @@
       "dependencies": "NMS-267",
       "source_event": "RepairCompleted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\tests\\test_multitenancy.py",
+          "services\\workforce-service\\tests\\test_workorders.py"
+        ],
+        "word_hits": [
+          "emergency",
+          "repair"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -42184,18 +42513,32 @@
       "dependencies": "Workforce-333",
       "source_event": "VisitLogged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "site",
+          "visit",
+          "field",
+          "visits"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -42214,18 +42557,22 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\workforce-service\\app\\main.py"
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\tasks.py",
+          "services\\workforce-service\\tests\\test_multitenancy.py"
         ],
         "word_hits": [
+          "asset",
           "health"
         ],
         "event_hit": false,
         "route_hit": true,
-        "test_hit": false,
-        "hit_count": 1,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
@@ -53681,18 +54028,29 @@
       "dependencies": "OSS-211",
       "source_event": "DiagramRendered",
       "backend_treatment": "BACKEND API/READ MODEL ONLY: frontend is outside this task",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "field"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": null
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "read-model API present but acceptance criteria incomplete"
       }
     },
     {
@@ -53708,18 +54066,28 @@
       "dependencies": "1423",
       "source_event": "ARSessionStarted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\tests\\conftest.py",
+          "services\\workforce-service\\tests\\test_fieldops.py",
+          "services\\workforce-service\\tests\\test_workorders.py"
+        ],
+        "word_hits": [
+          "installation"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -56047,18 +56415,30 @@
       "dependencies": "224",
       "source_event": "MapUpdated",
       "backend_treatment": "BACKEND API/READ MODEL ONLY: frontend is outside this task",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\routing.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\services.py",
+          "services\\workforce-service\\app\\tasks.py",
+          "services\\workforce-service\\app\\worker_runner.py"
+        ],
+        "word_hits": [
+          "map",
+          "time"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": null
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "read-model API present but acceptance criteria incomplete"
       }
     },
     {
@@ -56076,15 +56456,20 @@
       "backend_treatment": "FULL BACKEND",
       "status": "MISSING",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\tasks.py",
+          "services\\workforce-service\\app\\worker_runner.py"
+        ],
+        "word_hits": [
+          "live"
+        ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "no implementation evidence found in owning service"
       }
     },
@@ -56109,9 +56494,9 @@
         "route_hit": false,
         "test_hit": false,
         "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": null
       }
     },
@@ -56136,9 +56521,9 @@
         "route_hit": false,
         "test_hit": false,
         "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "no implementation evidence found in owning service"
       }
     },
@@ -56155,18 +56540,32 @@
       "dependencies": "346",
       "source_event": "ScoreCalculated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\workforce-service\\app\\context.py",
+          "services\\workforce-service\\app\\enums.py",
+          "services\\workforce-service\\app\\events.py",
+          "services\\workforce-service\\app\\main.py",
+          "services\\workforce-service\\app\\models.py",
+          "services\\workforce-service\\app\\schemas.py",
+          "services\\workforce-service\\app\\security.py",
+          "services\\workforce-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "technician",
+          "productivity",
+          "score",
+          "field"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
