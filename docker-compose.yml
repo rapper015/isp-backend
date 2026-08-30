@@ -39,6 +39,8 @@ services:
         condition: service_healthy
       aaa-service:
         condition: service_healthy
+      identity-service:
+        condition: service_healthy
       nms-service:
         condition: service_healthy
       ipam-service:
@@ -67,7 +69,7 @@ services:
       POSTGRES_DB: isp
       POSTGRES_USER: isp
       POSTGRES_PASSWORD: isp
-      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy,assurance,intelligence
+      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,identity,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy,assurance,intelligence
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
@@ -164,6 +166,21 @@ services:
       rabbitmq: {condition: service_healthy}
       valkey: {condition: service_healthy}
     networks: [platform]
+
+  identity-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: identity-service}}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: identity-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/identity
+      IDENTITY_JWT_SECRET: ${IDENTITY_JWT_SECRET:-change-me-identity-jwt-secret-0123456789abcdef}
+      PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:-change-me-platform-jwt-secret-0123456789abcdef}
+      IDENTITY_TOKEN_TTL_SECONDS: ${IDENTITY_TOKEN_TTL_SECONDS:-43200}
+      IDENTITY_INTERNAL_API_KEY: ${IDENTITY_INTERNAL_API_KEY:-change-me-identity-internal-key}
+      IDENTITY_INTERNAL_API_KEYS: ${IDENTITY_INTERNAL_API_KEYS:-change-me-identity-internal-key}
+      IDENTITY_BOOTSTRAP_ADMIN_USERNAME: ${IDENTITY_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      IDENTITY_BOOTSTRAP_ADMIN_PASSWORD: ${IDENTITY_BOOTSTRAP_ADMIN_PASSWORD:-change-me-admin-password}
 
   nms-service:
     <<: *domain-service
