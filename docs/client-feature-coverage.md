@@ -1,6 +1,6 @@
 # Client Feature Coverage — 1,500 reconciled rows
 
-Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=52, MISSING=64, PARTIAL=1206
+Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=60, CONDITIONAL_FUTURE=52, MISSING=38, PARTIAL=1215
 
 | ID | Owner | Access | Priority | Module / Submodule | Feature | Status |
 |---|---|---|---|---|---|---|
@@ -269,7 +269,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 263 | nms-service | NOC | P0 | NMS / Alerting | Alarm Prioritization | PARTIAL |
 | 264 | nms-service | NOC | P1 | NMS / Alerting | Alert Suppression | PARTIAL |
 | 265 | nms-service | NOC | P0 | NMS / Alerting | Notification Routing | PARTIAL |
-| 266 | nms-service | NOC | P0 | NMS / Alerting | Escalation Policies | MISSING |
+| 266 | nms-service | NOC | P0 | NMS / Alerting | Escalation Policies | COMPLETE |
 | 267 | nms-service | NOC | P0 | NMS / Fault Mgmt | Fault Detection | PARTIAL |
 | 268 | nms-service | NOC | P0 | NMS / Fault Mgmt | Fault Correlation | PARTIAL |
 | 269 | nms-service | NOC | P0 | NMS / Fault Mgmt | Root Cause Analysis | PARTIAL |
@@ -406,7 +406,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 400 | crm-service | SYS | P0 | Reseller / Scaling | Hierarchy Scaling | PARTIAL |
 | 401 | siem-service | AUD | P0 | Compliance / Regulatory | Regulatory Framework Setup | PARTIAL |
 | 402 | siem-service | AUD | P0 | Compliance / Regulatory | License Management | PARTIAL |
-| 403 | siem-service | AUD | P0 | Compliance / Regulatory | Circle/Region Mapping | MISSING |
+| 403 | siem-service | AUD | P0 | Compliance / Regulatory | Circle/Region Mapping | PARTIAL |
 | 404 | siem-service | AUD | P0 | Compliance / Data Retention | Retention Policy Config | PARTIAL |
 | 405 | siem-service | SYS | P0 | Compliance / Data Retention | Auto Data Archival | PARTIAL |
 | 406 | siem-service | SYS | P0 | Compliance / Data Retention | Auto Data Purge | PARTIAL |
@@ -436,7 +436,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 430 | siem-service | AUD | P0 | Compliance / Reporting | Incident Reports | PARTIAL |
 | 431 | siem-service | SYS | P0 | Compliance / SIEM | SIEM Integration | BLOCKED_EXTERNAL |
 | 432 | siem-service | SYS | P0 | Compliance / SIEM | Event Forwarding | PARTIAL |
-| 433 | siem-service | SYS | P1 | Compliance / SIEM | Threat Intelligence | MISSING |
+| 433 | siem-service | SYS | P1 | Compliance / SIEM | Threat Intelligence | PARTIAL |
 | 434 | siem-service | SYS | P1 | Compliance / SIEM | Alert Correlation | PARTIAL |
 | 435 | aiops-service | AUD | P0 | Compliance / Fraud | Fraud Monitoring | PARTIAL |
 | 436 | aiops-service | AUD | P0 | Compliance / Fraud | Fraud Case Mgmt | PARTIAL |
@@ -450,7 +450,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 444 | siem-service | SYS | P1 | Compliance / Governance | Access Reviews | PARTIAL |
 | 445 | siem-service | SYS | P1 | Compliance / Governance | Segregation of Duties | PARTIAL |
 | 446 | siem-service | AUD | P1 | Compliance / Governance | Compliance Checklist | PARTIAL |
-| 447 | siem-service | SYS | P0 | Compliance / Scalability | Multi-Region Compliance | PARTIAL |
+| 447 | siem-service | SYS | P0 | Compliance / Scalability | Multi-Region Compliance | COMPLETE |
 | 448 | siem-service | SYS | P0 | Compliance / Scalability | High Volume Logging | PARTIAL |
 | 449 | siem-service | SYS | P1 | Compliance / Integration | Govt API Integration | BLOCKED_EXTERNAL |
 | 450 | siem-service | SYS | P0 | Compliance / Monitoring | Continuous Compliance Scan | PARTIAL |
@@ -471,7 +471,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 465 | data-warehouse-service | SYS | P0 | Analytics / BI | Report Export | PARTIAL |
 | 466 | data-warehouse-service | SYS | P0 | Analytics / BI | Drill Down Analytics | PARTIAL |
 | 467 | data-warehouse-service | SYS | P0 | Analytics / BI | Real-time Analytics | PARTIAL |
-| 468 | data-warehouse-service | SYS | P0 | Analytics / BI | KPI Management | MISSING |
+| 468 | data-warehouse-service | SYS | P0 | Analytics / BI | KPI Management | COMPLETE |
 | 469 | data-warehouse-service | SYS | P0 | Analytics / Customer Analytics | Customer Segmentation Analytics | PARTIAL |
 | 470 | aiops-service | SYS | P0 | Analytics / Customer Analytics | Churn Prediction Analytics | PARTIAL |
 | 471 | data-warehouse-service | SYS | P0 | Analytics / Customer Analytics | Lifetime Value | PARTIAL |
@@ -480,8 +480,8 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 474 | data-warehouse-service | SYS | P0 | Analytics / Network Analytics | Capacity Forecasting | PARTIAL |
 | 475 | data-warehouse-service | SYS | P0 | Analytics / Network Analytics | Fault Trends | PARTIAL |
 | 476 | data-warehouse-service | SYS | P0 | Analytics / Network Analytics | SLA Analytics | PARTIAL |
-| 477 | data-warehouse-service | SYS | P0 | Analytics / Revenue Analytics | Revenue Trends | MISSING |
-| 478 | data-warehouse-service | SYS | P0 | Analytics / Revenue Analytics | Profitability Analysis | MISSING |
+| 477 | data-warehouse-service | SYS | P0 | Analytics / Revenue Analytics | Revenue Trends | COMPLETE |
+| 478 | data-warehouse-service | SYS | P0 | Analytics / Revenue Analytics | Profitability Analysis | COMPLETE |
 | 479 | data-warehouse-service | SYS | P0 | Analytics / Revenue Analytics | AR/AP Analytics | PARTIAL |
 | 480 | data-warehouse-service | SYS | P0 | Analytics / Revenue Analytics | Leakage Analytics | PARTIAL |
 | 481 | aiops-service | SYS | P0 | Analytics / AIOps | Anomaly Detection | PARTIAL |
@@ -502,7 +502,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 496 | data-warehouse-service | SYS | P0 | Analytics / Integration | API Data Access | BLOCKED_EXTERNAL |
 | 497 | data-warehouse-service | SYS | P0 | Analytics / Streaming | Event Streaming | PARTIAL |
 | 498 | data-warehouse-service | SYS | P0 | Analytics / Streaming | Real-time Processing | PARTIAL |
-| 499 | data-warehouse-service | SYS | P0 | Analytics / Scaling | Horizontal Scaling | MISSING |
+| 499 | data-warehouse-service | SYS | P0 | Analytics / Scaling | Horizontal Scaling | COMPLETE |
 | 500 | data-warehouse-service | SYS | P0 | Analytics / Scaling | High Throughput | PARTIAL |
 | 501 | core-platform-service | TA | P0 | Communication / Channels | SMS Gateway Integration | BLOCKED_EXTERNAL |
 | 502 | core-platform-service | TA | P0 | Communication / Channels | Email Gateway Integration | BLOCKED_EXTERNAL |
@@ -842,7 +842,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 836 | bss-service | SYS | P0 | Ecosystem / Marketplace | Subscription Billing | PARTIAL |
 | 837 | bss-service | SYS | P0 | Ecosystem / Marketplace | License Management | PARTIAL |
 | 838 | bss-service | SYS | P0 | Ecosystem / Marketplace | Usage Metering | PARTIAL |
-| 839 | data-warehouse-service | SYS | P0 | Ecosystem / Insights | Ecosystem Analytics | MISSING |
+| 839 | data-warehouse-service | SYS | P0 | Ecosystem / Insights | Ecosystem Analytics | COMPLETE |
 | 840 | data-warehouse-service | SYS | P0 | Ecosystem / Insights | Partner Insights | PARTIAL |
 | 841 | data-warehouse-service | SYS | P0 | Ecosystem / Insights | Marketplace Insights | PARTIAL |
 | 842 | siem-service | SYS | P0 | Ecosystem / Security | Partner Security | PARTIAL |
@@ -865,7 +865,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 859 | aiops-service | SYS | P1 | Autonomous / Operations | Autonomous Policy Tuning | PARTIAL |
 | 860 | aiops-service | SYS | P1 | Autonomous / Business | Autonomous Billing | PARTIAL |
 | 861 | aiops-service | SYS | P1 | Autonomous / Business | Autonomous Pricing | MISSING |
-| 862 | aiops-service | SYS | P1 | Autonomous / Business | Revenue Optimization AI | MISSING |
+| 862 | aiops-service | SYS | P1 | Autonomous / Business | Revenue Optimization AI | PARTIAL |
 | 863 | aiops-service | SYS | P1 | Autonomous / Business | Churn Prevention AI | PARTIAL |
 | 864 | aiops-service | SYS | P1 | Autonomous / Business | Customer Journey AI | PARTIAL |
 | 865 | aiops-service | SYS | P0 | Hyperautomation / RPA | Robotic Process Automation | PARTIAL |
@@ -875,7 +875,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 869 | aiops-service | SYS | P0 | Hyperautomation / AI Workflows | Decision Intelligence | PARTIAL |
 | 870 | aiops-service | SYS | P0 | Hyperautomation / Integration | Cross-System Automation | BLOCKED_EXTERNAL |
 | 871 | aiops-service | SYS | P1 | Digital Twin / Business | Business Digital Twin | MISSING |
-| 872 | aiops-service | SYS | P1 | Digital Twin / Business | Revenue Simulation | MISSING |
+| 872 | aiops-service | SYS | P1 | Digital Twin / Business | Revenue Simulation | PARTIAL |
 | 873 | aiops-service | SYS | P1 | Digital Twin / Business | Customer Simulation | PARTIAL |
 | 874 | aiops-service | SYS | P1 | Digital Twin / Business | Market Simulation | PARTIAL |
 | 875 | aiops-service | SYS | P1 | Digital Twin / Business | Pricing Simulation | PARTIAL |
@@ -892,7 +892,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 886 | aiops-service | SYS | P1 | CX / AI | Voice Assistant | MISSING |
 | 887 | aiops-service | SYS | P1 | CX / AI | Auto Ticket Resolution | PARTIAL |
 | 888 | aiops-service | SYS | P1 | CX / AI | Sentiment Response | MISSING |
-| 889 | aiops-service | SYS | P0 | CX / AI | Personalization Engine v2 | MISSING |
+| 889 | aiops-service | SYS | P0 | CX / AI | Personalization Engine v2 | PARTIAL |
 | 890 | core-platform-service | SYS | P0 | Platform / Global | Global Operations Center | COMPLETE |
 | 891 | core-platform-service | SYS | P0 | Platform / Global | Follow-the-Sun Support | PARTIAL |
 | 892 | core-platform-service | SYS | P0 | Platform / Global | Multi-Language AI | PARTIAL |
@@ -1085,7 +1085,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1079 | nms-service | SYS | P0 | Operations / Control | Command Execution Engine | PARTIAL |
 | 1080 | nms-service | SYS | P0 | Operations / Control | Bulk Command Execution | PARTIAL |
 | 1081 | nms-service | SYS | P0 | Operations / Control | Command Audit Logs | PARTIAL |
-| 1082 | nms-service | SYS | P0 | Operations / Control | Config Diff Viewer | MISSING |
+| 1082 | nms-service | SYS | P0 | Operations / Control | Config Diff Viewer | COMPLETE |
 | 1083 | nms-service | SYS | P0 | Operations / Control | Rollback Config | PARTIAL |
 | 1084 | oss-service | SYS | P0 | Capacity / Planning | Peak Network Forecast | PARTIAL |
 | 1085 | oss-service | SYS | P0 | Capacity / Planning | Subscriber Growth Forecast | PARTIAL |
@@ -1127,7 +1127,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1121 | nms-service | CSR | P0 | Operations / NOC | Shift Handover Logs | PARTIAL |
 | 1122 | nms-service | NOC | P0 | Operations / Incident | War Room Logs | PARTIAL |
 | 1123 | nms-service | NOC | P0 | Operations / Incident | Decision Tracking | PARTIAL |
-| 1124 | nms-service | CSR | P0 | Operations / Approval | Approval SLA | MISSING |
+| 1124 | nms-service | CSR | P0 | Operations / Approval | Approval SLA | COMPLETE |
 | 1125 | nms-service | SYS | P0 | Operations / Workflow | Human Task Queue | PARTIAL |
 | 1126 | nms-service | SYS | P0 | Operations / Workflow | Escalation Chain | PARTIAL |
 | 1127 | bss-service | AUD | P0 | Finance / Audit | Ledger Audit | PARTIAL |
@@ -1167,10 +1167,10 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1161 | siem-service | SYS | P0 | Compliance / Telecom | IPDR Retention Mgmt | PARTIAL |
 | 1162 | siem-service | AUD | P0 | Compliance / Telecom | LI Real-Time Feed | PARTIAL |
 | 1163 | siem-service | AUD | P0 | Compliance / Telecom | Data Access Audit | PARTIAL |
-| 1164 | siem-service | SYS | P0 | Compliance / Telecom | Geo Blocking | MISSING |
+| 1164 | siem-service | SYS | P0 | Compliance / Telecom | Geo Blocking | PARTIAL |
 | 1165 | siem-service | SYS | P0 | Compliance / Telecom | Emergency Services Routing | PARTIAL |
 | 1166 | nms-service | SYS | P0 | Performance / Optimization | Query Optimization | PARTIAL |
-| 1167 | nms-service | SYS | P0 | Performance / Optimization | Cache Strategy | MISSING |
+| 1167 | nms-service | SYS | P0 | Performance / Optimization | Cache Strategy | COMPLETE |
 | 1168 | nms-service | SYS | P0 | Performance / Optimization | Hot Path Optimization | PARTIAL |
 | 1169 | nms-service | SYS | P0 | Performance / Load | Peak Traffic Mgmt | PARTIAL |
 | 1170 | nms-service | SYS | P0 | Performance / Scaling | Session Scaling Engine | PARTIAL |
@@ -1183,7 +1183,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1177 | data-warehouse-service | SYS | P1 | Data / Integrity | Data Repair Engine | PARTIAL |
 | 1178 | data-warehouse-service | SYS | P0 | Data / Integrity | Backup Validation | COMPLETE |
 | 1179 | data-warehouse-service | SYS | P0 | Data / Recovery | Point-in-Time Recovery | COMPLETE |
-| 1180 | data-warehouse-service | SYS | P0 | Data / Recovery | Cross-Region Restore | PARTIAL |
+| 1180 | data-warehouse-service | SYS | P0 | Data / Recovery | Cross-Region Restore | COMPLETE |
 | 1181 | core-platform-service | SYS | P0 | UI/UX / Platform | Role-Based UI Engine | PARTIAL |
 | 1182 | core-platform-service | SYS | P0 | UI/UX / Platform | Custom Dashboards per Role | PARTIAL |
 | 1183 | core-platform-service | SYS | P1 | UI/UX / Platform | Accessibility Compliance | PARTIAL |
@@ -1239,7 +1239,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1233 | core-platform-service | SYS | P1 | Integration / Governance | Marketplace Certification | BLOCKED_EXTERNAL |
 | 1234 | siem-service | SYS | P0 | Security / SOC | SOC Dashboard | PARTIAL |
 | 1235 | siem-service | SYS | P0 | Security / SOAR | Security Automation Engine | PARTIAL |
-| 1236 | siem-service | SYS | P0 | Security / SOAR | Threat Hunting Playbooks | MISSING |
+| 1236 | siem-service | SYS | P0 | Security / SOAR | Threat Hunting Playbooks | COMPLETE |
 | 1237 | siem-service | SYS | P1 | Security / SOAR | Breach Simulation | PARTIAL |
 | 1238 | nms-service | SYS | P0 | Observability / Business | KPI-Event Correlation | PARTIAL |
 | 1239 | nms-service | SYS | P0 | Observability / Business | Customer Impact Heatmap | PARTIAL |
@@ -1289,10 +1289,10 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1283 | bss-service | SYS | P0 | Product / GTM | Campaign-Product Sync | PARTIAL |
 | 1284 | bss-service | SYS | P1 | Product / Pricing | Elastic Pricing Engine | PARTIAL |
 | 1285 | bss-service | SYS | P1 | Product / Analytics | Revenue per Feature | PARTIAL |
-| 1286 | nms-service | SYS | P0 | Platform / Resilience | Graceful Degradation Engine | MISSING |
+| 1286 | nms-service | SYS | P0 | Platform / Resilience | Graceful Degradation Engine | COMPLETE |
 | 1287 | nms-service | SYS | P0 | Platform / Resilience | Traffic Shedding Logic | PARTIAL |
 | 1288 | nms-service | SYS | P0 | Platform / Reliability | Fail-Safe Mode | PARTIAL |
-| 1289 | aiops-service | SYS | P0 | Platform / Intelligence | System Bottleneck Detector | MISSING |
+| 1289 | aiops-service | SYS | P0 | Platform / Intelligence | System Bottleneck Detector | COMPLETE |
 | 1290 | aiops-service | SYS | P0 | Platform / Intelligence | Resource Optimization AI | PARTIAL |
 | 1291 | aiops-service | SYS | P0 | Platform / Intelligence | Forecast-Based Scaling | PARTIAL |
 | 1292 | aiops-service | SYS | P1 | Platform / Intelligence | Cross-System Optimization | PARTIAL |
@@ -1300,7 +1300,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1294 | bss-service | SYS | P1 | Ecosystem / Marketplace | Revenue Split Optimization | PARTIAL |
 | 1295 | bss-service | SYS | P1 | Ecosystem / Marketplace | Marketplace Demand Forecast | PARTIAL |
 | 1296 | aiops-service | SYS | P0 | Operations / Intelligence | Ops Efficiency Score | PARTIAL |
-| 1297 | aiops-service | SYS | P0 | Operations / Intelligence | Automation Coverage Tracking | MISSING |
+| 1297 | aiops-service | SYS | P0 | Operations / Intelligence | Automation Coverage Tracking | PARTIAL |
 | 1298 | aiops-service | SYS | P1 | Operations / Intelligence | Human Effort Reduction | PARTIAL |
 | 1299 | core-platform-service | SYS | P1 | Platform / Final | Optimization Score | PARTIAL |
 | 1300 | core-platform-service | SYS | P1 | Platform / Final | Enterprise Maturity Index | PARTIAL |
@@ -1332,7 +1332,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1326 | core-platform-service | SYS | P0 | Integration / Platform | Integration Health Monitor | BLOCKED_EXTERNAL |
 | 1327 | core-platform-service | SYS | P0 | Integration / Platform | Retry Backoff Strategies | BLOCKED_EXTERNAL |
 | 1328 | core-platform-service | SYS | P0 | Integration / Governance | SLA Breach Alert (API) | BLOCKED_EXTERNAL |
-| 1329 | siem-service | SYS | P1 | Security / Advanced | Adaptive Threat Response | MISSING |
+| 1329 | siem-service | SYS | P1 | Security / Advanced | Adaptive Threat Response | PARTIAL |
 | 1330 | siem-service | SYS | P1 | Security / Advanced | Continuous Authentication | PARTIAL |
 | 1331 | siem-service | SYS | P1 | Security / Advanced | Session Risk Scoring | PARTIAL |
 | 1332 | siem-service | SYS | P1 | Security / Advanced | Geo Anomaly Detection | PARTIAL |
@@ -1347,7 +1347,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1341 | data-warehouse-service | SYS | P1 | Analytics / Advanced | Forecast Confidence Score | PARTIAL |
 | 1342 | data-warehouse-service | SYS | P0 | Analytics / Advanced | Data Freshness Monitor | PARTIAL |
 | 1343 | nms-service | SYS | P0 | Platform / Reliability | Latency SLA Enforcement | PARTIAL |
-| 1344 | nms-service | SYS | P0 | Platform / Reliability | Queue Saturation Protection | MISSING |
+| 1344 | nms-service | SYS | P0 | Platform / Reliability | Queue Saturation Protection | COMPLETE |
 | 1345 | nms-service | SYS | P0 | Platform / Reliability | Async Failure Recovery | PARTIAL |
 | 1346 | aiops-service | SYS | P0 | Platform / Optimization | Smart Resource Allocation | PARTIAL |
 | 1347 | aiops-service | SYS | P0 | Platform / Optimization | Multi-Tenant Resource Isolation | PARTIAL |
@@ -1373,7 +1373,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1367 | siem-service | SYS | P1 | Security / Advanced | Lateral Movement Detection | PARTIAL |
 | 1368 | siem-service | SYS | P0 | Security / Advanced | Privilege Escalation Detection | PARTIAL |
 | 1369 | siem-service | SYS | P2 | Security / Advanced | Behavioral Biometrics | PARTIAL |
-| 1370 | siem-service | SYS | P0 | Security / Advanced | Adaptive MFA | MISSING |
+| 1370 | siem-service | SYS | P0 | Security / Advanced | Adaptive MFA | COMPLETE |
 | 1371 | siem-service | SYS | P0 | Compliance / Automation | Real-Time Compliance Engine | PARTIAL |
 | 1372 | siem-service | SYS | P0 | Compliance / Automation | Cross-System Audit Sync | PARTIAL |
 | 1373 | siem-service | SYS | P1 | Compliance / Automation | Regulatory Change Adapter | PARTIAL |
@@ -1397,8 +1397,8 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1391 | core-platform-service | SYS | P0 | Ecosystem / Advanced | Cross-Partner SLA Sync | PARTIAL |
 | 1392 | core-platform-service | SYS | P1 | Ecosystem / Advanced | Partner Risk Forecast | PARTIAL |
 | 1393 | aiops-service | SYS | P1 | Operations / Intelligence | Automation Drift Detection | PARTIAL |
-| 1394 | aiops-service | SYS | P1 | Operations / Intelligence | Manual Override Analytics | MISSING |
-| 1395 | aiops-service | SYS | P0 | Operations / Intelligence | Ops Bottleneck Analyzer | PARTIAL |
+| 1394 | aiops-service | SYS | P1 | Operations / Intelligence | Manual Override Analytics | PARTIAL |
+| 1395 | aiops-service | SYS | P0 | Operations / Intelligence | Ops Bottleneck Analyzer | COMPLETE |
 | 1396 | aiops-service | SYS | P0 | Operations / Intelligence | SLA Compliance Predictor | PARTIAL |
 | 1397 | core-platform-service | SYS | P1 | Platform / Final | Autonomous Optimization Loop | PARTIAL |
 | 1398 | core-platform-service | SYS | P1 | Platform / Final | Self-Tuning System Engine | PARTIAL |
@@ -1423,7 +1423,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1417 | core-platform-service | SYS | P0 | DevOps / Telemetry | Feature Usage Telemetry | PARTIAL |
 | 1418 | core-platform-service | TA | P0 | DevOps / SLA | Tenant SLA Dashboard | PARTIAL |
 | 1419 | core-platform-service | SA | P0 | Platform / SLA | Platform SLA Guarantees | PARTIAL |
-| 1420 | aiops-service | SYS | P0 | Ops / Profitability | Profit per Node | MISSING |
+| 1420 | aiops-service | SYS | P0 | Ops / Profitability | Profit per Node | PARTIAL |
 | 1421 | aiops-service | SYS | P0 | Ops / Analytics | Customer Acquisition Funnel | PARTIAL |
 | 1422 | crm-service | FIN | P0 | Sales / Commission | Sales Commission Automation | PARTIAL |
 | 1423 | workforce-service | FO | P0 | Field Ops / Visualization | Digital Network Diagrams | PARTIAL |
@@ -1437,7 +1437,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1431 | bss-service | SYS | P0 | Product / Analytics | Trial Conversion Analytics | PARTIAL |
 | 1432 | data-warehouse-service | SYS | P1 | Analytics / CX | Drop-Off Root Cause | PARTIAL |
 | 1433 | data-warehouse-service | SYS | P0 | Analytics / Ops | SLA vs Revenue Correlation | PARTIAL |
-| 1434 | data-warehouse-service | SYS | P1 | Analytics / Sales | Commission Analytics | MISSING |
+| 1434 | data-warehouse-service | SYS | P1 | Analytics / Sales | Commission Analytics | PARTIAL |
 | 1435 | core-platform-service | SYS | P0 | Platform / Governance | Tenant Profitability Dashboard | PARTIAL |
 | 1436 | core-platform-service | SYS | P0 | Platform / Governance | Tenant Usage Costing | PARTIAL |
 | 1437 | core-platform-service | SYS | P0 | Platform / Governance | SLA Penalty Automation | PARTIAL |
@@ -1484,7 +1484,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=5
 | 1478 | core-platform-service | SYS | P0 | DevOps / Platform | SLA Breach Root Cause | PARTIAL |
 | 1479 | core-platform-service | SYS | P0 | DevOps / Platform | Tenant Isolation Validator | PARTIAL |
 | 1480 | core-platform-service | SYS | P0 | DevOps / Platform | Performance Regression Detector | PARTIAL |
-| 1481 | aiops-service | SYS | P0 | Operations / Economics | Region Profitability Analysis | MISSING |
+| 1481 | aiops-service | SYS | P0 | Operations / Economics | Region Profitability Analysis | PARTIAL |
 | 1482 | aiops-service | SYS | P0 | Operations / Economics | Product Profitability Heatmap | PARTIAL |
 | 1483 | aiops-service | SYS | P0 | Operations / Economics | Cost vs Revenue Correlation | PARTIAL |
 | 1484 | aiops-service | SYS | P1 | Operations / Economics | Expansion ROI Optimizer | COMPLETE |

@@ -34,7 +34,7 @@ from .routing import enforce_scope, require_platform_aggregate
 from .security import internal_service_auth, management_auth
 from .services import (audit_service, catalog_service, churn_service, feature_service,
                        fraud_service, ingestion_service, maintenance_service, ml_service,
-                       quality_service, remediation_service, report_service)
+                       operations_service, quality_service, remediation_service, report_service)
 
 logger = logging.getLogger("intelligence")
 
@@ -684,3 +684,98 @@ def audit_log(limit: int = 100, db: Session = Depends(db)):
     return [{"id": str(r.id), "actor": r.actor, "action": r.action, "resource_type": r.resource_type,
              "resource_id": r.resource_id, "tenant_id": str(r.tenant_id) if r.tenant_id else None,
              "occurred_at": r.occurred_at.isoformat()} for r in rows]
+
+
+# ===========================================================================
+# Operations intelligence (Batch 7b: 889, 1289, 1297, 1420, 1481)
+# ===========================================================================
+
+@app.post("/api/intelligence/v1/ops/personalization/profiles", dependencies=[Depends(management_auth)])
+def upsert_personalization(payload: dict, request: Request, db: Session = Depends(db)):
+    row = operations_service.PersonalizationService.upsert(db, _tid(), payload, actor=_actor(request))
+    return {"id": str(row.id), "subscriber_id": row.subscriber_id, "segments": row.segments,
+            "engagement_score": row.engagement_score}
+
+
+@app.post("/api/intelligence/v1/ops/personalization/recommend", dependencies=[Depends(management_auth)])
+def recommend_personalization(payload: dict, db: Session = Depends(db)):
+    return operations_service.PersonalizationService.recommend(db, _tid(), payload.get("subscriber_id"))
+
+
+@app.post("/api/intelligence/v1/ops/bottlenecks/detect", dependencies=[Depends(management_auth)])
+def detect_bottleneck(payload: dict, request: Request, db: Session = Depends(db)):
+    row = operations_service.BottleneckService.detect(
+        db, _tid(), payload.get("scope"), payload.get("metric"),
+        float(payload.get("value", 0)), float(payload.get("threshold", 0)), actor=_actor(request))
+    if row is None:
+        return {"detected": False, "scope": payload.get("scope")}
+    return {"detected": True, "id": str(row.id), "scope": row.scope, "metric": row.metric,
+            "severity": row.severity}
+
+
+@app.get("/api/intelligence/v1/ops/bottlenecks", dependencies=[Depends(management_auth)])
+def list_bottlenecks(status: str | None = None, db: Session = Depends(db)):
+    from app.models import Bottleneck
+    q = db.query(Bottleneck).filter(Bottleneck.tenant_id == _tid())
+    if status:
+        q = q.filter(Bottleneck.status == status)
+    return [{"id": str(b.id), "scope": b.scope, "metric": b.metric, "severity": b.severity,
+             "status": b.status, "detected_at": b.detected_at} for b in q.order_by(Bottleneck.detected_at.desc()).all()]
+
+
+@app.post("/api/intelligence/v1/ops/bottlenecks/{bottleneck_id}/resolve", dependencies=[Depends(management_auth)])
+def resolve_bottleneck(bottleneck_id: uuid.UUID, db: Session = Depends(db)):
+    try:
+        row = operations_service.BottleneckService.resolve(db, _tid(), bottleneck_id)
+    except KeyError:
+        raise HTTPException(404, "bottleneck not found")
+    return {"id": str(row.id), "status": row.status}
+
+
+@app.post("/api/intelligence/v1/ops/automation-coverage", dependencies=[Depends(management_auth)])
+def compute_automation_coverage(payload: dict, request: Request, db: Session = Depends(db)):
+    row = operations_service.CoverageService.compute(
+        db, _tid(), payload.get("period", "MONTH"), int(payload.get("automated", 0)),
+        int(payload.get("manual", 0)), actor=_actor(request))
+    return {"id": str(row.id), "period": row.period, "coverage_pct": row.coverage_pct}
+
+
+@app.get("/api/intelligence/v1/ops/automation-coverage", dependencies=[Depends(management_auth)])
+def get_automation_coverage(period: str = "MONTH", db: Session = Depends(db)):
+    from app.models import AutomationCoverage
+    row = db.query(AutomationCoverage).filter(
+        AutomationCoverage.tenant_id == _tid(), AutomationCoverage.period == period).first()
+    if not row:
+        raise HTTPException(404, "coverage not computed")
+    return {"period": row.period, "automated": row.automated_count, "manual": row.manual_count,
+            "coverage_pct": row.coverage_pct}
+
+
+@app.post("/api/intelligence/v1/ops/node-profit", dependencies=[Depends(management_auth)])
+def record_node_profit(payload: dict, request: Request, db: Session = Depends(db)):
+    row = operations_service.ProfitabilityService.node_profit(db, _tid(), payload, actor=_actor(request))
+    return {"id": str(row.id), "node": row.node, "revenue": row.revenue, "cost": row.cost,
+            "profit": row.profit}
+
+
+@app.get("/api/intelligence/v1/ops/node-profit", dependencies=[Depends(management_auth)])
+def list_node_profit(db: Session = Depends(db)):
+    from app.models import NodeProfit
+    rows = db.query(NodeProfit).filter(NodeProfit.tenant_id == _tid()).order_by(NodeProfit.profit.desc()).all()
+    return [{"id": str(r.id), "node": r.node, "period": r.period, "profit": r.profit} for r in rows]
+
+
+@app.post("/api/intelligence/v1/ops/region-profitability", dependencies=[Depends(management_auth)])
+def record_region_profitability(payload: dict, request: Request, db: Session = Depends(db)):
+    row = operations_service.ProfitabilityService.region_profitability(db, _tid(), payload, actor=_actor(request))
+    return {"id": str(row.id), "region": row.region, "revenue": row.revenue, "cost": row.cost,
+            "profit_margin": row.profit_margin}
+
+
+@app.get("/api/intelligence/v1/ops/region-profitability", dependencies=[Depends(management_auth)])
+def list_region_profitability(db: Session = Depends(db)):
+    from app.models import RegionProfitability
+    rows = db.query(RegionProfitability).filter(
+        RegionProfitability.tenant_id == _tid()).order_by(RegionProfitability.profit_margin.desc()).all()
+    return [{"id": str(r.id), "region": r.region, "period": r.period,
+             "profit_margin": r.profit_margin} for r in rows]

@@ -168,7 +168,13 @@ services:
   nms-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: nms-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: nms-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/nms}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: nms-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/nms
+      NMS_JWT_SECRET: ${NMS_JWT_SECRET:-change-me-nms-jwt-secret-0123456789abcdef}
+      NMS_INTERNAL_API_KEY: ${NMS_INTERNAL_API_KEY:-change-me-nms-internal-key}
+      NMS_INTERNAL_API_KEYS: ${NMS_INTERNAL_API_KEY:-change-me-nms-internal-key}
 
   ipam-service:
     <<: *domain-service
@@ -230,7 +236,13 @@ services:
   warehouse-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: warehouse-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: warehouse-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/warehouse}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: warehouse-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/warehouse
+      WAREHOUSE_JWT_SECRET: ${WAREHOUSE_JWT_SECRET:-change-me-warehouse-jwt-secret-0123456789abcdef}
+      WAREHOUSE_INTERNAL_API_KEY: ${WAREHOUSE_INTERNAL_API_KEY:-change-me-warehouse-internal-key}
+      WAREHOUSE_INTERNAL_API_KEYS: ${WAREHOUSE_INTERNAL_API_KEY:-change-me-warehouse-internal-key}
 
   aiops-service:
     <<: *domain-service

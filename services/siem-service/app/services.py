@@ -542,3 +542,107 @@ class VulnerabilityService:
         record_audit(session, ctx, "vuln.remediate", "Vulnerability", str(v.id))
         session.commit()
         return v
+
+
+class ComplianceOpsService:
+    """Circle/region mapping, geo blocking, threat playbooks, adaptive MFA."""
+
+    @staticmethod
+    def create_circle(session: Session, ctx: TenantContext, data: dict) -> models.CircleRegion:
+        tenant_id = ctx.require_tenant()
+        row = models.CircleRegion(tenant_id=tenant_id, status="ACTIVE", **data)
+        session.add(row)
+        session.commit()
+        record_audit(session, ctx, "compliance.circle_map", "CircleRegion", str(row.id))
+        session.commit()
+        return row
+
+    @staticmethod
+    def create_geo_rule(session: Session, ctx: TenantContext, data: dict) -> models.GeoBlockRule:
+        tenant_id = ctx.require_tenant()
+        row = models.GeoBlockRule(tenant_id=tenant_id, status="ENABLED", **data)
+        session.add(row)
+        session.commit()
+        record_audit(session, ctx, "geo_rule.create", "GeoBlockRule", str(row.id))
+        session.commit()
+        return row
+
+    @staticmethod
+    def evaluate_geo(session: Session, ctx: TenantContext, service: str,
+                     region_code: str) -> dict:
+        """Geo Blocking (1164): decide BLOCK/ALLOW for a service+region."""
+        rule = session.query(models.GeoBlockRule).filter(
+            models.GeoBlockRule.tenant_id == ctx.require_tenant(),
+            models.GeoBlockRule.service == service,
+            models.GeoBlockRule.region_code == region_code,
+            models.GeoBlockRule.status == "ENABLED").first()
+        action = rule.action if rule else "ALLOW"
+        if action == "BLOCK":
+            events.publish(session, "siem.geo.blocked.v1", "GeoBlockRule",
+                           rule.id if rule else None,
+                           {"service": service, "region_code": region_code,
+                            "action": action}, tenant_id=ctx.require_tenant())
+            session.commit()
+        return {"service": service, "region_code": region_code, "action": action}
+
+    @staticmethod
+    def create_playbook(session: Session, ctx: TenantContext, data: dict) -> models.ThreatPlaybook:
+        tenant_id = ctx.require_tenant()
+        p = models.ThreatPlaybook(tenant_id=tenant_id, status="ACTIVE", executions=0, **data)
+        session.add(p)
+        session.commit()
+        return p
+
+    @staticmethod
+    def execute_playbook(session: Session, ctx: TenantContext, playbook_id: uuid.UUID) -> models.ThreatPlaybook:
+        tenant_id = ctx.require_tenant()
+        p = session.query(models.ThreatPlaybook).filter(
+            models.ThreatPlaybook.id == playbook_id,
+            models.ThreatPlaybook.tenant_id == tenant_id).first()
+        if not p:
+            raise KeyError("Playbook not found")
+        p.executions += 1
+        session.commit()
+        events.publish(session, "siem.playbook.executed.v1", "ThreatPlaybook", p.id,
+                       {"playbook_id": str(p.id), "name": p.name, "executions": p.executions},
+                       tenant_id=tenant_id)
+        session.commit()
+        record_audit(session, ctx, "playbook.execute", "ThreatPlaybook", str(p.id))
+        session.commit()
+        return p
+
+    @staticmethod
+    def create_mfa_rule(session: Session, ctx: TenantContext, data: dict) -> models.AdaptiveMfaRule:
+        tenant_id = ctx.require_tenant()
+        r = models.AdaptiveMfaRule(tenant_id=tenant_id, enabled=True, **data)
+        session.add(r)
+        session.commit()
+        return r
+
+    @staticmethod
+    def evaluate_mfa(session: Session, ctx: TenantContext, context: dict) -> dict:
+        """Adaptive MFA (1370): trigger MFA when a context rule matches."""
+        tenant_id = ctx.require_tenant()
+        rules = session.query(models.AdaptiveMfaRule).filter(
+            models.AdaptiveMfaRule.tenant_id == tenant_id,
+            models.AdaptiveMfaRule.enabled.is_(True)).all()
+        for rule in rules:
+            conds = rule.conditions or {}
+            matched = True
+            for key, threshold in conds.items():
+                actual = context.get(key)
+                if isinstance(threshold, (int, float)) and isinstance(actual, (int, float)):
+                    if actual < float(threshold):
+                        matched = False
+                        break
+                elif bool(threshold) and not actual:
+                    matched = False
+                    break
+            if matched:
+                events.publish(session, "siem.mfa.triggered.v1", "AdaptiveMfaRule", rule.id,
+                               {"rule_id": str(rule.id), "name": rule.name,
+                                "action": rule.trigger_action}, tenant_id=tenant_id)
+                session.commit()
+                return {"mfa_required": True, "rule": rule.name,
+                        "action": rule.trigger_action}
+        return {"mfa_required": False, "rule": None}

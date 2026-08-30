@@ -16,6 +16,10 @@ from .aiops import (  # noqa: F401
     RemediationApproval, RemediationIntent, RemediationOutcome, RemediationPolicy,
     RemediationStep, RetentionCandidate,
 )
+from .operations import (  # noqa: F401
+    AutomationCoverage, Bottleneck, NodeProfit, PersonalizationProfile,
+    RegionProfitability,
+)
 
 from ..routing import tenant_owned
 
@@ -27,6 +31,7 @@ _TENANT_OWNED = (
     ChurnScore, RetentionCandidate, FailurePrediction, CapacityForecast,
     Recommendation, RemediationIntent, RemediationApproval, RemediationStep, RemediationOutcome,
     KillSwitch,
+    PersonalizationProfile, Bottleneck, AutomationCoverage, NodeProfit, RegionProfitability,
 )
 for _model in _TENANT_OWNED:
     tenant_owned(_model)

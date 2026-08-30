@@ -36,10 +36,10 @@ ROLE_PERMISSIONS = {
         "reports.view", "reports.export",
     },
     "COMPLIANCE_OFFICER": {
-        "events.view", "events.export", "evidence.view", "audit.view", "audit.export",
+        "events.view", "events.ingest", "events.export", "evidence.view", "audit.view", "audit.export",
         "policies.manage", "retention.manage", "consent.view", "consent.manage",
         "dsar.manage", "reports.view", "reports.export", "li.approve",
-        "violations.view", "dashboard.view",
+        "violations.view", "dashboard.view", "cases.manage",
     },
     "AUDITOR": {"audit.view", "audit.export", "reports.view", "reports.export",
                 "events.view", "evidence.view", "dashboard.view"},
@@ -102,6 +102,12 @@ def _required_permission(method: str, path: str) -> str | None:
         return "vuln.manage"
     if "/breach" in p:
         return "cases.manage"
+    if "/compliance" in p:
+        return "policies.manage" if method in ("POST", "PUT", "PATCH") else "violations.view"
+    if "/playbooks" in p:
+        return "cases.manage"
+    if "/mfa" in p:
+        return "events.ingest"
     if "/dashboard" in p:
         return "dashboard.view"
     if "/regulatory" in p or "/reports" in p:

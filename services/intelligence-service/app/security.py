@@ -18,22 +18,22 @@ ROLE_PERMISSIONS = {
     "ISP_ADMIN": {"*"},
     "AI_ENGINEER": {"datasets.view", "datasets.manage", "features.view", "features.manage",
                     "training.manage", "models.view", "models.manage", "predictions.view",
-                    "monitoring.view"},
+                    "monitoring.view", "ai.ops.view", "ai.ops.manage"},
     "MLOPS_ENGINEER": {"training.manage", "models.manage", "models.approve", "deploy.manage",
                        "monitoring.view", "datasets.view"},
     "DATA_SCIENTIST": {"datasets.view", "features.view", "training.manage", "models.view",
                        "predictions.view", "monitoring.view"},
     "NOC_ENGINEER": {"predictions.view", "recommendations.view", "remediation.execute",
-                     "monitoring.view", "fraud.view"},
+                     "monitoring.view", "fraud.view", "ai.ops.view", "ai.ops.manage"},
     "SRE_PLATFORM": {"recommendations.view", "remediation.manage", "remediation.execute",
                      "kill_switch.manage", "monitoring.view", "models.view", "deploy.manage"},
     "SECURITY_OPS": {"fraud.manage", "fraud.view", "remediation.view", "monitoring.view"},
     "CRM_RETENTION": {"churn.view", "retention.manage", "recommendations.view"},
-    "FINANCE_OPS": {"fraud.view", "reports.view", "recommendations.view"},
-    "AUDITOR": {"reports.view", "audit.view", "monitoring.view"},
-    "READ_ONLY": {"predictions.view", "recommendations.view", "monitoring.view", "fraud.view"},
+    "FINANCE_OPS": {"fraud.view", "reports.view", "recommendations.view", "ai.ops.view", "ai.ops.manage"},
+    "AUDITOR": {"reports.view", "audit.view", "monitoring.view", "ai.ops.view"},
+    "READ_ONLY": {"predictions.view", "recommendations.view", "monitoring.view", "fraud.view", "ai.ops.view"},
     "TENANT_ADMIN": {"predictions.view", "recommendations.view", "fraud.view", "churn.view",
-                     "maintenance.view", "remediation.view"},
+                     "maintenance.view", "remediation.view", "ai.ops.view", "ai.ops.manage"},
     "FRANCHISE_ADMIN": {"predictions.view", "recommendations.view", "fraud.view", "churn.view"},
     "super_admin": {"*"},
 }
@@ -99,6 +99,8 @@ def _required_permission(method: str, path: str) -> str | None:
         return "predictions.view"
     if "/insights" in p:
         return "predictions.view"
+    if "/ops" in p:
+        return "ai.ops.manage" if method in ("POST", "PUT", "PATCH") else "ai.ops.view"
     return "predictions.view"
 
 

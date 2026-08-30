@@ -13,8 +13,8 @@ from .database import SessionLocal
 from .routing import enforce_scope, record_audit, require_tenant_id
 from .security import _required_permission, get_auth_context, require_permission
 from .context import TenantContext
-from .services import (CaseService, ConsentService, DsarService, EventService,
-                       LiService, PolicyService, RetentionService,
+from .services import (CaseService, ComplianceOpsService, ConsentService, DsarService,
+                       EventService, LiService, PolicyService, RetentionService,
                        VulnerabilityService)
 
 
@@ -510,3 +510,81 @@ def regulatory_report(request: Request, payload: dict = None,
                  detail={"type": report_type})
     db.commit()
     return report
+
+
+# ---------------------------------------------------------------------------
+# Compliance ops: circle mapping, geo blocking, playbooks, adaptive MFA
+# (features 403, 1164, 1236, 1370)
+# ---------------------------------------------------------------------------
+@app.post("/api/siem/v1/compliance/circles", status_code=201)
+def create_circle(body: dict, request: Request,
+                  db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("policies.manage"))):
+    require_tenant_id(ctx)
+    row = ComplianceOpsService.create_circle(db, ctx, body)
+    return {"id": str(row.id), "circle_name": row.circle_name, "state_codes": row.state_codes}
+
+
+@app.get("/api/siem/v1/compliance/circles")
+def list_circles(request: Request, db: Session = Depends(_db),
+                 ctx: TenantContext = Depends(_auth("violations.view"))):
+    q = enforce_scope(db.query(models.CircleRegion), models.CircleRegion, ctx)
+    return [{"id": str(r.id), "operator": r.operator, "circle_name": r.circle_name,
+             "state_codes": r.state_codes, "status": r.status} for r in q.all()]
+
+
+@app.post("/api/siem/v1/compliance/geo-block", status_code=201)
+def create_geo_rule(body: dict, request: Request,
+                    db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("policies.manage"))):
+    require_tenant_id(ctx)
+    row = ComplianceOpsService.create_geo_rule(db, ctx, body)
+    return {"id": str(row.id), "service": row.service, "region_code": row.region_code,
+            "action": row.action}
+
+
+@app.post("/api/siem/v1/compliance/geo-block/evaluate")
+def evaluate_geo(body: dict, request: Request,
+                 db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("violations.view"))):
+    require_tenant_id(ctx)
+    return ComplianceOpsService.evaluate_geo(db, ctx, body.get("service"),
+                                             body.get("region_code"))
+
+
+@app.post("/api/siem/v1/threat/playbooks", status_code=201)
+def create_playbook(body: dict, request: Request,
+                    db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("cases.manage"))):
+    require_tenant_id(ctx)
+    p = ComplianceOpsService.create_playbook(db, ctx, body)
+    return {"id": str(p.id), "name": p.name, "steps": len(p.steps or []), "status": p.status}
+
+
+@app.get("/api/siem/v1/threat/playbooks")
+def list_playbooks(request: Request, db: Session = Depends(_db),
+                   ctx: TenantContext = Depends(_auth("cases.manage"))):
+    q = enforce_scope(db.query(models.ThreatPlaybook), models.ThreatPlaybook, ctx)
+    return [{"id": str(p.id), "name": p.name, "tactic": p.tactic, "status": p.status,
+             "executions": p.executions} for p in q.all()]
+
+
+@app.post("/api/siem/v1/threat/playbooks/{playbook_id}/execute")
+def execute_playbook(playbook_id: uuid.UUID, request: Request,
+                     db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("cases.manage"))):
+    try:
+        p = ComplianceOpsService.execute_playbook(db, ctx, playbook_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"id": str(p.id), "name": p.name, "executions": p.executions}
+
+
+@app.post("/api/siem/v1/security/mfa-rules", status_code=201)
+def create_mfa_rule(body: dict, request: Request,
+                    db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("events.ingest"))):
+    require_tenant_id(ctx)
+    r = ComplianceOpsService.create_mfa_rule(db, ctx, body)
+    return {"id": str(r.id), "name": r.name, "trigger_action": r.trigger_action, "enabled": r.enabled}
+
+
+@app.post("/api/siem/v1/security/mfa-rules/evaluate")
+def evaluate_mfa(body: dict, request: Request,
+                 db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("events.ingest"))):
+    require_tenant_id(ctx)
+    return ComplianceOpsService.evaluate_mfa(db, ctx, body.get("context", {}))

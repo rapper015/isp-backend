@@ -221,7 +221,55 @@ class Inbox(UUIDMixin, Base):
     consumed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class CircleRegion(UUIDMixin, Base):
+    """Operator circle/region mapping, India (feature 403)."""
+    __tablename__ = "sec_circle_region"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    operator: Mapped[str] = mapped_column(String(120))
+    circle_name: Mapped[str] = mapped_column(String(160), index=True)
+    state_codes: Mapped[list] = mapped_column(JSON, default=list)
+    status: Mapped[str] = mapped_column(String(20), default="ACTIVE")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    __table_args__ = (UniqueConstraint("tenant_id", "circle_name", name="uq_sec_circle"),)
+
+
+class GeoBlockRule(UUIDMixin, Base):
+    """Restrict services per region (feature 1164)."""
+    __tablename__ = "sec_geo_block_rule"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    service: Mapped[str] = mapped_column(String(120))
+    region_code: Mapped[str] = mapped_column(String(40), index=True)
+    action: Mapped[str] = mapped_column(String(20), default="BLOCK")  # BLOCK | ALLOW
+    status: Mapped[str] = mapped_column(String(20), default="ENABLED")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    __table_args__ = (UniqueConstraint("tenant_id", "service", "region_code", name="uq_sec_geo_rule"),)
+
+
+class ThreatPlaybook(UUIDMixin, Base):
+    """Guided threat-hunting playbooks (feature 1236)."""
+    __tablename__ = "sec_threat_playbook"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    tactic: Mapped[str | None] = mapped_column(String(120))
+    steps: Mapped[list] = mapped_column(JSON, default=list)
+    status: Mapped[str] = mapped_column(String(20), default="ACTIVE")
+    executions: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class AdaptiveMfaRule(UUIDMixin, Base):
+    """Context-based MFA triggers (feature 1370)."""
+    __tablename__ = "sec_adaptive_mfa_rule"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    conditions: Mapped[dict] = mapped_column(JSON, default=dict)  # {"risk_score": 70, "geo_mismatch": true, ...}
+    trigger_action: Mapped[str] = mapped_column(String(20), default="CHALLENGE")
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 for _t in (SecurityEvent, EvidenceBlock, CompliancePolicy, PolicyViolation,
            RetentionPolicy, ConsentRecord, DataAccessRequest, SecurityCase,
-           CaseEvent, AuditLog, Vulnerability, LIRequest):
+           CaseEvent, AuditLog, Vulnerability, LIRequest,
+           CircleRegion, GeoBlockRule, ThreatPlaybook, AdaptiveMfaRule):
     _register(_t.__tablename__)

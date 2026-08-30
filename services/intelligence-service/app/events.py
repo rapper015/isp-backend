@@ -34,6 +34,11 @@ PUBLISHED_TOPOLOGY = {
     "ai.remediation_compensated.v1",
     "ai.model_drift_detected.v1",
     "ai.kill_switch_engaged.v1",
+    "ai.personalization.updated.v1",
+    "ai.bottleneck.detected.v1",
+    "ai.automation_coverage.computed.v1",
+    "ai.node_profit.recorded.v1",
+    "ai.region_profitability.recorded.v1",
 }
 
 # Consumed domain events -> normalized analytical contracts.

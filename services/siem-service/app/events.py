@@ -21,6 +21,10 @@ PUBLISHED_TOPOLOGY = {
     "siem.retention.purged.v1": "Records were archived or purged per retention policy.",
     "siem.breach.notified.v1": "A breach notification was issued.",
     "siem.vulnerability.ingested.v1": "A vulnerability scan finding was recorded.",
+    "siem.circle.mapped.v1": "An operator circle/region mapping was recorded.",
+    "siem.geo.blocked.v1": "A service access attempt was blocked by geo rule.",
+    "siem.playbook.executed.v1": "A threat-hunting playbook was executed.",
+    "siem.mfa.triggered.v1": "Adaptive MFA challenged a session.",
 }
 
 CONSUMED_TOPOLOGY = {

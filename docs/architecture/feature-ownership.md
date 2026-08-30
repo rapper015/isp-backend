@@ -67,9 +67,9 @@ Total features: 80
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 5 |
-| COMPLETE | 1 |
+| COMPLETE | 7 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 8 |
+| MISSING | 2 |
 | PARTIAL | 100 |
 
 Total features: 114
@@ -91,10 +91,10 @@ Total features: 8
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 2 |
-| COMPLETE | 1 |
+| COMPLETE | 4 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 8 |
-| PARTIAL | 98 |
+| MISSING | 2 |
+| PARTIAL | 101 |
 
 Total features: 109
 
@@ -115,9 +115,9 @@ Total features: 39
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 2 |
-| COMPLETE | 2 |
+| COMPLETE | 8 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 7 |
+| MISSING | 1 |
 | PARTIAL | 55 |
 
 Total features: 66
@@ -127,9 +127,9 @@ Total features: 66
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 1 |
-| COMPLETE | 2 |
+| COMPLETE | 4 |
 | CONDITIONAL_FUTURE | 51 |
-| MISSING | 16 |
-| PARTIAL | 113 |
+| MISSING | 8 |
+| PARTIAL | 119 |
 
 Total features: 183
