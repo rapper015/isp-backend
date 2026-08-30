@@ -18,7 +18,8 @@ DEFAULT_ROLE_TEMPLATES = {
     },
     "TENANT_ADMIN": {
         "permissions": ["tenants.manage", "memberships.manage", "roles.manage", "partners.manage",
-                        "commissions.manage", "settlements.manage", "reports.view", "*financial.approve"],
+                        "commissions.manage", "settlements.manage", "reports.view", "*financial.approve",
+                        "governance.manage", "governance.view"],
         "scope": "TENANT",
     },
     "FRANCHISE_ADMIN": {
@@ -36,11 +37,11 @@ DEFAULT_ROLE_TEMPLATES = {
         "scope": "TENANT",
     },
     "AUDITOR": {
-        "permissions": ["reports.view", "audit.view", "reports.export"],
+        "permissions": ["reports.view", "audit.view", "reports.export", "governance.view"],
         "scope": "TENANT",
     },
     "READ_ONLY": {
-        "permissions": ["reports.view", "customers.view", "audit.view"],
+        "permissions": ["reports.view", "customers.view", "audit.view", "governance.view"],
         "scope": "BRANCH",
     },
 }

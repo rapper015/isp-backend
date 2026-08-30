@@ -123,6 +123,8 @@ def _required_permission(method: str, path: str) -> str | None:
         return "reports.view" if method == "GET" else "reports.export"
     if "/audit" in p:
         return "audit.view"
+    if "/governance" in p:
+        return "governance.manage" if method in ("POST", "PUT", "PATCH", "DELETE") else "governance.view"
     return "tenants.view"
 
 
