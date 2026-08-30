@@ -4,11 +4,11 @@
 
 | Status | Count |
 |---|---|
-| PARTIAL | 984 |
-| MISSING | 308 |
+| PARTIAL | 1081 |
+| MISSING | 210 |
 | BLOCKED_EXTERNAL | 135 |
 | CONDITIONAL_FUTURE | 52 |
-| COMPLETE | 21 |
+| COMPLETE | 22 |
 
 ## By owner
 | Owner | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
@@ -22,15 +22,15 @@
 | ipam-service | 2 | 0 | 0 | 0 | 6 |
 | nms-service | 5 | 1 | 0 | 8 | 100 |
 | oss-service | 15 | 0 | 0 | 32 | 117 |
-| siem-service | 2 | 0 | 0 | 106 | 1 |
+| siem-service | 2 | 1 | 0 | 8 | 98 |
 | workforce-service | 1 | 0 | 0 | 34 | 4 |
 
 ## By priority
 | Priority | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
 |---|---|---|---|---|---|
-| P0 | 93 | 17 | 1 | 193 | 706 |
-| P1 | 42 | 4 | 8 | 111 | 273 |
-| P2 | 0 | 0 | 41 | 4 | 5 |
+| P0 | 93 | 18 | 1 | 118 | 780 |
+| P1 | 42 | 4 | 8 | 90 | 294 |
+| P2 | 0 | 0 | 41 | 2 | 7 |
 | P3 | 0 | 0 | 2 | 0 | 0 |
 
 ## Missing / partial P0 and P1 (implementation backlog)
@@ -390,54 +390,54 @@
 - **398** [P0] crm-service: Access Monitoring (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **399** [P0] crm-service: Multi-Tenant Reseller (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **400** [P0] crm-service: Hierarchy Scaling (MISSING) — no implementation evidence found in owning service
-- **401** [P0] siem-service: Regulatory Framework Setup (MISSING) — no implementation evidence found in owning service
-- **402** [P0] siem-service: License Management (MISSING) — no implementation evidence found in owning service
+- **401** [P0] siem-service: Regulatory Framework Setup (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **402** [P0] siem-service: License Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **403** [P0] siem-service: Circle/Region Mapping (MISSING) — no implementation evidence found in owning service
-- **404** [P0] siem-service: Retention Policy Config (MISSING) — no implementation evidence found in owning service
-- **405** [P0] siem-service: Auto Data Archival (MISSING) — no implementation evidence found in owning service
-- **406** [P0] siem-service: Auto Data Purge (MISSING) — no implementation evidence found in owning service
-- **407** [P0] siem-service: Central Log Repository (MISSING) — no implementation evidence found in owning service
-- **408** [P0] siem-service: Tamper Proof Logs (MISSING) — no implementation evidence found in owning service
-- **409** [P0] siem-service: Log Search & Retrieval (MISSING) — no implementation evidence found in owning service
-- **410** [P0] siem-service: Log Export (MISSING) — no implementation evidence found in owning service
-- **411** [P0] siem-service: LI Enablement (MISSING) — no implementation evidence found in owning service
-- **412** [P0] siem-service: Target Identification (MISSING) — no implementation evidence found in owning service
-- **413** [P0] siem-service: Traffic Mirroring (MISSING) — no implementation evidence found in owning service
-- **414** [P0] siem-service: Session Logging (MISSING) — no implementation evidence found in owning service
-- **415** [P0] siem-service: LI Audit Logs (MISSING) — no implementation evidence found in owning service
-- **416** [P0] siem-service: Authorization Control (MISSING) — no implementation evidence found in owning service
-- **417** [P0] siem-service: Data Encryption (MISSING) — no implementation evidence found in owning service
-- **418** [P0] siem-service: Data Masking (MISSING) — no implementation evidence found in owning service
-- **419** [P0] siem-service: Key Management (MISSING) — no implementation evidence found in owning service
-- **420** [P0] siem-service: Secure Access Logging (MISSING) — no implementation evidence found in owning service
-- **421** [P0] siem-service: Consent Management (MISSING) — no implementation evidence found in owning service
-- **422** [P0] siem-service: Data Access Requests (MISSING) — no implementation evidence found in owning service
-- **423** [P0] siem-service: Right to Erasure (MISSING) — no implementation evidence found in owning service
-- **424** [P1] siem-service: Data Portability (MISSING) — no implementation evidence found in owning service
-- **425** [P0] siem-service: Compliance Dashboard (MISSING) — 
-- **426** [P0] siem-service: Violation Detection (MISSING) — no implementation evidence found in owning service
-- **427** [P1] siem-service: Risk Assessment (MISSING) — no implementation evidence found in owning service
-- **428** [P0] siem-service: Regulatory Reports (MISSING) — no implementation evidence found in owning service
-- **429** [P0] siem-service: Audit Reports (MISSING) — no implementation evidence found in owning service
-- **430** [P0] siem-service: Incident Reports (MISSING) — no implementation evidence found in owning service
-- **432** [P0] siem-service: Event Forwarding (MISSING) — no implementation evidence found in owning service
+- **404** [P0] siem-service: Retention Policy Config (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **405** [P0] siem-service: Auto Data Archival (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **406** [P0] siem-service: Auto Data Purge (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **407** [P0] siem-service: Central Log Repository (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **408** [P0] siem-service: Tamper Proof Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **409** [P0] siem-service: Log Search & Retrieval (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **410** [P0] siem-service: Log Export (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **411** [P0] siem-service: LI Enablement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **412** [P0] siem-service: Target Identification (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **413** [P0] siem-service: Traffic Mirroring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **414** [P0] siem-service: Session Logging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **415** [P0] siem-service: LI Audit Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **416** [P0] siem-service: Authorization Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **417** [P0] siem-service: Data Encryption (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **418** [P0] siem-service: Data Masking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **419** [P0] siem-service: Key Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **420** [P0] siem-service: Secure Access Logging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **421** [P0] siem-service: Consent Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **422** [P0] siem-service: Data Access Requests (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **423** [P0] siem-service: Right to Erasure (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **424** [P1] siem-service: Data Portability (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **425** [P0] siem-service: Compliance Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **426** [P0] siem-service: Violation Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **427** [P1] siem-service: Risk Assessment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **428** [P0] siem-service: Regulatory Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **429** [P0] siem-service: Audit Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **430** [P0] siem-service: Incident Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **432** [P0] siem-service: Event Forwarding (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **433** [P1] siem-service: Threat Intelligence (MISSING) — no implementation evidence found in owning service
-- **434** [P1] siem-service: Alert Correlation (MISSING) — no implementation evidence found in owning service
+- **434** [P1] siem-service: Alert Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **435** [P0] aiops-service: Fraud Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **436** [P0] aiops-service: Fraud Case Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **437** [P0] aiops-service: Blacklist Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **438** [P0] siem-service: Full Audit Trail (MISSING) — no implementation evidence found in owning service
-- **439** [P0] siem-service: Audit Search (MISSING) — no implementation evidence found in owning service
-- **440** [P0] siem-service: Audit Export (MISSING) — no implementation evidence found in owning service
-- **441** [P0] siem-service: Policy Definition (MISSING) — no implementation evidence found in owning service
-- **442** [P0] siem-service: Policy Enforcement (MISSING) — no implementation evidence found in owning service
-- **443** [P1] siem-service: Policy Exceptions (MISSING) — no implementation evidence found in owning service
-- **444** [P1] siem-service: Access Reviews (MISSING) — no implementation evidence found in owning service
-- **445** [P1] siem-service: Segregation of Duties (MISSING) — no implementation evidence found in owning service
-- **446** [P1] siem-service: Compliance Checklist (MISSING) — no implementation evidence found in owning service
+- **438** [P0] siem-service: Full Audit Trail (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **439** [P0] siem-service: Audit Search (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **440** [P0] siem-service: Audit Export (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **441** [P0] siem-service: Policy Definition (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **442** [P0] siem-service: Policy Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **443** [P1] siem-service: Policy Exceptions (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **444** [P1] siem-service: Access Reviews (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **445** [P1] siem-service: Segregation of Duties (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **446** [P1] siem-service: Compliance Checklist (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **447** [P0] siem-service: Multi-Region Compliance (PARTIAL) — deployment manifests present; per-feature service control pending
-- **448** [P0] siem-service: High Volume Logging (MISSING) — no implementation evidence found in owning service
-- **450** [P0] siem-service: Continuous Compliance Scan (MISSING) — no implementation evidence found in owning service
+- **448** [P0] siem-service: High Volume Logging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **450** [P0] siem-service: Continuous Compliance Scan (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **451** [P0] data-warehouse-service: Data Ingestion (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **452** [P0] data-warehouse-service: ETL Pipelines (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **453** [P0] data-warehouse-service: Data Lake Storage (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -744,9 +744,9 @@
 - **839** [P0] data-warehouse-service: Ecosystem Analytics (MISSING) — no implementation evidence found in owning service
 - **840** [P0] data-warehouse-service: Partner Insights (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **841** [P0] data-warehouse-service: Marketplace Insights (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **842** [P0] siem-service: Partner Security (MISSING) — no implementation evidence found in owning service
-- **843** [P0] siem-service: Cross-Domain Security (MISSING) — no implementation evidence found in owning service
-- **844** [P1] siem-service: Trust Framework (MISSING) — no implementation evidence found in owning service
+- **842** [P0] siem-service: Partner Security (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **843** [P0] siem-service: Cross-Domain Security (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **844** [P1] siem-service: Trust Framework (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **845** [P0] core-platform-service: Partner Governance (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **846** [P0] core-platform-service: Policy Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **847** [P0] core-platform-service: Ecosystem Scaling (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -830,9 +830,9 @@
 - **933** [P1] core-platform-service: Policy Intelligence (MISSING) — no implementation evidence found in owning service
 - **934** [P0] core-platform-service: Decision Audit Trail (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **935** [P1] core-platform-service: Ethics Engine (MISSING) — no implementation evidence found in owning service
-- **936** [P0] siem-service: Enterprise Risk Mgmt (MISSING) — no implementation evidence found in owning service
-- **937** [P0] siem-service: Predictive Risk (MISSING) — no implementation evidence found in owning service
-- **938** [P1] siem-service: Risk Mitigation Engine (MISSING) — no implementation evidence found in owning service
+- **936** [P0] siem-service: Enterprise Risk Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **937** [P0] siem-service: Predictive Risk (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **938** [P1] siem-service: Risk Mitigation Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **940** [P0] core-platform-service: Enterprise Command Center (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **941** [P0] core-platform-service: Real-time Decisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **942** [P1] core-platform-service: Autonomous Task Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -882,10 +882,10 @@
 - **1036** [P0] bss-service: Deferred Revenue (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1037** [P0] bss-service: Accrual Accounting (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1038** [P0] bss-service: Revenue Recognition (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1039** [P0] siem-service: CAF Management (MISSING) — no implementation evidence found in owning service
-- **1040** [P0] siem-service: CAF Audit Trail (MISSING) — no implementation evidence found in owning service
-- **1041** [P0] siem-service: IPDR Format Export (MISSING) — no implementation evidence found in owning service
-- **1042** [P0] siem-service: LEA Interface (MISSING) — no implementation evidence found in owning service
+- **1039** [P0] siem-service: CAF Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1040** [P0] siem-service: CAF Audit Trail (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1041** [P0] siem-service: IPDR Format Export (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1042** [P0] siem-service: LEA Interface (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1043** [P0] data-warehouse-service: Data Residency Rules (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1044** [P0] data-warehouse-service: BYOK (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1045** [P0] bss-service: Product Launch (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1002,21 +1002,21 @@
 - **1158** [P0] nms-service: Log Enrichment (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1159** [P0] nms-service: Cross-Domain Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1160** [P1] nms-service: Dynamic Alert Thresholds (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1161** [P0] siem-service: IPDR Retention Mgmt (MISSING) — no implementation evidence found in owning service
-- **1162** [P0] siem-service: LI Real-Time Feed (MISSING) — no implementation evidence found in owning service
-- **1163** [P0] siem-service: Data Access Audit (MISSING) — no implementation evidence found in owning service
+- **1161** [P0] siem-service: IPDR Retention Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1162** [P0] siem-service: LI Real-Time Feed (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1163** [P0] siem-service: Data Access Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1164** [P0] siem-service: Geo Blocking (MISSING) — no implementation evidence found in owning service
-- **1165** [P0] siem-service: Emergency Services Routing (MISSING) — no implementation evidence found in owning service
+- **1165** [P0] siem-service: Emergency Services Routing (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1166** [P0] nms-service: Query Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1167** [P0] nms-service: Cache Strategy (MISSING) — no implementation evidence found in owning service
 - **1168** [P0] nms-service: Hot Path Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1169** [P0] nms-service: Peak Traffic Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1170** [P0] nms-service: Session Scaling Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1171** [P0] siem-service: Runtime Protection (MISSING) — no implementation evidence found in owning service
-- **1172** [P0] siem-service: Container Security (MISSING) — no implementation evidence found in owning service
-- **1173** [P0] siem-service: Vulnerability Scanning (MISSING) — no implementation evidence found in owning service
-- **1174** [P0] siem-service: Patch Management (MISSING) — no implementation evidence found in owning service
-- **1175** [P0] siem-service: Security Baselines (MISSING) — no implementation evidence found in owning service
+- **1171** [P0] siem-service: Runtime Protection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1172** [P0] siem-service: Container Security (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1173** [P0] siem-service: Vulnerability Scanning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1174** [P0] siem-service: Patch Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1175** [P0] siem-service: Security Baselines (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1176** [P0] data-warehouse-service: Data Consistency Checker (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1177** [P1] data-warehouse-service: Data Repair Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1180** [P0] data-warehouse-service: Cross-Region Restore (PARTIAL) — deployment manifests present; per-feature service control pending
@@ -1066,16 +1066,16 @@
 - **1227** [P0] crm-service: Journey Funnel Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1228** [P0] crm-service: Proactive Issue Resolution (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1229** [P1] crm-service: Gamification Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1234** [P0] siem-service: SOC Dashboard (MISSING) — 
-- **1235** [P0] siem-service: Security Automation Engine (MISSING) — no implementation evidence found in owning service
+- **1234** [P0] siem-service: SOC Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1235** [P0] siem-service: Security Automation Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1236** [P0] siem-service: Threat Hunting Playbooks (MISSING) — no implementation evidence found in owning service
-- **1237** [P1] siem-service: Breach Simulation (MISSING) — no implementation evidence found in owning service
+- **1237** [P1] siem-service: Breach Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1238** [P0] nms-service: KPI-Event Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1239** [P0] nms-service: Customer Impact Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1240** [P0] siem-service: GDPR Compliance Engine (MISSING) — no implementation evidence found in owning service
-- **1241** [P1] siem-service: FCC/ETSI Compliance (MISSING) — no implementation evidence found in owning service
-- **1242** [P0] siem-service: Multi-Country Localization (MISSING) — no implementation evidence found in owning service
-- **1243** [P0] siem-service: Law Enforcement Workflow (MISSING) — no implementation evidence found in owning service
+- **1240** [P0] siem-service: GDPR Compliance Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1241** [P1] siem-service: FCC/ETSI Compliance (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1242** [P0] siem-service: Multi-Country Localization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1243** [P0] siem-service: Law Enforcement Workflow (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1244** [P0] core-platform-service: Unified Admin Console (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1245** [P0] core-platform-service: Persona-Based Dashboards (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1246** [P0] bss-service: Go-To-Market Workflow (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1103,12 +1103,12 @@
 - **1268** [P0] aiops-service: Churn Root Cause Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1269** [P0] crm-service: Offer Auto Trigger (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1270** [P1] crm-service: Service Downgrade Prevention (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1274** [P0] siem-service: SOC Incident Timeline (MISSING) — no implementation evidence found in owning service
-- **1275** [P1] siem-service: Auto Playbook Tuning (MISSING) — no implementation evidence found in owning service
-- **1276** [P1] siem-service: Threat Attribution (MISSING) — no implementation evidence found in owning service
+- **1274** [P0] siem-service: SOC Incident Timeline (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1275** [P1] siem-service: Auto Playbook Tuning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1276** [P1] siem-service: Threat Attribution (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1277** [P0] nms-service: Revenue Drop Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1278** [P0] nms-service: SLA Impact Simulator (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1279** [P0] siem-service: Cross-Border Data Rules Engine (MISSING) — no implementation evidence found in owning service
+- **1279** [P0] siem-service: Cross-Border Data Rules Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1280** [P1] siem-service: Automated Notice Handling (MISSING) — no implementation evidence found in owning service
 - **1281** [P0] core-platform-service: Smart Dashboard Builder (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1282** [P0] core-platform-service: KPI Widgets Library (PARTIAL) — read-model API present but acceptance criteria incomplete
@@ -1156,12 +1156,12 @@
 - **1324** [P1] core-platform-service: Adaptive UI (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1325** [P0] core-platform-service: Smart Notifications (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1329** [P1] siem-service: Adaptive Threat Response (MISSING) — no implementation evidence found in owning service
-- **1330** [P1] siem-service: Continuous Authentication (MISSING) — no implementation evidence found in owning service
-- **1331** [P1] siem-service: Session Risk Scoring (MISSING) — no implementation evidence found in owning service
-- **1332** [P1] siem-service: Geo Anomaly Detection (MISSING) — no implementation evidence found in owning service
-- **1333** [P0] siem-service: Data Transfer Audit (MISSING) — no implementation evidence found in owning service
-- **1334** [P0] siem-service: Retention Validation (MISSING) — no implementation evidence found in owning service
-- **1335** [P0] siem-service: Regulatory Reporting Automation (MISSING) — no implementation evidence found in owning service
+- **1330** [P1] siem-service: Continuous Authentication (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1331** [P1] siem-service: Session Risk Scoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1332** [P1] siem-service: Geo Anomaly Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1333** [P0] siem-service: Data Transfer Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1334** [P0] siem-service: Retention Validation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1335** [P0] siem-service: Regulatory Reporting Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1336** [P1] bss-service: Subscription Cohort Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1337** [P0] bss-service: ARPU Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1338** [P1] bss-service: CAC Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1193,13 +1193,13 @@
 - **1364** [P0] aiops-service: Experience Degradation Alerts (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1365** [P1] aiops-service: Lifetime Engagement Score (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1366** [P0] aiops-service: Complaint Pattern Mining (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1367** [P1] siem-service: Lateral Movement Detection (MISSING) — no implementation evidence found in owning service
-- **1368** [P0] siem-service: Privilege Escalation Detection (MISSING) — no implementation evidence found in owning service
+- **1367** [P1] siem-service: Lateral Movement Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1368** [P0] siem-service: Privilege Escalation Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1370** [P0] siem-service: Adaptive MFA (MISSING) — no implementation evidence found in owning service
-- **1371** [P0] siem-service: Real-Time Compliance Engine (MISSING) — no implementation evidence found in owning service
-- **1372** [P0] siem-service: Cross-System Audit Sync (MISSING) — no implementation evidence found in owning service
-- **1373** [P1] siem-service: Regulatory Change Adapter (MISSING) — no implementation evidence found in owning service
-- **1374** [P1] siem-service: Audit Risk Scoring (MISSING) — no implementation evidence found in owning service
+- **1371** [P0] siem-service: Real-Time Compliance Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1372** [P0] siem-service: Cross-System Audit Sync (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1373** [P1] siem-service: Regulatory Change Adapter (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1374** [P1] siem-service: Audit Risk Scoring (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1375** [P1] nms-service: Trace Replay Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1376** [P0] nms-service: Service Dependency Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1377** [P0] nms-service: Event Storm Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1239,9 +1239,8 @@
 - **1411** [P0] bss-service: Enterprise Contract Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1412** [P0] bss-service: Multi-Site Account Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1413** [P0] bss-service: Hierarchy-Based Billing Split (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1414** [P0] siem-service: Security Case Management (MISSING) — no implementation evidence found in owning service
-- **1415** [P0] siem-service: SOC Workflow Lifecycle (MISSING) — no implementation evidence found in owning service
-- **1416** [P0] siem-service: Data Breach Notification Workflow (MISSING) — no implementation evidence found in owning service
+- **1415** [P0] siem-service: SOC Workflow Lifecycle (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1416** [P0] siem-service: Data Breach Notification Workflow (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1417** [P0] core-platform-service: Feature Usage Telemetry (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1418** [P0] core-platform-service: Tenant SLA Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1419** [P0] core-platform-service: Platform SLA Guarantees (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1264,10 +1263,10 @@
 - **1438** [P0] core-platform-service: Cross-Domain Event Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1439** [P1] core-platform-service: Event Replay Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1440** [P0] core-platform-service: Cross-System Orchestration (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1441** [P0] siem-service: Multi-Regulator Engine (MISSING) — no implementation evidence found in owning service
-- **1442** [P1] siem-service: Cross-Jurisdiction Conflict Resolver (MISSING) — no implementation evidence found in owning service
+- **1441** [P0] siem-service: Multi-Regulator Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1442** [P1] siem-service: Cross-Jurisdiction Conflict Resolver (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1443** [P1] siem-service: Digital Forensics Engine (MISSING) — no implementation evidence found in owning service
-- **1444** [P1] siem-service: Evidence Chain Mgmt (MISSING) — no implementation evidence found in owning service
+- **1444** [P1] siem-service: Evidence Chain Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1445** [P0] aiops-service: Revenue Shock Detector (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1446** [P0] aiops-service: Demand Shock Response (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1447** [P0] core-platform-service: Full Lifecycle Traceability (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1293,12 +1292,12 @@
 - **1467** [P0] bss-service: Cross-Entity Customer View (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1468** [P0] bss-service: Multi-Contract Billing Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1469** [P0] core-platform-service: Contract SLA Aggregator (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1470** [P0] siem-service: Enterprise SLA Risk Engine (MISSING) — no implementation evidence found in owning service
-- **1471** [P0] siem-service: Incident Prioritization Engine (MISSING) — no implementation evidence found in owning service
-- **1472** [P0] siem-service: Automated Escalation Matrix (MISSING) — no implementation evidence found in owning service
-- **1473** [P0] siem-service: Breach Impact Analyzer (MISSING) — no implementation evidence found in owning service
-- **1474** [P0] siem-service: Customer Notification Tracker (MISSING) — no implementation evidence found in owning service
-- **1475** [P0] siem-service: Regulator Reporting Automation (MISSING) — no implementation evidence found in owning service
+- **1470** [P0] siem-service: Enterprise SLA Risk Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1471** [P0] siem-service: Incident Prioritization Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1472** [P0] siem-service: Automated Escalation Matrix (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1473** [P0] siem-service: Breach Impact Analyzer (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1474** [P0] siem-service: Customer Notification Tracker (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1475** [P0] siem-service: Regulator Reporting Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1476** [P0] core-platform-service: Tenant Usage Cost Meter (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1477** [P0] core-platform-service: Feature Adoption Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1478** [P0] core-platform-service: SLA Breach Root Cause (PARTIAL) — partial evidence; acceptance criteria incomplete

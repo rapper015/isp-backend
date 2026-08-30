@@ -1,9 +1,9 @@
 {
   "total": 1500,
   "status_counts": {
-    "PARTIAL": 984,
-    "COMPLETE": 21,
-    "MISSING": 308,
+    "PARTIAL": 1081,
+    "COMPLETE": 22,
+    "MISSING": 210,
     "BLOCKED_EXTERNAL": 135,
     "CONDITIONAL_FUTURE": 52
   },
@@ -15505,18 +15505,33 @@
       "dependencies": "Core-33",
       "source_event": "FrameworkConfigured",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py"
+        ],
+        "word_hits": [
+          "regulatory",
+          "configure",
+          "trai",
+          "dot",
+          "compliance"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15532,18 +15547,27 @@
       "dependencies": "401",
       "source_event": "LicenseUpdated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\tests\\test_audit_and_security.py"
+        ],
+        "word_hits": [
+          "manage",
+          "isp",
+          "dot"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15567,9 +15591,9 @@
         "route_hit": false,
         "test_hit": false,
         "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "no implementation evidence found in owning service"
       }
     },
@@ -15586,18 +15610,32 @@
       "dependencies": "Core-31",
       "source_event": "RetentionDefined",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py"
+        ],
+        "word_hits": [
+          "retention",
+          "policy",
+          "configure",
+          "data"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15613,18 +15651,33 @@
       "dependencies": "404",
       "source_event": "DataArchived",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py"
+        ],
+        "word_hits": [
+          "auto",
+          "data",
+          "archive",
+          "logs",
+          "threshold"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15640,18 +15693,33 @@
       "dependencies": "404",
       "source_event": "DataPurged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py"
+        ],
+        "word_hits": [
+          "auto",
+          "data",
+          "purge",
+          "delete",
+          "policy"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15667,18 +15735,32 @@
       "dependencies": "Core-44",
       "source_event": "LogStored",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\worker_runner.py"
+        ],
+        "word_hits": [
+          "central",
+          "log",
+          "repository",
+          "logs"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15694,18 +15776,33 @@
       "dependencies": "407",
       "source_event": "LogSecured",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "tamper",
+          "proof",
+          "logs",
+          "log",
+          "storage"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15721,18 +15818,30 @@
       "dependencies": "407",
       "source_event": "LogRetrieved",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\worker_runner.py"
+        ],
+        "word_hits": [
+          "log",
+          "logs"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15748,18 +15857,32 @@
       "dependencies": "409",
       "source_event": "LogExported",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\worker_runner.py"
+        ],
+        "word_hits": [
+          "log",
+          "export",
+          "logs",
+          "audit"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15775,18 +15898,28 @@
       "dependencies": "AAA-195",
       "source_event": "LIEnabled",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "enablement",
+          "enable",
+          "lawful",
+          "interception"
+        ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15802,18 +15935,30 @@
       "dependencies": "411",
       "source_event": "TargetAssigned",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\conftest.py",
+          "services\\siem-service\\tests\\test_audit_and_security.py"
+        ],
+        "word_hits": [
+          "target",
+          "subscriber"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15829,18 +15974,27 @@
       "dependencies": "412",
       "source_event": "TrafficMirrored",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\conftest.py",
+          "services\\siem-service\\tests\\test_audit_and_security.py"
+        ],
+        "word_hits": [
+          "target"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15856,18 +16010,32 @@
       "dependencies": "AAA-160",
       "source_event": "LISessionLogged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "session",
+          "logging",
+          "capture",
+          "metadata"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15883,18 +16051,30 @@
       "dependencies": "411",
       "source_event": "LIAuditLogged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\migrations\\0001_siem_batch1.py",
+          "services\\siem-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "audit",
+          "logs"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15910,18 +16090,31 @@
       "dependencies": "411",
       "source_event": "LIApproved",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\conftest.py",
+          "services\\siem-service\\tests\\test_audit_and_security.py"
+        ],
+        "word_hits": [
+          "authorization",
+          "approve",
+          "requests"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15937,18 +16130,33 @@
       "dependencies": "Core-33",
       "source_event": "DataEncrypted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py"
+        ],
+        "word_hits": [
+          "data",
+          "encryption",
+          "encrypt",
+          "sensitive",
+          "rest"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15964,18 +16172,33 @@
       "dependencies": "417",
       "source_event": "DataMasked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py"
+        ],
+        "word_hits": [
+          "data",
+          "masking",
+          "mask",
+          "pii",
+          "fields"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15991,18 +16214,31 @@
       "dependencies": "417",
       "source_event": "KeyRotated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\conftest.py",
+          "services\\siem-service\\tests\\test_events.py"
+        ],
+        "word_hits": [
+          "key",
+          "manage",
+          "encryption",
+          "keys"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16018,18 +16254,32 @@
       "dependencies": "Core-29",
       "source_event": "SecureAccessLogged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "access",
+          "logging",
+          "log",
+          "sensitive"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16045,18 +16295,30 @@
       "dependencies": "CRM-71",
       "source_event": "ConsentCaptured",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py"
+        ],
+        "word_hits": [
+          "consent",
+          "user"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16072,18 +16334,32 @@
       "dependencies": "421",
       "source_event": "RequestProcessed",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py"
+        ],
+        "word_hits": [
+          "data",
+          "access",
+          "requests",
+          "user"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16099,18 +16375,33 @@
       "dependencies": "422",
       "source_event": "DataErased",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py"
+        ],
+        "word_hits": [
+          "right",
+          "erasure",
+          "delete",
+          "data",
+          "request"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16126,18 +16417,32 @@
       "dependencies": "422",
       "source_event": "DataExported",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py"
+        ],
+        "word_hits": [
+          "data",
+          "portability",
+          "export",
+          "user"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16153,18 +16458,30 @@
       "dependencies": "401",
       "source_event": "DashboardViewed",
       "backend_treatment": "BACKEND API/READ MODEL ONLY: frontend is outside this task",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "compliance",
+          "dashboard"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": null
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "read-model API present but acceptance criteria incomplete"
       }
     },
     {
@@ -16180,18 +16497,33 @@
       "dependencies": "401",
       "source_event": "ViolationDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "violation",
+          "detection",
+          "detect",
+          "policy",
+          "violations"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16207,18 +16539,31 @@
       "dependencies": "426",
       "source_event": "RiskEvaluated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "risk",
+          "evaluate",
+          "compliance"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16234,18 +16579,31 @@
       "dependencies": "401",
       "source_event": "ReportGenerated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\tests\\test_audit_and_security.py"
+        ],
+        "word_hits": [
+          "regulatory",
+          "reports",
+          "generate",
+          "trai",
+          "dot"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16261,18 +16619,31 @@
       "dependencies": "407",
       "source_event": "AuditReported",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\migrations\\0001_siem_batch1.py",
+          "services\\siem-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "audit",
+          "reports",
+          "internal"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16288,18 +16659,32 @@
       "dependencies": "426",
       "source_event": "IncidentReported",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "incident",
+          "reports",
+          "compliance",
+          "logs"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16318,18 +16703,25 @@
       "status": "BLOCKED_EXTERNAL",
       "evidence": {
         "files": [
-          "services\\siem-service\\app\\main.py"
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py"
         ],
         "word_hits": [
           "siem"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 1,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "production adapter requires external provider credentials/infra"
       }
     },
@@ -16346,22 +16738,31 @@
       "dependencies": "431",
       "source_event": "EventForwarded",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\siem-service\\app\\main.py"
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py"
         ],
         "word_hits": [
+          "event",
+          "logs",
           "siem"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16385,9 +16786,9 @@
         "route_hit": false,
         "test_hit": false,
         "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "no implementation evidence found in owning service"
       }
     },
@@ -16404,22 +16805,29 @@
       "dependencies": "433",
       "source_event": "ThreatCorrelated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\siem-service\\app\\main.py"
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py"
         ],
         "word_hits": [
           "siem"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 1,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16558,18 +16966,33 @@
       "dependencies": "Core-29",
       "source_event": "AuditLogged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py"
+        ],
+        "word_hits": [
+          "full",
+          "audit",
+          "trail",
+          "cross",
+          "records"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16585,18 +17008,29 @@
       "dependencies": "438",
       "source_event": "AuditRetrieved",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\migrations\\0001_siem_batch1.py",
+          "services\\siem-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "audit"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16612,18 +17046,31 @@
       "dependencies": "439",
       "source_event": "AuditExported",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\migrations\\0001_siem_batch1.py",
+          "services\\siem-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "audit",
+          "export",
+          "logs"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16639,18 +17086,31 @@
       "dependencies": "None",
       "source_event": "PolicyDefined",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "policy",
+          "compliance",
+          "policies"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16666,18 +17126,32 @@
       "dependencies": "441",
       "source_event": "PolicyEnforced",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "policy",
+          "enforcement",
+          "enforce",
+          "system"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16693,18 +17167,32 @@
       "dependencies": "441",
       "source_event": "ExceptionGranted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "policy",
+          "manage",
+          "exception",
+          "cases"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16720,18 +17208,31 @@
       "dependencies": "Core-14",
       "source_event": "ReviewCompleted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "access",
+          "periodic",
+          "role"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16747,18 +17248,28 @@
       "dependencies": "444",
       "source_event": "SoDValidated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_compliance.py"
+        ],
+        "word_hits": [
+          "enforce",
+          "policies"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16774,18 +17285,30 @@
       "dependencies": "441",
       "source_event": "ChecklistCompleted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "compliance",
+          "audit"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16803,15 +17326,26 @@
       "backend_treatment": "INFRASTRUCTURE + SERVICE CONTROL: code only in owner plus infrastructure manifests",
       "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "compliance"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "deployment manifests present; per-feature service control pending"
       }
     },
@@ -16828,18 +17362,33 @@
       "dependencies": "407",
       "source_event": "LogScaled",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "high",
+          "volume",
+          "logging",
+          "log",
+          "ingestion"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -16863,9 +17412,9 @@
         "route_hit": false,
         "test_hit": false,
         "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "production adapter requires external provider credentials/infra"
       }
     },
@@ -16882,18 +17431,31 @@
       "dependencies": "441",
       "source_event": "ComplianceScanned",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "continuous",
+          "compliance",
+          "scan"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -31425,18 +31987,29 @@
       "dependencies": "594",
       "source_event": "SecurityValidated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "security"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -31452,18 +32025,31 @@
       "dependencies": "842",
       "source_event": "FederationSecured",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py"
+        ],
+        "word_hits": [
+          "cross",
+          "domain",
+          "security"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -31479,18 +32065,25 @@
       "dependencies": "842",
       "source_event": "TrustEstablished",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_compliance.py"
+        ],
+        "word_hits": [
+          "policies"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -34746,18 +35339,23 @@
       "dependencies": "Platform-778",
       "source_event": "RiskTracked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_cases.py"
+        ],
+        "word_hits": [
+          "risk"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -34773,18 +35371,23 @@
       "dependencies": "936",
       "source_event": "RiskPredicted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_cases.py"
+        ],
+        "word_hits": [
+          "risk"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -34800,18 +35403,28 @@
       "dependencies": "936",
       "source_event": "MitigationApplied",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py",
+          "services\\siem-service\\tests\\conftest.py",
+          "services\\siem-service\\tests\\test_cases.py"
+        ],
+        "word_hits": [
+          "risk",
+          "auto"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -34827,18 +35440,31 @@
       "dependencies": "937",
       "source_event": "RiskDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_compliance.py",
+          "services\\siem-service\\tests\\test_events.py"
+        ],
+        "word_hits": [
+          "detection",
+          "detect",
+          "unknown"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -38556,22 +39182,29 @@
       "dependencies": "CRM-66",
       "source_event": "CAFStored",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\siem-service\\app\\main.py"
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py"
         ],
         "word_hits": [
           "app"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 1,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -38587,18 +39220,31 @@
       "dependencies": "1039",
       "source_event": "CAFAudited",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\migrations\\0001_siem_batch1.py",
+          "services\\siem-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "audit",
+          "trail",
+          "logs"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -38614,18 +39260,31 @@
       "dependencies": "AAA-163",
       "source_event": "IPDRExported",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_audit_and_security.py",
+          "services\\siem-service\\tests\\test_events.py"
+        ],
+        "word_hits": [
+          "ipdr",
+          "format",
+          "export",
+          "records"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -38641,18 +39300,32 @@
       "dependencies": "1041",
       "source_event": "LEAccessed",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\conftest.py",
+          "services\\siem-service\\tests\\test_audit_and_security.py"
+        ],
+        "word_hits": [
+          "lea",
+          "law",
+          "enforcement",
+          "access"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43060,18 +43733,31 @@
       "dependencies": "1041",
       "source_event": "RetentionApplied",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "ipdr",
+          "retention",
+          "law"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43087,18 +43773,29 @@
       "dependencies": "413",
       "source_event": "FeedDelivered",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "time"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43114,18 +43811,32 @@
       "dependencies": "420",
       "source_event": "AccessAudited",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py"
+        ],
+        "word_hits": [
+          "data",
+          "access",
+          "audit",
+          "regulator"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43149,9 +43860,9 @@
         "route_hit": false,
         "test_hit": false,
         "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "no implementation evidence found in owning service"
       }
     },
@@ -43168,18 +43879,28 @@
       "dependencies": "VoIP-665",
       "source_event": "EmergencyRouted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "routing",
+          "route"
+        ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43390,18 +44111,24 @@
       "dependencies": "594",
       "source_event": "ThreatBlocked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\tests\\test_events.py"
+        ],
+        "word_hits": [
+          "runtime"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43417,18 +44144,29 @@
       "dependencies": "Platform-638",
       "source_event": "ContainerSecured",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "security"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43444,18 +44182,31 @@
       "dependencies": "594",
       "source_event": "VulnerabilityDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\migrations\\0001_siem_batch1.py"
+        ],
+        "word_hits": [
+          "vulnerability",
+          "detect",
+          "vulnerabilities"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43471,18 +44222,26 @@
       "dependencies": "1173",
       "source_event": "PatchApplied",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "patch",
+          "apply"
+        ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43498,18 +44257,30 @@
       "dependencies": "1173",
       "source_event": "BaselineApplied",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "security",
+          "enforce"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -45682,18 +46453,31 @@
       "dependencies": "782",
       "source_event": "SOCViewed",
       "backend_treatment": "BACKEND API/READ MODEL ONLY: frontend is outside this task",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "soc",
+          "dashboard",
+          "security"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": null
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "read-model API present but acceptance criteria incomplete"
       }
     },
     {
@@ -45709,18 +46493,32 @@
       "dependencies": "782",
       "source_event": "ResponseExecuted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py"
+        ],
+        "word_hits": [
+          "security",
+          "auto",
+          "incident",
+          "response"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -45744,9 +46542,9 @@
         "route_hit": false,
         "test_hit": false,
         "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "no implementation evidence found in owning service"
       }
     },
@@ -45763,18 +46561,28 @@
       "dependencies": "645",
       "source_event": "BreachSimulated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_cases.py"
+        ],
+        "word_hits": [
+          "breach"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -45874,18 +46682,30 @@
       "dependencies": "Compliance-421",
       "source_event": "GDPRValidated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py"
+        ],
+        "word_hits": [
+          "compliance",
+          "data"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -45901,18 +46721,29 @@
       "dependencies": "401",
       "source_event": "ComplianceValidated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "compliance"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -45928,18 +46759,30 @@
       "dependencies": "1043",
       "source_event": "DataLocalized",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py"
+        ],
+        "word_hits": [
+          "route",
+          "data"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -45955,18 +46798,32 @@
       "dependencies": "1042",
       "source_event": "RequestProcessed",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py",
+          "services\\siem-service\\migrations\\0001_siem_batch1.py"
+        ],
+        "word_hits": [
+          "law",
+          "enforcement",
+          "workflow",
+          "end"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -47077,18 +47934,33 @@
       "dependencies": "1234",
       "source_event": "TimelineLogged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "soc",
+          "incident",
+          "timeline",
+          "full",
+          "lifecycle"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -47104,18 +47976,25 @@
       "dependencies": "1236",
       "source_event": "PlaybookOptimized",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\tasks.py",
+          "services\\siem-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "auto"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -47131,18 +48010,29 @@
       "dependencies": "782",
       "source_event": "SourceIdentified",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "source"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -47238,18 +48128,30 @@
       "dependencies": "1242",
       "source_event": "RuleApplied",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py"
+        ],
+        "word_hits": [
+          "cross",
+          "data"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -47273,9 +48175,9 @@
         "route_hit": false,
         "test_hit": false,
         "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "no implementation evidence found in owning service"
       }
     },
@@ -49096,15 +49998,20 @@
       "backend_treatment": "FULL BACKEND",
       "status": "MISSING",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\schemas.py"
+        ],
+        "word_hits": [
+          "response"
+        ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "no implementation evidence found in owning service"
       }
     },
@@ -49121,18 +50028,25 @@
       "dependencies": "152",
       "source_event": "AuthValidated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "continuous",
+          "validate"
+        ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -49148,18 +50062,30 @@
       "dependencies": "783",
       "source_event": "RiskCalculated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py",
+          "services\\siem-service\\app\\worker_runner.py"
+        ],
+        "word_hits": [
+          "session",
+          "risk"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -49175,18 +50101,30 @@
       "dependencies": "783",
       "source_event": "AnomalyDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_compliance.py",
+          "services\\siem-service\\tests\\test_events.py"
+        ],
+        "word_hits": [
+          "anomaly",
+          "detection",
+          "detect"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -49202,18 +50140,31 @@
       "dependencies": "1279",
       "source_event": "TransferLogged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py"
+        ],
+        "word_hits": [
+          "data",
+          "audit",
+          "cross"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -49229,18 +50180,30 @@
       "dependencies": "404",
       "source_event": "RetentionChecked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "retention",
+          "compliance"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -49256,18 +50219,31 @@
       "dependencies": "428",
       "source_event": "ReportSubmitted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\tasks.py",
+          "services\\siem-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "regulatory",
+          "auto",
+          "generate"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -50493,18 +51469,31 @@
       "dependencies": "783",
       "source_event": "MovementDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\conftest.py",
+          "services\\siem-service\\tests\\test_compliance.py"
+        ],
+        "word_hits": [
+          "detection",
+          "detect",
+          "internal"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -50520,18 +51509,32 @@
       "dependencies": "Core-14",
       "source_event": "EscalationDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "escalation",
+          "detection",
+          "detect",
+          "role"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -50547,18 +51550,29 @@
       "dependencies": "783",
       "source_event": "BehaviorTracked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py",
+          "services\\siem-service\\tests\\conftest.py",
+          "services\\siem-service\\tests\\test_audit_and_security.py"
+        ],
+        "word_hits": [
+          "user"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -50576,15 +51590,26 @@
       "backend_treatment": "FULL BACKEND",
       "status": "MISSING",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "context"
+        ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "no implementation evidence found in owning service"
       }
     },
@@ -50601,18 +51626,32 @@
       "dependencies": "450",
       "source_event": "ComplianceValidated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "time",
+          "compliance",
+          "continuous",
+          "rule"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -50628,18 +51667,33 @@
       "dependencies": "438",
       "source_event": "LogsSynced",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py"
+        ],
+        "word_hits": [
+          "cross",
+          "system",
+          "audit",
+          "compliance",
+          "logs"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -50655,18 +51709,32 @@
       "dependencies": "401",
       "source_event": "RulesUpdated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py"
+        ],
+        "word_hits": [
+          "regulatory",
+          "change",
+          "auto",
+          "update"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -50682,18 +51750,30 @@
       "dependencies": "936",
       "source_event": "RiskCalculated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\routing.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\migrations\\0001_siem_batch1.py",
+          "services\\siem-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "audit",
+          "risk"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -52243,18 +53323,32 @@
       "dependencies": "782",
       "source_event": "CaseCreated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
-        "files": [],
-        "word_hits": [],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "security",
+          "case",
+          "incidents",
+          "lifecycle"
+        ],
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": null
       }
     },
     {
@@ -52270,18 +53364,33 @@
       "dependencies": "1234",
       "source_event": "WorkflowExecuted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\conftest.py"
+        ],
+        "word_hits": [
+          "soc",
+          "workflow",
+          "lifecycle",
+          "full",
+          "incident"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -52297,18 +53406,33 @@
       "dependencies": "Compliance-421",
       "source_event": "NotificationTriggered",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py"
+        ],
+        "word_hits": [
+          "data",
+          "breach",
+          "notification",
+          "workflow",
+          "notify"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -53215,18 +54339,28 @@
       "dependencies": "401",
       "source_event": "RegulationApplied",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_audit_and_security.py",
+          "services\\siem-service\\tests\\test_cases.py"
+        ],
+        "word_hits": [
+          "regulator"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -53242,18 +54376,30 @@
       "dependencies": "1242",
       "source_event": "ConflictResolved",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\context.py",
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "cross",
+          "resolve"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -53271,15 +54417,19 @@
       "backend_treatment": "FULL BACKEND",
       "status": "MISSING",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\events.py"
+        ],
+        "word_hits": [
+          "incidents"
+        ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
+        "hit_count": 1,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
         "missing_acceptance": "no implementation evidence found in owning service"
       }
     },
@@ -53296,18 +54446,30 @@
       "dependencies": "1443",
       "source_event": "EvidenceStored",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\migrations\\0001_siem_batch1.py",
+          "services\\siem-service\\tests\\test_events.py"
+        ],
+        "word_hits": [
+          "evidence",
+          "chain"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -54279,18 +55441,29 @@
       "dependencies": "1354",
       "source_event": "RiskPredicted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_cases.py"
+        ],
+        "word_hits": [
+          "risk",
+          "breach"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -54306,18 +55479,30 @@
       "dependencies": "1414",
       "source_event": "PriorityAssigned",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_audit_and_security.py",
+          "services\\siem-service\\tests\\test_cases.py"
+        ],
+        "word_hits": [
+          "incident",
+          "incidents",
+          "impact"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -54333,18 +55518,32 @@
       "dependencies": "1415",
       "source_event": "EscalationTriggered",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\enums.py",
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "escalation",
+          "matrix",
+          "escalate",
+          "severity"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -54360,18 +55559,30 @@
       "dependencies": "1416",
       "source_event": "ImpactCalculated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_cases.py"
+        ],
+        "word_hits": [
+          "breach",
+          "impact",
+          "estimate"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -54387,18 +55598,30 @@
       "dependencies": "1416",
       "source_event": "NotificationTracked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\events.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\tests\\test_cases.py"
+        ],
+        "word_hits": [
+          "notification",
+          "breach",
+          "notifications"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -54414,18 +55637,31 @@
       "dependencies": "1435",
       "source_event": "ReportSubmitted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\siem-service\\app\\crypto.py",
+          "services\\siem-service\\app\\database.py",
+          "services\\siem-service\\app\\main.py",
+          "services\\siem-service\\app\\models.py",
+          "services\\siem-service\\app\\schemas.py",
+          "services\\siem-service\\app\\security.py",
+          "services\\siem-service\\app\\services.py",
+          "services\\siem-service\\app\\tasks.py"
+        ],
+        "word_hits": [
+          "regulator",
+          "auto",
+          "report"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
-        "tenant_evidence": false,
-        "audit_evidence": false,
-        "permission_evidence": false,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
+        "tenant_evidence": true,
+        "audit_evidence": true,
+        "permission_evidence": true,
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {

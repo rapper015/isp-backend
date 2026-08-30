@@ -178,7 +178,29 @@ services:
   siem-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: siem-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: siem-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/siem}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: siem-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/siem
+      SIEM_JWT_SECRET: ${SIEM_JWT_SECRET:-change-me-siem-jwt-secret-0123456789abcdef}
+      SIEM_INTERNAL_API_KEY: ${SIEM_INTERNAL_API_KEY:-change-me-siem-internal-key}
+      SIEM_ENCRYPTION_KEY: ${SIEM_ENCRYPTION_KEY:-change-me-siem-encryption-key-0123456789abcdef}
+
+  siem-worker:
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: siem-service}}
+    command: ["python", "-m", "app.worker_runner"]
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: siem-worker
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/siem
+      SIEM_JWT_SECRET: ${SIEM_JWT_SECRET:-change-me-siem-jwt-secret-0123456789abcdef}
+      SIEM_INTERNAL_API_KEY: ${SIEM_INTERNAL_API_KEY:-change-me-siem-internal-key}
+      SIEM_ENCRYPTION_KEY: ${SIEM_ENCRYPTION_KEY:-change-me-siem-encryption-key-0123456789abcdef}
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      valkey: {condition: service_healthy}
+    networks: [platform]
 
   workforce-service:
     <<: *domain-service

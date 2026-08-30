@@ -91,10 +91,10 @@ Total features: 8
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 2 |
-| COMPLETE | 0 |
+| COMPLETE | 1 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 106 |
-| PARTIAL | 1 |
+| MISSING | 8 |
+| PARTIAL | 98 |
 
 Total features: 109
 
