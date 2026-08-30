@@ -1,6 +1,6 @@
 # Client Feature Coverage — 1,500 reconciled rows
 
-Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=52, MISSING=103, PARTIAL=1169
+Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=52, MISSING=75, PARTIAL=1197
 
 | ID | Owner | Access | Priority | Module / Submodule | Feature | Status |
 |---|---|---|---|---|---|---|
@@ -107,7 +107,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 101 | bss-service | TA | P0 | BSS / Product Catalog | Create Product | PARTIAL |
 | 102 | bss-service | TA | P0 | BSS / Product Catalog | Update Product | PARTIAL |
 | 103 | bss-service | TA | P1 | BSS / Product Catalog | Delete Product | PARTIAL |
-| 104 | bss-service | TA | P0 | BSS / Product Catalog | Bundle Products | MISSING |
+| 104 | bss-service | TA | P0 | BSS / Product Catalog | Bundle Products | PARTIAL |
 | 105 | bss-service | TA | P0 | BSS / Product Catalog | Pricing Models | PARTIAL |
 | 106 | bss-service | TA | P0 | BSS / Plans | Create Plan | PARTIAL |
 | 107 | bss-service | TA | P0 | BSS / Plans | Update Plan | PARTIAL |
@@ -143,7 +143,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 137 | bss-service | SYS | P0 | BSS / Charging | QoS Policy Bind | PARTIAL |
 | 138 | bss-service | TA | P1 | BSS / Pricing | Regional Pricing | PARTIAL |
 | 139 | bss-service | TA | P1 | BSS / Pricing | Time-based Pricing | PARTIAL |
-| 140 | bss-service | TA | P1 | BSS / Pricing | Volume Discounts | MISSING |
+| 140 | bss-service | TA | P1 | BSS / Pricing | Volume Discounts | PARTIAL |
 | 141 | bss-service | FIN | P0 | BSS / Collections | Dunning Management | PARTIAL |
 | 142 | bss-service | FIN | P1 | BSS / Collections | Collection Cases | PARTIAL |
 | 143 | bss-service | CSR | P0 | BSS / Adjustments | Manual Adjustment | PARTIAL |
@@ -371,12 +371,12 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 365 | crm-service | RES | P0 | Reseller / Provisioning | Suspension Control | PARTIAL |
 | 366 | bss-service | TA | P0 | Reseller / Commission | Commission Rules | PARTIAL |
 | 367 | bss-service | TA | P0 | Reseller / Commission | Revenue Share | PARTIAL |
-| 368 | bss-service | FIN | P0 | Reseller / Commission | Commission Calculation | MISSING |
+| 368 | bss-service | FIN | P0 | Reseller / Commission | Commission Calculation | PARTIAL |
 | 369 | bss-service | FIN | P0 | Reseller / Commission | Payout Processing | PARTIAL |
 | 370 | bss-service | FIN | P0 | Reseller / Commission | Commission Reports | PARTIAL |
 | 371 | bss-service | RES | P0 | Reseller / Wallet | Reseller Wallet | PARTIAL |
 | 372 | bss-service | RES | P0 | Reseller / Wallet | Recharge Wallet | PARTIAL |
-| 373 | bss-service | RES | P0 | Reseller / Wallet | Wallet Deduction | MISSING |
+| 373 | bss-service | RES | P0 | Reseller / Wallet | Wallet Deduction | PARTIAL |
 | 374 | bss-service | TA | P0 | Reseller / Credit Control | Credit Limit | PARTIAL |
 | 375 | bss-service | SYS | P0 | Reseller / Credit Control | Credit Monitoring | PARTIAL |
 | 376 | bss-service | SYS | P0 | Reseller / Credit Control | Auto Suspension | PARTIAL |
@@ -683,10 +683,10 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 677 | bss-service | FIN | P1 | Monetization / API Monetization | API Billing | PARTIAL |
 | 678 | bss-service | FIN | P1 | Monetization / Marketplace | App Billing | BLOCKED_EXTERNAL |
 | 679 | bss-service | FIN | P0 | Monetization / Partner | Partner Revenue Share | PARTIAL |
-| 680 | bss-service | TA | P0 | Monetization / Catalog | Service Catalog | MISSING |
+| 680 | bss-service | TA | P0 | Monetization / Catalog | Service Catalog | PARTIAL |
 | 681 | bss-service | TA | P0 | Monetization / Offers | Offer Management | PARTIAL |
 | 682 | bss-service | TA | P1 | Monetization / Offers | Coupon Engine | MISSING |
-| 683 | bss-service | TA | P1 | Monetization / Offers | Dynamic Pricing | MISSING |
+| 683 | bss-service | TA | P1 | Monetization / Offers | Dynamic Pricing | PARTIAL |
 | 684 | bss-service | SYS | P0 | Monetization / Billing | Usage Aggregation | PARTIAL |
 | 685 | bss-service | SYS | P0 | Monetization / Billing | Cross Product Billing | PARTIAL |
 | 686 | bss-service | FIN | P0 | Monetization / Reporting | Revenue Streams | PARTIAL |
@@ -697,8 +697,8 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 691 | bss-service | SYS | P0 | Monetization / Bundles | Converged Services | PARTIAL |
 | 692 | bss-service | SYS | P1 | Monetization / Bundles | Family Plans | PARTIAL |
 | 693 | bss-service | SYS | P0 | Monetization / Bundles | Add-on Services | PARTIAL |
-| 694 | bss-service | SYS | P1 | Monetization / Marketplace | Service Marketplace | MISSING |
-| 695 | bss-service | SYS | P1 | Monetization / Marketplace | Vendor Onboarding | MISSING |
+| 694 | bss-service | SYS | P1 | Monetization / Marketplace | Service Marketplace | PARTIAL |
+| 695 | bss-service | SYS | P1 | Monetization / Marketplace | Vendor Onboarding | PARTIAL |
 | 696 | bss-service | SYS | P1 | Monetization / Marketplace | Catalog Sync | PARTIAL |
 | 697 | data-warehouse-service | SYS | P1 | Monetization / Insights | Offer Effectiveness | PARTIAL |
 | 698 | data-warehouse-service | SYS | P0 | Monetization / Insights | Revenue Optimization | PARTIAL |
@@ -805,21 +805,21 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 799 | nms-service | SYS | P1 | Platform / Performance | Edge AI Processing | PARTIAL |
 | 800 | nms-service | SYS | P0 | Platform / Performance | High Frequency Processing | PARTIAL |
 | 801 | bss-service | TA | P0 | Marketplace / B2B | Enterprise Marketplace | PARTIAL |
-| 802 | bss-service | TA | P0 | Marketplace / B2B | Enterprise Catalog | MISSING |
-| 803 | bss-service | TA | P0 | Marketplace / B2B | Vendor Onboarding | MISSING |
-| 804 | bss-service | TA | P0 | Marketplace / B2B | Vendor SLA Contracts | MISSING |
+| 802 | bss-service | TA | P0 | Marketplace / B2B | Enterprise Catalog | PARTIAL |
+| 803 | bss-service | TA | P0 | Marketplace / B2B | Vendor Onboarding | PARTIAL |
+| 804 | bss-service | TA | P0 | Marketplace / B2B | Vendor SLA Contracts | PARTIAL |
 | 805 | bss-service | SYS | P0 | Marketplace / B2B | Vendor API Integration | BLOCKED_EXTERNAL |
 | 806 | bss-service | FIN | P0 | Marketplace / B2B | Revenue Settlement | PARTIAL |
 | 807 | bss-service | TA | P0 | Marketplace / B2B | Service Bundling | PARTIAL |
 | 808 | bss-service | SYS | P1 | Marketplace / B2B | Dynamic Service Composition | MISSING |
 | 809 | bss-service | TA | P0 | Marketplace / B2B | Contract Lifecycle Mgmt | PARTIAL |
 | 810 | bss-service | AUD | P0 | Marketplace / B2B | Contract Compliance | PARTIAL |
-| 811 | bss-service | TA | P0 | SLA / Monetization | SLA Pricing | MISSING |
-| 812 | bss-service | TA | P0 | SLA / Monetization | Penalty Rules | MISSING |
+| 811 | bss-service | TA | P0 | SLA / Monetization | SLA Pricing | PARTIAL |
+| 812 | bss-service | TA | P0 | SLA / Monetization | Penalty Rules | PARTIAL |
 | 813 | bss-service | FIN | P0 | SLA / Monetization | SLA Billing | PARTIAL |
 | 814 | bss-service | SYS | P0 | SLA / Monetization | SLA Credits | PARTIAL |
 | 815 | bss-service | SYS | P0 | SLA / Monetization | SLA Analytics | PARTIAL |
-| 816 | bss-service | SA | P0 | API Economy / Monetization | API Marketplace | MISSING |
+| 816 | bss-service | SA | P0 | API Economy / Monetization | API Marketplace | PARTIAL |
 | 817 | bss-service | SA | P0 | API Economy / Monetization | API Subscription Plans | PARTIAL |
 | 818 | bss-service | API | P0 | API Economy / Monetization | API Usage Billing | PARTIAL |
 | 819 | bss-service | SYS | P0 | API Economy / Monetization | Rate Plan Enforcement | PARTIAL |
@@ -908,9 +908,9 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 902 | bss-service | SYS | P0 | Enterprise / Finance | Auto Ledger Reconciliation | PARTIAL |
 | 903 | bss-service | SYS | P1 | Enterprise / Finance | Expense Intelligence | MISSING |
 | 904 | bss-service | SYS | P0 | Enterprise / Finance | Financial Forecasting | PARTIAL |
-| 905 | bss-service | FIN | P0 | Enterprise / Finance | Budget Planning | MISSING |
+| 905 | bss-service | FIN | P0 | Enterprise / Finance | Budget Planning | PARTIAL |
 | 906 | bss-service | SYS | P0 | Enterprise / Finance | Cash Flow Optimization | PARTIAL |
-| 907 | bss-service | SYS | P1 | Enterprise / Finance | Tax Optimization AI | MISSING |
+| 907 | bss-service | SYS | P1 | Enterprise / Finance | Tax Optimization AI | PARTIAL |
 | 908 | core-platform-service | SYS | P1 | Enterprise / Legal | Contract Intelligence | PARTIAL |
 | 909 | core-platform-service | SYS | P1 | Enterprise / Legal | Clause Extraction | MISSING |
 | 910 | core-platform-service | SYS | P1 | Enterprise / Legal | Risk Detection | MISSING |
@@ -1012,7 +1012,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 1006 | oss-service | SYS | P0 | OMS / Order Mgmt | Retry Logic | PARTIAL |
 | 1007 | oss-service | CSR | P0 | OMS / Order Mgmt | Order Cancellation | PARTIAL |
 | 1008 | oss-service | SYS | P0 | OMS / Order Mgmt | Order SLA Tracking | PARTIAL |
-| 1009 | bss-service | TA | P0 | Catalog / Service | Service Catalog | MISSING |
+| 1009 | bss-service | TA | P0 | Catalog / Service | Service Catalog | PARTIAL |
 | 1010 | oss-service | TA | P0 | Catalog / Resource | Resource Catalog | PARTIAL |
 | 1011 | oss-service | SYS | P0 | Catalog / Mapping | Service-Resource Mapping | PARTIAL |
 | 1012 | oss-service | SYS | P0 | Inventory / Reconciliation | Inventory Sync | PARTIAL |
@@ -1049,7 +1049,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 1043 | data-warehouse-service | SYS | P0 | Data / Governance | Data Residency Rules | PARTIAL |
 | 1044 | data-warehouse-service | SYS | P0 | Data / Governance | BYOK | PARTIAL |
 | 1045 | bss-service | TA | P0 | Product / Lifecycle | Product Launch | PARTIAL |
-| 1046 | bss-service | TA | P0 | Product / Lifecycle | Product Sunset | MISSING |
+| 1046 | bss-service | TA | P0 | Product / Lifecycle | Product Sunset | PARTIAL |
 | 1047 | bss-service | TA | P0 | Product / Lifecycle | Migration Plan | PARTIAL |
 | 1048 | core-platform-service | SYS | P1 | Testing / Lab | Network Simulator | PARTIAL |
 | 1049 | core-platform-service | SYS | P1 | Testing / Lab | PPPoE Simulator | PARTIAL |
@@ -1224,8 +1224,8 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 1218 | aaa-service | NOC | P1 | Access / 5G/4G | Cell Optimization | PARTIAL |
 | 1219 | aaa-service | TA | P0 | Access / WiFi | WiFi Monetization | PARTIAL |
 | 1220 | aaa-service | TA | P1 | Access / WiFi | Captive Portal Campaigns | PARTIAL |
-| 1221 | bss-service | FIN | P0 | Finance / Accounting | Profit Center Mgmt | MISSING |
-| 1222 | bss-service | FIN | P0 | Finance / Accounting | Cost Center Mgmt | MISSING |
+| 1221 | bss-service | FIN | P0 | Finance / Accounting | Profit Center Mgmt | PARTIAL |
+| 1222 | bss-service | FIN | P0 | Finance / Accounting | Cost Center Mgmt | PARTIAL |
 | 1223 | bss-service | FIN | P0 | Finance / Accounting | Multi-Entity Ledger | PARTIAL |
 | 1224 | bss-service | FIN | P0 | Finance / Tax | Tax Jurisdiction Engine | PARTIAL |
 | 1225 | bss-service | SYS | P0 | Finance / Analytics | Revenue vs Network Analytics | PARTIAL |
@@ -1252,7 +1252,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 1246 | bss-service | TA | P0 | Product / GTM | Go-To-Market Workflow | PARTIAL |
 | 1247 | bss-service | TA | P1 | Product / Pricing | Pricing A/B Testing | PARTIAL |
 | 1248 | bss-service | SYS | P0 | Product / Analytics | Plan Profitability Tracking | PARTIAL |
-| 1249 | bss-service | SYS | P0 | Product / Analytics | Feature Adoption Tracking | MISSING |
+| 1249 | bss-service | SYS | P0 | Product / Analytics | Feature Adoption Tracking | PARTIAL |
 | 1250 | aiops-service | SYS | P1 | Platform / Intelligence | Business Impact Predictor | PARTIAL |
 | 1251 | oss-service | NOC | P0 | Core Network / Routing | BGP Route Leak Detection | PARTIAL |
 | 1252 | oss-service | NOC | P0 | Core Network / Routing | RPKI Validation | PARTIAL |
@@ -1267,7 +1267,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 1261 | aaa-service | NOC | P0 | Access / WiFi | Hotspot ROI Analytics | PARTIAL |
 | 1262 | aaa-service | NOC | P1 | Access / WiFi | Dynamic Pricing WiFi | PARTIAL |
 | 1263 | bss-service | SYS | P0 | Finance / Accounting | Real-Time Profit Dashboard | PARTIAL |
-| 1264 | bss-service | SYS | P1 | Finance / Accounting | Cost Leakage Detection | MISSING |
+| 1264 | bss-service | SYS | P1 | Finance / Accounting | Cost Leakage Detection | PARTIAL |
 | 1265 | bss-service | SYS | P1 | Finance / Accounting | Margin Optimization AI | MISSING |
 | 1266 | bss-service | SYS | P0 | Finance / Forecast | Demand-Based Revenue Forecast | PARTIAL |
 | 1267 | aiops-service | SYS | P1 | CX / Intelligence | Persona Behavior Modeling | PARTIAL |
@@ -1296,15 +1296,15 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 1290 | aiops-service | SYS | P0 | Platform / Intelligence | Resource Optimization AI | PARTIAL |
 | 1291 | aiops-service | SYS | P0 | Platform / Intelligence | Forecast-Based Scaling | PARTIAL |
 | 1292 | aiops-service | SYS | P1 | Platform / Intelligence | Cross-System Optimization | PARTIAL |
-| 1293 | bss-service | SYS | P0 | Ecosystem / Marketplace | Partner SLA Analytics | MISSING |
+| 1293 | bss-service | SYS | P0 | Ecosystem / Marketplace | Partner SLA Analytics | PARTIAL |
 | 1294 | bss-service | SYS | P1 | Ecosystem / Marketplace | Revenue Split Optimization | PARTIAL |
-| 1295 | bss-service | SYS | P1 | Ecosystem / Marketplace | Marketplace Demand Forecast | MISSING |
+| 1295 | bss-service | SYS | P1 | Ecosystem / Marketplace | Marketplace Demand Forecast | PARTIAL |
 | 1296 | aiops-service | SYS | P0 | Operations / Intelligence | Ops Efficiency Score | PARTIAL |
 | 1297 | aiops-service | SYS | P0 | Operations / Intelligence | Automation Coverage Tracking | MISSING |
 | 1298 | aiops-service | SYS | P1 | Operations / Intelligence | Human Effort Reduction | PARTIAL |
 | 1299 | core-platform-service | SYS | P1 | Platform / Final | Optimization Score | PARTIAL |
 | 1300 | core-platform-service | SYS | P1 | Platform / Final | Enterprise Maturity Index | PARTIAL |
-| 1301 | bss-service | SYS | P1 | Monetization / Pricing | Surge Pricing Engine | MISSING |
+| 1301 | bss-service | SYS | P1 | Monetization / Pricing | Surge Pricing Engine | PARTIAL |
 | 1302 | bss-service | SYS | P1 | Monetization / Pricing | Location-Based Pricing | PARTIAL |
 | 1303 | bss-service | SYS | P1 | Monetization / Usage | Micro-Charging Engine | PARTIAL |
 | 1304 | bss-service | SYS | P0 | Monetization / Usage | Session-Level Charging | PARTIAL |
@@ -1433,8 +1433,8 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 1427 | bss-service | SYS | P0 | Product / Monetization | Feature Monetization Engine | PARTIAL |
 | 1428 | bss-service | SYS | P0 | Product / Lifecycle | Trial Lifecycle Mgmt | PARTIAL |
 | 1429 | bss-service | SYS | P0 | Product / Lifecycle | Subscription Lifecycle | PARTIAL |
-| 1430 | bss-service | SYS | P0 | Product / Lifecycle | Churn Lifecycle Tracking | MISSING |
-| 1431 | bss-service | SYS | P0 | Product / Analytics | Trial Conversion Analytics | MISSING |
+| 1430 | bss-service | SYS | P0 | Product / Lifecycle | Churn Lifecycle Tracking | PARTIAL |
+| 1431 | bss-service | SYS | P0 | Product / Analytics | Trial Conversion Analytics | PARTIAL |
 | 1432 | data-warehouse-service | SYS | P1 | Analytics / CX | Drop-Off Root Cause | PARTIAL |
 | 1433 | data-warehouse-service | SYS | P0 | Analytics / Ops | SLA vs Revenue Correlation | PARTIAL |
 | 1434 | data-warehouse-service | SYS | P1 | Analytics / Sales | Commission Analytics | MISSING |
@@ -1501,6 +1501,6 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 1495 | core-platform-service | SYS | P0 | Integration / Enterprise | ERP Sync Validation | BLOCKED_EXTERNAL |
 | 1496 | bss-service | SYS | P1 | Product / Growth | Expansion Simulation | PARTIAL |
 | 1497 | bss-service | SYS | P1 | Product / Growth | Viral Growth Engine | MISSING |
-| 1498 | bss-service | SYS | P0 | Product / Growth | Product Stickiness Score | MISSING |
+| 1498 | bss-service | SYS | P0 | Product / Growth | Product Stickiness Score | PARTIAL |
 | 1499 | bss-service | SYS | P1 | Product / Growth | Monetization Efficiency Index | PARTIAL |
 | 1500 | core-platform-service | SYS | P1 | Platform / Final | Full-System Intelligence Graph | PARTIAL |

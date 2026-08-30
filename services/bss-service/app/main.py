@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
 from .models import Invoice, Payment, Plan
 from .revenue.router import router as revenue_router
+from .revenue.catalog_router import router as catalog_router
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -17,6 +18,7 @@ async def lifespan(_app: FastAPI):
     yield
 app = FastAPI(title="BSS Service", version="2.0.0", lifespan=lifespan)
 app.include_router(revenue_router)
+app.include_router(catalog_router)
 def db_session():
     db = SessionLocal()
     try: yield db

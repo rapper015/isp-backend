@@ -33,8 +33,8 @@ Total features: 141
 | BLOCKED_EXTERNAL | 5 |
 | COMPLETE | 0 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 34 |
-| PARTIAL | 153 |
+| MISSING | 6 |
+| PARTIAL | 181 |
 
 Total features: 192
 

@@ -1,10 +1,10 @@
 {
   "total": 1500,
   "status_counts": {
-    "PARTIAL": 1169,
+    "PARTIAL": 1197,
     "COMPLETE": 41,
     "BLOCKED_EXTERNAL": 135,
-    "MISSING": 103,
+    "MISSING": 75,
     "CONDITIONAL_FUTURE": 52
   },
   "rows": [
@@ -4054,20 +4054,21 @@
           "services\\bss-service\\app\\database.py",
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py"
+          "services\\bss-service\\app\\revenue\\enums.py"
         ],
         "word_hits": [
           "create",
-          "product"
+          "product",
+          "define"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -4090,14 +4091,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\router.py",
           "services\\bss-service\\app\\revenue\\gateways\\fake.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
-          "services\\bss-service\\legacy\\billing\\import_serializers.py",
-          "services\\bss-service\\legacy\\billing\\import_views.py",
-          "services\\bss-service\\legacy\\billing\\models.py",
-          "services\\bss-service\\legacy\\billing\\sequences.py"
+          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py"
         ],
         "word_hits": [
           "update",
@@ -4129,23 +4130,25 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\revenue\\cache.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\gateways\\fake.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
-          "services\\bss-service\\legacy\\billing\\models.py",
-          "services\\bss-service\\legacy\\billing\\services.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "delete",
-          "product"
+          "product",
+          "retire",
+          "catalog"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -4165,18 +4168,30 @@
       "dependencies": "101",
       "source_event": "BundleCreated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "bundle",
+          "products",
+          "bundles"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -4197,21 +4212,23 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\security.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py"
+          "services\\bss-service\\app\\revenue\\ledger.py"
         ],
         "word_hits": [
+          "pricing",
           "models",
-          "configure"
+          "configure",
+          "tiers"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -4237,22 +4254,23 @@
           "services\\bss-service\\app\\database.py",
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py"
+          "services\\bss-service\\app\\revenue\\enums.py"
         ],
         "word_hits": [
           "create",
           "plan",
+          "define",
           "subscription",
           "plans"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -4277,12 +4295,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\schemas.py",
-          "services\\bss-service\\legacy\\billing\\admin.py",
-          "services\\bss-service\\legacy\\billing\\import_serializers.py",
-          "services\\bss-service\\legacy\\billing\\import_views.py"
+          "services\\bss-service\\app\\revenue\\schemas.py"
         ],
         "word_hits": [
           "update",
@@ -4316,12 +4334,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\schemas.py",
-          "services\\bss-service\\legacy\\billing\\admin.py",
-          "services\\bss-service\\legacy\\billing\\models.py",
-          "services\\bss-service\\legacy\\billing\\serializers.py"
+          "services\\bss-service\\app\\revenue\\schemas.py"
         ],
         "word_hits": [
           "plan"
@@ -4354,12 +4372,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "assign",
@@ -4396,12 +4414,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\schemas.py",
-          "services\\bss-service\\legacy\\billing\\admin.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "plan",
@@ -4438,21 +4456,22 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\reports.py",
           "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\legacy\\billing\\models.py",
-          "services\\bss-service\\legacy\\billing\\serializers.py",
-          "services\\bss-service\\legacy\\billing\\services.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py"
+          "services\\bss-service\\legacy\\billing\\models.py"
         ],
         "word_hits": [
+          "usage",
           "rate",
           "records"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -4479,10 +4498,10 @@
           "services\\bss-service\\app\\models.py",
           "services\\bss-service\\app\\security.py",
           "services\\bss-service\\app\\revenue\\cache.py",
-          "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\dunning.py"
         ],
         "word_hits": [
           "real",
@@ -4516,13 +4535,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py"
+          "services\\bss-service\\app\\revenue\\manual_payments.py"
         ],
         "word_hits": [
           "offline",
@@ -4605,7 +4624,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
@@ -4631,23 +4650,24 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "billing",
           "cycle",
           "monthly",
+          "prepaid",
           "cycles"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -4713,12 +4733,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "bill",
@@ -4794,13 +4814,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py"
+          "services\\bss-service\\app\\revenue\\ledger.py"
         ],
         "word_hits": [
           "credit",
@@ -4836,13 +4856,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py"
+          "services\\bss-service\\app\\revenue\\manual_payments.py"
         ],
         "word_hits": [
           "debit",
@@ -4881,10 +4901,10 @@
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
           "services\\bss-service\\app\\revenue\\cache.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py"
+          "services\\bss-service\\app\\revenue\\enums.py"
         ],
         "word_hits": [
           "invoice",
@@ -4920,12 +4940,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py"
+          "services\\bss-service\\app\\revenue\\events.py"
         ],
         "word_hits": [
           "payment",
@@ -5085,23 +5105,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\schemas.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
-          "services\\bss-service\\legacy\\billing\\models.py",
-          "services\\bss-service\\legacy\\billing\\serializers.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py",
-          "services\\bss-service\\legacy\\billing\\importing\\parser.py"
+          "services\\bss-service\\app\\revenue\\schemas.py"
         ],
         "word_hits": [
           "wallet",
-          "system"
+          "system",
+          "prepaid"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -5125,13 +5146,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\database.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\enums.py",
+          "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "auto",
@@ -5207,13 +5228,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
           "revenue"
@@ -5245,13 +5266,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
           "revenue",
@@ -5286,21 +5307,22 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py"
+          "services\\bss-service\\app\\revenue\\events.py"
         ],
         "word_hits": [
           "fraud",
+          "usage",
           "payment"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -5326,21 +5348,22 @@
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
           "services\\bss-service\\app\\revenue\\cache.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py"
+          "services\\bss-service\\app\\revenue\\enums.py"
         ],
         "word_hits": [
           "credit",
           "limit",
+          "define",
           "customer"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -5363,22 +5386,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
-          "credit"
+          "credit",
+          "usage"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -5403,12 +5427,12 @@
         "files": [
           "services\\bss-service\\app\\models.py",
           "services\\bss-service\\app\\revenue\\cache.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\schemas.py"
+          "services\\bss-service\\app\\revenue\\router.py"
         ],
         "word_hits": [
           "suspension",
@@ -5441,21 +5465,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\schemas.py",
-          "services\\bss-service\\migrations\\versions\\0001_bss_milestone4.py",
-          "services\\bss-service\\tests\\test_m4_dunning.py"
+          "services\\bss-service\\app\\revenue\\schemas.py"
         ],
         "word_hits": [
+          "usage",
           "policy"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -5480,12 +5506,12 @@
         "files": [
           "services\\bss-service\\app\\database.py",
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "policy",
@@ -5519,22 +5545,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\migrations\\versions\\0001_bss_milestone4.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
+          "pricing",
           "location"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -5561,20 +5588,21 @@
           "services\\bss-service\\app\\models.py",
           "services\\bss-service\\app\\security.py",
           "services\\bss-service\\app\\revenue\\cache.py",
-          "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\dunning.py"
         ],
         "word_hits": [
           "time",
+          "pricing",
           "off",
           "rules"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -5594,22 +5622,27 @@
       "dependencies": "105",
       "source_event": "VolumeDiscountApplied",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\bss-service\\legacy\\billing\\importing\\services.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\legacy\\billing\\importing\\services.py",
+          "services\\bss-service\\tests\\test_catalog.py"
         ],
         "word_hits": [
-          "bulk"
+          "bulk",
+          "usage"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -5829,11 +5862,11 @@
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\security.py",
           "services\\bss-service\\app\\revenue\\cache.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py"
+          "services\\bss-service\\app\\revenue\\ledger.py"
         ],
         "word_hits": [
           "tax",
@@ -5951,11 +5984,11 @@
           "services\\bss-service\\app\\database.py",
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py"
+          "services\\bss-service\\app\\revenue\\ledger.py"
         ],
         "word_hits": [
           "ledger",
@@ -14531,20 +14564,25 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\reconciliation.py",
-          "services\\bss-service\\legacy\\billing\\import_views.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py",
-          "services\\bss-service\\legacy\\billing\\importing\\parser.py"
+          "services\\bss-service\\legacy\\billing\\import_views.py"
         ],
         "word_hits": [
+          "commission",
           "rules",
+          "define",
           "structure"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -14569,12 +14607,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\security.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py"
+          "services\\bss-service\\app\\revenue\\money.py"
         ],
         "word_hits": [
           "revenue",
@@ -14605,22 +14643,30 @@
       "dependencies": "366",
       "source_event": "CommissionCalculated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\bss-service\\app\\revenue\\payments.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\app\\revenue\\payments.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
         ],
         "word_hits": [
+          "commission",
           "calculate"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -14641,12 +14687,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "processing",
@@ -14680,18 +14726,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\reports.py",
           "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\security.py",
-          "services\\bss-service\\tests\\test_m4_api.py"
+          "services\\bss-service\\app\\revenue\\security.py"
         ],
         "word_hits": [
+          "commission",
           "reports"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -14716,22 +14767,23 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\ledger.py"
         ],
         "word_hits": [
           "reseller",
           "wallet",
+          "prepaid",
           "balance"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -14755,13 +14807,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py"
+          "services\\bss-service\\app\\revenue\\ledger.py"
         ],
         "word_hits": [
           "wallet",
@@ -14791,23 +14843,31 @@
       "dependencies": "371",
       "source_event": "WalletDebited",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py"
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py"
         ],
         "word_hits": [
-          "wallet"
+          "wallet",
+          "deduction",
+          "deduct"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -14827,13 +14887,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\revenue\\cache.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py"
+          "services\\bss-service\\app\\revenue\\ledger.py"
         ],
         "word_hits": [
           "credit",
@@ -14867,22 +14927,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
-          "credit"
+          "credit",
+          "usage"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -14906,13 +14967,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\database.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py"
+          "services\\bss-service\\app\\revenue\\ledger.py"
         ],
         "word_hits": [
           "auto",
@@ -14948,12 +15009,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\events.py"
         ],
         "word_hits": [
           "invoice",
@@ -14988,12 +15049,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\events.py"
         ],
         "word_hits": [
           "invoice",
@@ -15190,22 +15251,23 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\schemas.py"
+          "services\\bss-service\\app\\revenue\\payments.py"
         ],
         "word_hits": [
           "subscriber",
           "reports",
-          "customer"
+          "customer",
+          "analytics"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -15229,22 +15291,23 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\money.py"
         ],
         "word_hits": [
           "revenue",
-          "reports"
+          "reports",
+          "analytics"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -15269,21 +15332,22 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\reports.py",
           "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\security.py",
-          "services\\bss-service\\legacy\\billing\\admin.py",
-          "services\\bss-service\\legacy\\billing\\import_views.py",
-          "services\\bss-service\\legacy\\billing\\models.py"
+          "services\\bss-service\\app\\revenue\\security.py"
         ],
         "word_hits": [
+          "usage",
           "reports",
           "subscriber"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -25830,8 +25894,8 @@
           "services\\bss-service\\app\\revenue\\gateways\\fake.py",
           "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
           "services\\bss-service\\legacy\\billing\\services.py",
-          "services\\bss-service\\tests\\test_m4_api.py",
-          "services\\bss-service\\tests\\test_m4_dunning.py"
+          "services\\bss-service\\tests\\test_catalog.py",
+          "services\\bss-service\\tests\\test_m4_api.py"
         ],
         "word_hits": [
           "subscription",
@@ -26053,22 +26117,23 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py"
+          "services\\bss-service\\app\\revenue\\events.py"
         ],
         "word_hits": [
           "billing",
           "rate",
-          "voice"
+          "voice",
+          "usage"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -26557,22 +26622,23 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py"
+          "services\\bss-service\\app\\revenue\\manual_payments.py"
         ],
         "word_hits": [
           "billing",
-          "charge"
+          "charge",
+          "usage"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -26597,12 +26663,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py"
+          "services\\bss-service\\app\\revenue\\manual_payments.py"
         ],
         "word_hits": [
           "app",
@@ -26637,22 +26703,24 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\money.py"
         ],
         "word_hits": [
+          "partner",
           "revenue",
-          "share"
+          "share",
+          "partners"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -26672,18 +26740,29 @@
       "dependencies": "BSS-101",
       "source_event": "CatalogUpdated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "catalog"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -26705,11 +26784,11 @@
           "services\\bss-service\\app\\database.py",
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py"
+          "services\\bss-service\\app\\revenue\\enums.py"
         ],
         "word_hits": [
           "create"
@@ -26768,18 +26847,27 @@
       "dependencies": "Analytics-481",
       "source_event": "PriceAdjusted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "pricing"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -26798,16 +26886,21 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\legacy\\billing\\test_imports.py",
+          "services\\bss-service\\tests\\test_catalog.py",
           "services\\bss-service\\tests\\test_m4_payments.py"
         ],
         "word_hits": [
+          "usage",
           "multi"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -26831,13 +26924,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "cross",
@@ -26871,13 +26964,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\money.py"
         ],
         "word_hits": [
           "revenue",
@@ -27062,20 +27155,21 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\events.py"
         ],
         "word_hits": [
+          "bundle",
           "voice"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27100,12 +27194,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\security.py",
           "services\\bss-service\\legacy\\billing\\import_serializers.py",
-          "services\\bss-service\\legacy\\billing\\import_views.py",
-          "services\\bss-service\\legacy\\billing\\models.py",
-          "services\\bss-service\\legacy\\billing\\services.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py"
+          "services\\bss-service\\legacy\\billing\\import_views.py"
         ],
         "word_hits": [
           "plans",
@@ -27139,13 +27233,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
           "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py"
+          "services\\bss-service\\app\\revenue\\payments.py"
         ],
         "word_hits": [
           "add"
@@ -27173,22 +27267,29 @@
       "dependencies": "Integration-586",
       "source_event": "ItemListed",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\bss-service\\legacy\\billing\\migrations\\0004_invoiceimportbatch_invoiceimportrow_and_more.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\legacy\\billing\\migrations\\0004_invoiceimportbatch_invoiceimportrow_and_more.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
         ],
         "word_hits": [
+          "marketplace",
           "sell"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -27204,18 +27305,31 @@
       "dependencies": "694",
       "source_event": "VendorOnboarded",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "vendor",
+          "onboarding",
+          "onboard",
+          "vendors"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -27236,21 +27350,22 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\manual_payments.py"
         ],
         "word_hits": [
+          "catalog",
           "sync",
           "external"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27386,21 +27501,23 @@
           "services\\bss-service\\app\\models.py",
           "services\\bss-service\\app\\security.py",
           "services\\bss-service\\app\\revenue\\cache.py",
-          "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\dunning.py"
         ],
         "word_hits": [
           "real",
           "time",
+          "monetization",
           "instant",
+          "usage",
           "billing"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 6,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -31311,16 +31428,25 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\legacy\\billing\\test_imports.py",
-          "services\\bss-service\\tests\\test_m4_payments.py"
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
         ],
         "word_hits": [
-          "multi"
+          "enterprise",
+          "marketplace",
+          "multi",
+          "vendor"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -31340,18 +31466,30 @@
       "dependencies": "801",
       "source_event": "CatalogUpdated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "enterprise",
+          "catalog"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -31367,28 +31505,33 @@
       "dependencies": "801",
       "source_event": "VendorCreated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\gateways\\base.py",
           "services\\bss-service\\app\\revenue\\gateways\\fake.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
-          "services\\bss-service\\app\\revenue\\gateways\\__init__.py",
-          "services\\bss-service\\legacy\\billing\\admin.py",
-          "services\\bss-service\\legacy\\payments\\admin.py",
-          "services\\bss-service\\legacy\\plans\\admin.py"
+          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py"
         ],
         "word_hits": [
-          "register"
+          "vendor",
+          "onboarding",
+          "register",
+          "enterprise",
+          "vendors"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -31404,22 +31547,30 @@
       "dependencies": "SLA-676",
       "source_event": "VendorSLAAssigned",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\bss-service\\app\\revenue\\events.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
         ],
         "word_hits": [
+          "vendor",
+          "sla",
           "contracts"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -31438,23 +31589,24 @@
       "status": "BLOCKED_EXTERNAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
           "services\\bss-service\\app\\revenue\\schemas.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
-          "services\\bss-service\\legacy\\billing\\models.py",
-          "services\\bss-service\\legacy\\billing\\serializers.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py",
-          "services\\bss-service\\legacy\\billing\\importing\\parser.py",
-          "services\\bss-service\\legacy\\billing\\importing\\services.py"
+          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py"
         ],
         "word_hits": [
+          "vendor",
           "integration",
           "system"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -31478,13 +31630,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "revenue",
@@ -31518,16 +31670,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\legacy\\billing\\test_imports.py",
-          "services\\bss-service\\tests\\test_m4_payments.py"
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
         ],
         "word_hits": [
-          "multi"
+          "bundle",
+          "multi",
+          "vendor"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -31578,21 +31738,24 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\security.py",
           "services\\bss-service\\app\\revenue\\gateways\\fake.py",
+          "services\\bss-service\\tests\\test_catalog.py",
           "services\\bss-service\\tests\\test_m4_dunning.py",
           "services\\bss-service\\tests\\test_m4_manual_payments.py"
         ],
         "word_hits": [
           "contract",
+          "lifecycle",
           "manage",
           "contracts"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -31615,22 +31778,25 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\gateways\\fake.py",
-          "services\\bss-service\\legacy\\billing\\import_views.py",
-          "services\\bss-service\\tests\\test_m4_money_ledger.py"
+          "services\\bss-service\\app\\revenue\\gateways\\fake.py"
         ],
         "word_hits": [
           "contract",
           "compliance",
-          "ensure"
+          "ensure",
+          "sla"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -31650,25 +31816,32 @@
       "dependencies": "BSS-105",
       "source_event": "SLAPriced",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\legacy\\billing\\services.py",
           "services\\bss-service\\legacy\\billing\\test_imports.py",
           "services\\bss-service\\legacy\\billing\\importing\\parser.py",
           "services\\bss-service\\legacy\\billing\\importing\\services.py"
         ],
         "word_hits": [
-          "price"
+          "sla",
+          "pricing",
+          "price",
+          "tier"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -31684,23 +31857,32 @@
       "dependencies": "SLA-311",
       "source_event": "PenaltyApplied",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py"
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\app\\revenue\\reconciliation.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
         ],
         "word_hits": [
-          "rules"
+          "penalty",
+          "rules",
+          "sla",
+          "breach"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -31720,22 +31902,24 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
+          "sla",
           "billing",
-          "bill"
+          "bill",
+          "terms"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -31759,15 +31943,16 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\database.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\manual_payments.py"
         ],
         "word_hits": [
+          "sla",
           "credits",
           "auto",
           "credit"
@@ -31775,7 +31960,7 @@
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -31798,22 +31983,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
           "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\webhooks.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py",
-          "services\\bss-service\\tests\\test_m4_webhooks.py"
+          "services\\bss-service\\app\\revenue\\reports.py"
         ],
         "word_hits": [
+          "sla",
+          "analytics",
           "financial"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -31833,22 +32020,29 @@
       "dependencies": "Integration-585",
       "source_event": "APIMarketplaceLaunched",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\bss-service\\legacy\\billing\\import_serializers.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\legacy\\billing\\import_serializers.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
         ],
         "word_hits": [
+          "marketplace",
           "public"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -31869,22 +32063,23 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\payments.py"
         ],
         "word_hits": [
           "subscription",
           "plans",
-          "charge"
+          "charge",
+          "tiers"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -31908,22 +32103,23 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
+          "usage",
           "billing",
           "bill"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -31948,12 +32144,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\schemas.py",
-          "services\\bss-service\\legacy\\billing\\admin.py",
-          "services\\bss-service\\legacy\\billing\\models.py"
+          "services\\bss-service\\app\\revenue\\router.py"
         ],
         "word_hits": [
           "rate",
@@ -31987,13 +32183,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
           "revenue"
@@ -32526,22 +32722,24 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py"
+          "services\\bss-service\\app\\revenue\\manual_payments.py"
         ],
         "word_hits": [
+          "partner",
           "app",
           "store",
-          "apps"
+          "apps",
+          "marketplace"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -32566,23 +32764,24 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py"
+          "services\\bss-service\\app\\revenue\\events.py"
         ],
         "word_hits": [
           "subscription",
           "billing",
           "charge",
-          "app"
+          "app",
+          "usage"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -32607,12 +32806,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py"
+          "services\\bss-service\\app\\revenue\\payments.py"
         ],
         "word_hits": [
           "manage",
@@ -32646,20 +32845,21 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py"
+          "services\\bss-service\\app\\revenue\\manual_payments.py"
         ],
         "word_hits": [
+          "usage",
           "app"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -35021,13 +35221,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\database.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "auto",
@@ -35094,13 +35294,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
           "financial",
@@ -35130,29 +35330,31 @@
       "dependencies": "904",
       "source_event": "BudgetPlanned",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
           "services\\bss-service\\app\\revenue\\schemas.py",
           "services\\bss-service\\legacy\\billing\\models.py",
-          "services\\bss-service\\legacy\\billing\\serializers.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py",
-          "services\\bss-service\\legacy\\billing\\importing\\parser.py",
-          "services\\bss-service\\legacy\\billing\\importing\\services.py",
-          "services\\bss-service\\legacy\\billing\\migrations\\0004_invoiceimportbatch_invoiceimportrow_and_more.py"
+          "services\\bss-service\\legacy\\billing\\serializers.py"
         ],
         "word_hits": [
+          "budget",
+          "planning",
           "system"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35206,7 +35408,7 @@
       "dependencies": "BSS-115",
       "source_event": "TaxOptimized",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
           "services\\bss-service\\app\\revenue\\models.py",
@@ -35223,12 +35425,12 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -38975,18 +39177,30 @@
       "dependencies": "BSS-101",
       "source_event": "ServiceDefined",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "catalog",
+          "logical"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -39515,18 +39729,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py"
+          "services\\bss-service\\legacy\\billing\\test_imports.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
         ],
         "word_hits": [
+          "usage",
           "exchange",
           "records"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -39989,14 +40209,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py"
+          "services\\bss-service\\app\\revenue\\payments.py"
         ],
         "word_hits": [
           "double",
@@ -40032,13 +40252,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
           "revenue"
@@ -40070,13 +40290,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\payments.py"
         ],
         "word_hits": [
           "accounting",
@@ -40109,13 +40329,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\money.py"
         ],
         "word_hits": [
           "revenue",
@@ -40385,10 +40605,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\gateways\\fake.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
-          "services\\bss-service\\tests\\test_m4_dunning.py"
+          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py"
         ],
         "word_hits": [
           "product",
@@ -40417,23 +40641,32 @@
       "dependencies": "103",
       "source_event": "ProductRetired",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\gateways\\fake.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py"
+          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py"
         ],
         "word_hits": [
-          "product"
+          "product",
+          "sunset",
+          "retire",
+          "products"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -40454,12 +40687,12 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\schemas.py",
-          "services\\bss-service\\app\\revenue\\gateways\\base.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
           "migration",
@@ -43548,14 +43781,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
           "ledger",
@@ -43591,13 +43824,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
           "revenue",
@@ -47189,18 +47422,29 @@
       "dependencies": "1035",
       "source_event": "ProfitTracked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "profit",
+          "center",
+          "centers"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -47216,22 +47460,30 @@
       "dependencies": "121",
       "source_event": "CostTracked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\app\\revenue\\reports.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
         ],
         "word_hits": [
+          "cost",
+          "center",
           "operational"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -47250,14 +47502,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py"
+          "services\\bss-service\\app\\revenue\\payments.py"
         ],
         "word_hits": [
           "multi",
@@ -47291,23 +47543,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\legacy\\billing\\admin.py",
           "services\\bss-service\\legacy\\billing\\models.py",
           "services\\bss-service\\legacy\\billing\\serializers.py",
-          "services\\bss-service\\legacy\\billing\\services.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py",
-          "services\\bss-service\\legacy\\billing\\importing\\parser.py",
-          "services\\bss-service\\legacy\\billing\\importing\\services.py"
+          "services\\bss-service\\legacy\\billing\\services.py"
         ],
         "word_hits": [
           "tax",
-          "multi"
+          "multi",
+          "logic"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -47331,21 +47584,22 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\money.py"
         ],
         "word_hits": [
-          "revenue"
+          "revenue",
+          "analytics"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -48152,17 +48406,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\tests\\test_m4_api.py",
-          "services\\bss-service\\tests\\test_m4_payments.py"
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py",
+          "services\\bss-service\\tests\\test_m4_api.py"
         ],
         "word_hits": [
+          "market",
           "flow"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -48185,22 +48445,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
           "services\\bss-service\\app\\revenue\\schemas.py",
           "services\\bss-service\\app\\revenue\\gateways\\fake.py",
-          "services\\bss-service\\legacy\\billing\\tests.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py",
-          "services\\bss-service\\legacy\\payments\\tests.py",
-          "services\\bss-service\\legacy\\plans\\tests.py"
+          "services\\bss-service\\legacy\\billing\\tests.py"
         ],
         "word_hits": [
+          "pricing",
           "test"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -48225,20 +48486,21 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\schemas.py",
-          "services\\bss-service\\legacy\\billing\\admin.py",
-          "services\\bss-service\\legacy\\billing\\models.py",
-          "services\\bss-service\\legacy\\billing\\serializers.py"
+          "services\\bss-service\\app\\revenue\\schemas.py"
         ],
         "word_hits": [
-          "plan"
+          "plan",
+          "profit"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -48258,18 +48520,29 @@
       "dependencies": "Analytics-468",
       "source_event": "AdoptionTracked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "feature",
+          "adoption",
+          "usage"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -48800,21 +49073,22 @@
           "services\\bss-service\\app\\models.py",
           "services\\bss-service\\app\\security.py",
           "services\\bss-service\\app\\revenue\\cache.py",
-          "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\dunning.py"
         ],
         "word_hits": [
           "real",
           "time",
+          "profit",
           "dashboard",
           "live"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -48834,18 +49108,27 @@
       "dependencies": "1222",
       "source_event": "LeakageDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "cost"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -48892,21 +49175,22 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\money.py"
         ],
         "word_hits": [
-          "revenue"
+          "revenue",
+          "usage"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -49537,13 +49821,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\security.py",
-          "services\\bss-service\\app\\revenue\\gateways\\fake.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
-          "services\\bss-service\\legacy\\billing\\services.py",
-          "services\\bss-service\\legacy\\billing\\views.py",
-          "services\\bss-service\\legacy\\payments\\services.py"
+          "services\\bss-service\\app\\revenue\\security.py"
         ],
         "word_hits": [
           "product",
@@ -49551,7 +49835,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
@@ -49576,22 +49860,23 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py"
+          "services\\bss-service\\app\\revenue\\manual_payments.py"
         ],
         "word_hits": [
+          "pricing",
           "driven",
           "model"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -49615,21 +49900,23 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
-          "revenue"
+          "revenue",
+          "feature",
+          "monetization"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -49915,18 +50202,29 @@
       "dependencies": "825",
       "source_event": "SLAAnalyzed",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "partner",
+          "sla",
+          "analytics"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -49946,22 +50244,23 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "revenue",
-          "split"
+          "split",
+          "partner"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -49981,18 +50280,27 @@
       "dependencies": "839",
       "source_event": "ForecastGenerated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "marketplace"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -50196,18 +50504,27 @@
       "dependencies": "1284",
       "source_event": "PriceAdjusted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "pricing"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -50226,22 +50543,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\migrations\\versions\\0001_bss_milestone4.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
-          "location"
+          "location",
+          "pricing"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -50267,21 +50585,23 @@
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\security.py",
           "services\\bss-service\\app\\revenue\\cache.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py"
+          "services\\bss-service\\app\\revenue\\events.py"
         ],
         "word_hits": [
           "micro",
+          "fine",
+          "usage",
           "billing",
           "sec"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -50309,9 +50629,9 @@
           "services\\bss-service\\app\\models.py",
           "services\\bss-service\\app\\security.py",
           "services\\bss-service\\app\\revenue\\cache.py",
-          "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py"
         ],
         "word_hits": [
           "session",
@@ -50346,13 +50666,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
           "revenue"
@@ -50427,18 +50747,19 @@
           "services\\bss-service\\app\\models.py",
           "services\\bss-service\\app\\security.py",
           "services\\bss-service\\app\\revenue\\cache.py",
-          "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py"
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\dunning.py"
         ],
         "word_hits": [
-          "time"
+          "time",
+          "pricing"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -51581,13 +51902,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
           "revenue",
@@ -51621,21 +51942,22 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\schemas.py"
+          "services\\bss-service\\app\\revenue\\payments.py"
         ],
         "word_hits": [
           "cac",
-          "customer"
+          "customer",
+          "cost"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -51658,23 +51980,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py"
+          "services\\bss-service\\app\\revenue\\payments.py"
         ],
         "word_hits": [
           "cac",
-          "ratio"
+          "ratio",
+          "metric"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -54107,14 +54430,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\security.py"
+          "services\\bss-service\\app\\revenue\\refunds.py"
         ],
         "word_hits": [
           "multi",
@@ -54181,16 +54504,17 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\manual_payments.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py"
+          "services\\bss-service\\app\\revenue\\payments.py"
         ],
         "word_hits": [
+          "cost",
           "allocation",
           "allocate",
           "product"
@@ -54198,7 +54522,7 @@
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -54221,24 +54545,26 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\money.py",
           "services\\bss-service\\app\\revenue\\refunds.py",
           "services\\bss-service\\legacy\\billing\\admin.py",
-          "services\\bss-service\\legacy\\billing\\models.py",
-          "services\\bss-service\\legacy\\billing\\serializers.py",
-          "services\\bss-service\\legacy\\billing\\services.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py"
+          "services\\bss-service\\legacy\\billing\\models.py"
         ],
         "word_hits": [
+          "partner",
           "tax",
           "handling",
-          "apply"
+          "apply",
+          "partners"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -54502,14 +54828,15 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\manual_payments.py"
         ],
         "word_hits": [
+          "enterprise",
           "contract",
           "billing",
           "custom"
@@ -54517,7 +54844,7 @@
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -54540,14 +54867,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py"
+          "services\\bss-service\\app\\revenue\\manual_payments.py"
         ],
         "word_hits": [
           "multi",
@@ -55136,22 +55463,25 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reconciliation.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py"
+          "services\\bss-service\\app\\revenue\\reconciliation.py"
         ],
         "word_hits": [
-          "charge"
+          "feature",
+          "monetization",
+          "charge",
+          "usage"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -55175,22 +55505,25 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py"
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
+          "trial",
+          "lifecycle",
           "paid",
+          "conversion",
           "flow"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -55214,23 +55547,24 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
           "services\\bss-service\\app\\revenue\\security.py",
           "services\\bss-service\\legacy\\billing\\services.py",
           "services\\bss-service\\legacy\\billing\\test_imports.py",
+          "services\\bss-service\\tests\\test_catalog.py",
           "services\\bss-service\\tests\\test_m4_api.py",
-          "services\\bss-service\\tests\\test_m4_dunning.py",
-          "services\\bss-service\\tests\\test_m4_manual_payments.py",
-          "services\\bss-service\\tests\\test_m4_payments.py"
+          "services\\bss-service\\tests\\test_m4_dunning.py"
         ],
         "word_hits": [
           "subscription",
+          "lifecycle",
           "manage",
           "full"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -55250,18 +55584,29 @@
       "dependencies": "CRM-89",
       "source_event": "ChurnTracked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "churn",
+          "lifecycle"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -55277,18 +55622,30 @@
       "dependencies": "1428",
       "source_event": "ConversionCalculated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py",
+          "services\\bss-service\\tests\\test_catalog.py"
+        ],
+        "word_hits": [
+          "trial",
+          "conversion",
+          "analytics"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -56047,13 +56404,13 @@
       "evidence": {
         "files": [
           "services\\bss-service\\app\\main.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py"
+          "services\\bss-service\\app\\revenue\\ledger.py"
         ],
         "word_hits": [
           "group",
@@ -56086,14 +56443,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\enums.py",
           "services\\bss-service\\app\\revenue\\events.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\reconciliation.py",
           "services\\bss-service\\app\\revenue\\reports.py",
           "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\schemas.py",
-          "services\\bss-service\\app\\revenue\\security.py"
+          "services\\bss-service\\app\\revenue\\schemas.py"
         ],
         "word_hits": [
           "settlement",
@@ -56127,24 +56484,25 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
           "services\\bss-service\\app\\revenue\\reconciliation.py",
           "services\\bss-service\\app\\revenue\\router.py",
-          "services\\bss-service\\app\\revenue\\security.py",
-          "services\\bss-service\\legacy\\billing\\importing\\services.py",
-          "services\\bss-service\\legacy\\payments\\models.py",
-          "services\\bss-service\\legacy\\payments\\migrations\\0001_initial.py",
-          "services\\bss-service\\tests\\conftest.py"
+          "services\\bss-service\\app\\revenue\\security.py"
         ],
         "word_hits": [
           "transfer",
+          "pricing",
           "internal",
           "compliance"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -56167,22 +56525,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\payments.py",
           "services\\bss-service\\app\\revenue\\refunds.py",
           "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\webhooks.py",
-          "services\\bss-service\\legacy\\billing\\test_imports.py",
-          "services\\bss-service\\tests\\test_m4_webhooks.py"
+          "services\\bss-service\\app\\revenue\\webhooks.py"
         ],
         "word_hits": [
-          "financial"
+          "financial",
+          "risk"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -56661,22 +57020,23 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\reports.py",
-          "services\\bss-service\\app\\revenue\\router.py"
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py"
         ],
         "word_hits": [
           "cross",
           "entity",
-          "customer"
+          "customer",
+          "enterprise"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -56702,11 +57062,11 @@
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
           "services\\bss-service\\app\\revenue\\cache.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
-          "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\events.py",
-          "services\\bss-service\\app\\revenue\\ledger.py",
-          "services\\bss-service\\app\\revenue\\manual_payments.py"
+          "services\\bss-service\\app\\revenue\\enums.py"
         ],
         "word_hits": [
           "multi",
@@ -57763,14 +58123,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\refunds.py",
-          "services\\bss-service\\app\\revenue\\gateways\\base.py",
-          "services\\bss-service\\app\\revenue\\gateways\\fake.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
-          "services\\bss-service\\legacy\\billing\\models.py",
-          "services\\bss-service\\legacy\\billing\\serializers.py",
-          "services\\bss-service\\legacy\\billing\\services.py"
+          "services\\bss-service\\app\\revenue\\gateways\\base.py"
         ],
         "word_hits": [
           "simulation",
@@ -57828,23 +58188,32 @@
       "dependencies": "1430",
       "source_event": "ScoreCalculated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
+          "services\\bss-service\\app\\revenue\\events.py",
+          "services\\bss-service\\app\\revenue\\models.py",
           "services\\bss-service\\app\\revenue\\gateways\\fake.py",
-          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py"
+          "services\\bss-service\\app\\revenue\\gateways\\razorpay.py",
+          "services\\bss-service\\migrations\\versions\\0002_bss_catalog.py"
         ],
         "word_hits": [
-          "product"
+          "product",
+          "stickiness",
+          "score",
+          "retention"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -57865,21 +58234,23 @@
         "files": [
           "services\\bss-service\\app\\main.py",
           "services\\bss-service\\app\\models.py",
+          "services\\bss-service\\app\\revenue\\catalog.py",
+          "services\\bss-service\\app\\revenue\\catalog_models.py",
+          "services\\bss-service\\app\\revenue\\catalog_router.py",
           "services\\bss-service\\app\\revenue\\dunning.py",
           "services\\bss-service\\app\\revenue\\enums.py",
-          "services\\bss-service\\app\\revenue\\models.py",
-          "services\\bss-service\\app\\revenue\\money.py",
-          "services\\bss-service\\app\\revenue\\payments.py",
-          "services\\bss-service\\app\\revenue\\refunds.py"
+          "services\\bss-service\\app\\revenue\\events.py"
         ],
         "word_hits": [
+          "monetization",
           "index",
-          "revenue"
+          "revenue",
+          "score"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,

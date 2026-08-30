@@ -508,3 +508,24 @@ class InboxMessage(Base):
     event_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     consumer: Mapped[str] = mapped_column(String(128), primary_key=True)
     processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+# Master Spec Batch 5: monetization & catalog models (register on metadata).
+from .catalog_models import (  # noqa: E402, F401
+    ApiMarketplaceProduct,
+    BudgetPlan,
+    ChurnRecord,
+    CommissionRecord,
+    CostCenter,
+    EnterpriseCatalogItem,
+    FeatureAdoption,
+    PartnerSlaMetric,
+    ProductBundle,
+    ProductStickiness,
+    ProfitCenter,
+    ServiceCatalogItem,
+    SlaPricingTier,
+    TrialRecord,
+    Vendor,
+    WalletLedger,
+)
