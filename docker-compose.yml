@@ -120,6 +120,8 @@ services:
   aaa-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
+    ports:
+      - "${AAA_PORT:-8000}:8000"
     environment:
       <<: *domain-environment
       SERVICE_NAME: aaa-service
