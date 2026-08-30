@@ -77,9 +77,24 @@ def test_tenant_isolation():
 
 def test_milestone0_legacy_endpoints_preserved():
     with TestClient(app) as client:
-        created = client.post("/customers", json={"full_name": "Legacy User", "phone": f"9{uuid4().int % 100000000:08d}", "email": f"legacy{uuid4().int}@example.com"})
+        created = client.post("/customers", json={"full_name": "Legacy User", "phone": f"9{uuid4().int % 100000000:08d}", "email": f"legacy{uuid4().int}@example.com"}, headers=HEADERS)
         assert created.status_code == 201
         code = created.json()["customer_code"]
-        by_code = client.get(f"/customers/by-code/{code}")
+        by_code = client.get(f"/customers/by-code/{code}", headers=HEADERS)
         assert by_code.status_code == 200
         assert by_code.json()["full_name"] == "Legacy User"
+
+
+def test_legacy_routes_require_auth():
+    """Legacy root-path routes must be protected like the /api/crm surface."""
+    with TestClient(app) as client:
+        # no service key -> 401
+        assert client.get("/customers").status_code == 401
+        assert client.get("/leads").status_code == 401
+        assert client.post("/customers", json={"full_name": "X", "phone": "9000000000"}).status_code == 401
+        assert client.post("/leads", json={"primary_mobile": "9000000000"}).status_code == 401
+        assert client.post("/franchises", json={"franchise_code": "F", "name": "F"}).status_code == 401
+        assert client.post("/branches", json={"franchise_id": str(uuid4()), "branch_code": "B", "name": "B"}).status_code == 401
+        # with service key -> allowed
+        assert client.get("/customers", headers=HEADERS).status_code == 200
+        assert client.get("/leads", headers=HEADERS).status_code == 200
