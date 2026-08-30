@@ -28,25 +28,3 @@ def limited(scope: str, maximum: int, window_seconds: int) -> bool:
         if count == 1: connection.expire(f"{PREFIX}:limit:{scope}", window_seconds)
         return count <= maximum
     except redis.RedisError: return True
-
-
-# ---------------------------------------------------------------------------
-# Milestone 3 — compiled-policy cache (Redis is an accelerator; the database
-# remains authoritative for policies and decisions).
-# ---------------------------------------------------------------------------
-
-def cache_compiled_policy(tenant_id, subscriber_id, compiled: dict, ttl: int = 300) -> None:
-    set_json(key(str(tenant_id), "policy", str(subscriber_id)), compiled, ttl=ttl)
-
-
-def get_compiled_policy(tenant_id, subscriber_id) -> dict | None:
-    return get_json(key(str(tenant_id), "policy", str(subscriber_id)))
-
-
-def invalidate_compiled_policy(tenant_id, subscriber_id) -> None:
-    delete_pattern(str(tenant_id), "policy")
-
-
-def cache_control_throttle(tenant_id, nas_id, window_seconds: int = 1) -> bool:
-    """Per-NAS control-action rate limit (fail-open)."""
-    return limited(f"control:{tenant_id}:{nas_id}", 1, window_seconds)

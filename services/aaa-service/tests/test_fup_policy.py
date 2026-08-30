@@ -13,8 +13,7 @@ def test_fup_policy_overrides_rate_limit_in_authorization_response():
         client.post("/internal/radius/v1/accounting", headers=headers, json={"idempotency_key": "fup-start", "attributes": {"User-Name": "fup-user", "NAS-IP-Address": "203.0.113.55", "Acct-Session-Id": "fup-session", "Acct-Status-Type": "Start", "Acct-Input-Octets": 2}})
         result = client.post("/internal/radius/v1/authorize", headers=headers, json={"attributes": {"User-Name": "fup-user", "NAS-IP-Address": "203.0.113.55"}})
         assert result.status_code == 200
-        # RouterOS rx/tx: download/upload (M3 direction-correct format).
-        assert result.json()["reply_attributes"]["Mikrotik-Rate-Limit"] == "2M/1M"
+        assert result.json()["reply_attributes"]["Mikrotik-Rate-Limit"] == "1000k/2000k"
 
 
 def test_usage_reset_clears_fup_projection():

@@ -16,5 +16,4 @@ def test_fup_activation_is_idempotent_on_usage_threshold():
     assert usage.fup_active is True
     command = session.scalar(select(RadiusCommand))
     assert command.command_type == "COA"
-    # RouterOS rx/tx: download/upload (M3 direction-correct format).
-    assert command.attributes["Mikrotik-Rate-Limit"] == "200k/100k"
+    assert command.attributes["Mikrotik-Rate-Limit"] == "100k/200k"

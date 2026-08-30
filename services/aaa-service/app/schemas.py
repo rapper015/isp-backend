@@ -40,19 +40,6 @@ class NasUpdateIn(StrictModel):
     capabilities: dict[str, Any] | None = None
 class TenantIn(StrictModel):
     name: str = Field(min_length=1, max_length=128); enabled: bool = True; policy: dict[str, Any] = Field(default_factory=dict)
-
-# --- Milestone 0: operator/user auth ----------------------------------------
-class UserCreateIn(StrictModel):
-    username: str = Field(min_length=3, max_length=128)
-    password: str = Field(min_length=8, max_length=128)
-    full_name: str | None = Field(default=None, max_length=255)
-    email: str | None = Field(default=None, max_length=255)
-    role: str = Field(default="READ_ONLY", max_length=64)
-    tenant_id: UUID | None = None
-
-class LoginIn(StrictModel):
-    username: str = Field(min_length=1, max_length=128)
-    password: str = Field(min_length=1, max_length=128)
 class IpPoolIn(StrictModel):
     tenant_id: UUID
     name: str = Field(min_length=1, max_length=128)

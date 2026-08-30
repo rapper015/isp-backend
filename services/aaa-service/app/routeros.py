@@ -323,35 +323,6 @@ def parse_routeros_version(version: str) -> tuple[int, int, int] | None:
     return int(match.group(1)), int(match.group(2)), int(match.group(3) or "0")
 
 
-# M3 typed-object path map (kind -> RouterOS API path). Keys are validated by
-# the network-control allowlist before any call reaches an adapter.
-_OBJECT_PATHS = {
-    "queue_type": "/queue/type",
-    "queue_tree": "/queue/tree",
-    "simple_queue": "/queue/simple",
-    "mangle_rule": "/ip/firewall/mangle",
-    "address_list": "/ip/firewall/address-list",
-}
-
-
-def _object_arguments(kind: str, params: dict) -> dict[str, str]:
-    """Translate a typed, allowlisted object description into RouterOS API
-    arguments. Unknown keys are ignored (never forwarded verbatim)."""
-    allowed = {
-        "queue_type": {"name", "kind", "pcq-rate", "pcq-limit", "pcq-classifier", "comment"},
-        "queue_tree": {"name", "parent", "packet-marks", "max-limit", "limit-at", "priority", "comment"},
-        "simple_queue": {"name", "target", "max-limit", "limit-at", "comment"},
-        "mangle_rule": {"chain", "protocol", "dst-port", "src-port", "dscp", "new-packet-mark", "new-connection-mark", "comment"},
-        "address_list": {"list", "address", "comment"},
-    }
-    arguments: dict[str, str] = {}
-    for key in allowed.get(kind, set()):
-        api_key = key.replace("_", "-")
-        if key in params and params[key] is not None:
-            arguments[api_key] = str(params[key])
-    return arguments
-
-
 # ---------------------------------------------------------------------------
 # Adapter interface
 # ---------------------------------------------------------------------------
@@ -438,32 +409,6 @@ class RouterOSAdapter(ABC):
 
     @abstractmethod
     def get_active_hotspot_sessions(self) -> list[dict]: ...
-
-    # -- Milestone 3: typed policy/QoS operations --------------------------
-
-    @abstractmethod
-    def get_queue_types(self) -> list[dict]: ...
-
-    @abstractmethod
-    def get_queues(self) -> list[dict]: ...
-
-    @abstractmethod
-    def get_queue_trees(self) -> list[dict]: ...
-
-    @abstractmethod
-    def get_mangle_rules(self) -> list[dict]: ...
-
-    @abstractmethod
-    def get_address_lists(self) -> list[dict]: ...
-
-    @abstractmethod
-    def create_managed_object(self, kind: str, params: dict) -> str: ...
-
-    @abstractmethod
-    def remove_managed_object(self, kind: str, remote_id: str) -> None: ...
-
-    @abstractmethod
-    def disconnect_active_session(self, session_id: str) -> dict: ...
 
 
 # ---------------------------------------------------------------------------
@@ -844,73 +789,6 @@ class RouterOSApiAdapter(RouterOSAdapter):
             return []
         return [{"user": _str(row.get("user")), "address": _str(row.get("address")) or None, "mac_address": _str(row.get("mac-address")) or None, "uptime": _str(row.get("uptime")) or None} for row in rows]
 
-    # -- Milestone 3: typed policy/QoS operations ---------------------------
-
-    def get_queue_types(self) -> list[dict]:
-        try:
-            rows = self._call("/queue/type", "print")
-        except RouterOSCommandError:
-            return []
-        return [{"remote_id": _str(row.get(".id")), "name": _str(row.get("name")), "kind": _str(row.get("kind")), "comment": _str(row.get("comment")) or None} for row in rows]
-
-    def get_queues(self) -> list[dict]:
-        try:
-            rows = self._call("/queue/simple", "print")
-        except RouterOSCommandError:
-            return []
-        return [{"remote_id": _str(row.get(".id")), "name": _str(row.get("name")), "target": _str(row.get("target")), "comment": _str(row.get("comment")) or None} for row in rows]
-
-    def get_queue_trees(self) -> list[dict]:
-        try:
-            rows = self._call("/queue/tree", "print")
-        except RouterOSCommandError:
-            return []
-        return [{"remote_id": _str(row.get(".id")), "name": _str(row.get("name")), "parent": _str(row.get("parent")), "comment": _str(row.get("comment")) or None} for row in rows]
-
-    def get_mangle_rules(self) -> list[dict]:
-        try:
-            rows = self._call("/ip/firewall/mangle", "print")
-        except RouterOSCommandError:
-            return []
-        return [{"remote_id": _str(row.get(".id")), "chain": _str(row.get("chain")), "packet_mark": _str(row.get("new-packet-mark")) or None, "connection_mark": _str(row.get("new-connection-mark")) or None, "comment": _str(row.get("comment")) or None} for row in rows]
-
-    def get_address_lists(self) -> list[dict]:
-        try:
-            rows = self._call("/ip/firewall/address-list", "print")
-        except RouterOSCommandError:
-            return []
-        return [{"remote_id": _str(row.get(".id")), "list": _str(row.get("list")), "address": _str(row.get("address")), "comment": _str(row.get("comment")) or None} for row in rows]
-
-    def create_managed_object(self, kind: str, params: dict) -> str:
-        """Typed creation of platform-managed RouterOS objects. The caller must
-        pass only allowlisted keys; 'kind' is validated by the network-control
-        layer before reaching here."""
-        path = _OBJECT_PATHS.get(kind)
-        if path is None:
-            raise RouterOSCommandError(code="UNSUPPORTED_OBJECT", message=f"unsupported managed object kind: {kind}")
-        self._call(path, "add", arguments=_object_arguments(kind, params))
-        marker = params.get("name") or params.get("list") or params.get("comment")
-        rows = self._call(path, "print", queries={"comment": str(params.get("comment", ""))})
-        for row in rows:
-            if marker and _str(row.get("name") or row.get("list")) == str(marker):
-                return _str(row.get(".id"))
-        for row in rows:
-            return _str(row.get(".id"))
-        raise RouterOSInvalidResponse(code="INVALID_RESPONSE", message="RouterOS did not return the created object")
-
-    def remove_managed_object(self, kind: str, remote_id: str) -> None:
-        path = _OBJECT_PATHS.get(kind)
-        if path is None:
-            raise RouterOSCommandError(code="UNSUPPORTED_OBJECT", message=f"unsupported managed object kind: {kind}")
-        self._call(path, "remove", arguments={"id": remote_id})
-
-    def disconnect_active_session(self, session_id: str) -> dict:
-        rows = self._call("/ppp/active", "print", queries={"id": session_id}) if session_id.startswith("*") else []
-        if not rows:
-            return {"disconnected": False, "reason": "session not found", "session_id": session_id}
-        self._call("/ppp/active", "remove", arguments={"id": _str(rows[0].get(".id"))})
-        return {"disconnected": True, "session_id": session_id}
-
 
 # ---------------------------------------------------------------------------
 # Version-specific adapters. RouterOS v6 vs v7 differences relevant to RADIUS
@@ -1009,11 +887,6 @@ class FakeRouterOSAdapter(RouterOSAdapter):
         self.hotspot_profiles: list[dict] = []
         self.active_ppp: list[dict] = []
         self.active_hotspot: list[dict] = []
-        self.queue_types: list[dict] = []
-        self.simple_queues: list[dict] = []
-        self.queue_trees: list[dict] = []
-        self.mangle_rules: list[dict] = []
-        self.address_lists: list[dict] = []
         self.fail_auth = False
         self.fail_permission = False
         self.command_error: str | None = None
@@ -1198,62 +1071,6 @@ class FakeRouterOSAdapter(RouterOSAdapter):
     def get_active_hotspot_sessions(self) -> list[dict]:
         return [dict(item) for item in self.active_hotspot]
 
-    # -- Milestone 3: typed policy/QoS operations ---------------------------
-
-    def get_queue_types(self) -> list[dict]:
-        return [dict(item) for item in self.queue_types]
-
-    def get_queues(self) -> list[dict]:
-        return [dict(item) for item in self.simple_queues]
-
-    def get_queue_trees(self) -> list[dict]:
-        return [dict(item) for item in self.queue_trees]
-
-    def get_mangle_rules(self) -> list[dict]:
-        return [dict(item) for item in self.mangle_rules]
-
-    def get_address_lists(self) -> list[dict]:
-        return [dict(item) for item in self.address_lists]
-
-    def create_managed_object(self, kind: str, params: dict) -> str:
-        if kind not in _OBJECT_PATHS:
-            raise RouterOSCommandError(code="UNSUPPORTED_OBJECT", message=f"unsupported managed object kind: {kind}")
-        remote_id = self._remote_id()
-        entry = {"remote_id": remote_id, "kind": kind}
-        entry.update({k: params[k] for k in params if k in {"name", "list", "address", "comment", "kind", "parent", "max-limit", "limit-at", "priority", "chain", "protocol", "dst-port", "src-port", "dscp", "new-packet-mark", "new-connection-mark", "target", "packet-marks", "pcq-rate", "pcq-limit", "pcq-classifier"}})
-        entry["comment"] = entry.get("comment", params.get("comment"))
-        bucket = self._object_bucket(kind)
-        bucket.append(entry)
-        return remote_id
-
-    def remove_managed_object(self, kind: str, remote_id: str) -> None:
-        bucket = self._object_bucket(kind)
-        for index, item in enumerate(bucket):
-            if item.get("remote_id") == remote_id:
-                bucket.pop(index)
-                return
-        raise RouterOSCommandError(code="NOT_FOUND", message=f"managed object not found: {remote_id}")
-
-    def disconnect_active_session(self, session_id: str) -> dict:
-        for index, item in enumerate(self.active_ppp):
-            if item.get("remote_id") == session_id or item.get("name") == session_id:
-                self.active_ppp.pop(index)
-                return {"disconnected": True, "session_id": session_id}
-        return {"disconnected": False, "reason": "session not found", "session_id": session_id}
-
-    def _object_bucket(self, kind: str) -> list[dict]:
-        if kind == "queue_type":
-            return self.queue_types
-        if kind == "queue_tree":
-            return self.queue_trees
-        if kind == "simple_queue":
-            return self.simple_queues
-        if kind == "mangle_rule":
-            return self.mangle_rules
-        if kind == "address_list":
-            return self.address_lists
-        raise RouterOSCommandError(code="UNSUPPORTED_OBJECT", message=f"unsupported managed object kind: {kind}")
-
     # -- simulation helpers --------------------------------------------------
 
     def seed_radius_entry(self, **kwargs) -> None:
@@ -1263,18 +1080,3 @@ class FakeRouterOSAdapter(RouterOSAdapter):
 
     def seed_hotspot_profile(self, **kwargs) -> None:
         self.hotspot_profiles.append({"remote_id": kwargs.pop("remote_id", self._remote_id()), "name": kwargs.get("name", "default"), "use_radius": kwargs.get("use_radius", False), "radius_accounting": kwargs.get("radius_accounting", False), "radius_interim_update": kwargs.get("radius_interim_update"), "radius_mac_format": None, "location_name": None})
-
-    def seed_queue_type(self, **kwargs) -> None:
-        self.queue_types.append({"remote_id": kwargs.pop("remote_id", self._remote_id()), "name": kwargs.get("name"), "kind": kwargs.get("kind", "pcq"), "comment": kwargs.get("comment")})
-
-    def seed_simple_queue(self, **kwargs) -> None:
-        self.simple_queues.append({"remote_id": kwargs.pop("remote_id", self._remote_id()), "name": kwargs.get("name"), "target": kwargs.get("target"), "comment": kwargs.get("comment")})
-
-    def seed_queue_tree(self, **kwargs) -> None:
-        self.queue_trees.append({"remote_id": kwargs.pop("remote_id", self._remote_id()), "name": kwargs.get("name"), "parent": kwargs.get("parent"), "comment": kwargs.get("comment")})
-
-    def seed_mangle(self, **kwargs) -> None:
-        self.mangle_rules.append({"remote_id": kwargs.pop("remote_id", self._remote_id()), "chain": kwargs.get("chain", "forward"), "packet_mark": kwargs.get("packet_mark") or kwargs.get("new-packet-mark"), "connection_mark": kwargs.get("connection_mark") or kwargs.get("new-connection-mark"), "comment": kwargs.get("comment")})
-
-    def seed_address_list(self, **kwargs) -> None:
-        self.address_lists.append({"remote_id": kwargs.pop("remote_id", self._remote_id()), "list": kwargs.get("list"), "address": kwargs.get("address"), "comment": kwargs.get("comment")})
