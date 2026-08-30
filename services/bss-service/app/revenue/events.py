@@ -39,6 +39,24 @@ EVENTS = (
     # invoice
     "invoice.issued.v1",
     "invoice.overdue.v1",
+    # catalog / monetization (Master Spec Batch 5)
+    "catalog.bundle.created.v1",
+    "catalog.service_defined.v1",
+    "catalog.product_sunset.v1",
+    "catalog.enterprise_catalog_created.v1",
+    "catalog.vendor_onboarded.v1",
+    "monetization.commission_calculated.v1",
+    "monetization.wallet_debited.v1",
+    "monetization.churn_tracked.v1",
+    "monetization.trial_converted.v1",
+    "monetization.stickiness_computed.v1",
+    # growth / engagement (Master Spec Batch 8)
+    "catalog.coupon.applied.v1",
+    "catalog.points.redeemed.v1",
+    "catalog.service.composed.v1",
+    "catalog.expense.categorized.v1",
+    "catalog.margin.improved.v1",
+    "catalog.referral.triggered.v1",
 )
 
 
