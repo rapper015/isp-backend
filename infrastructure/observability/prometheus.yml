@@ -1,0 +1,47 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+  external_labels:
+    cluster: isp-platform
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+scrape_configs:
+  # API services expose /internal/metrics (Prometheus text format).
+  - job_name: isp-services
+    metrics_path: /internal/metrics
+    static_configs:
+      - targets:
+          - crm-service:8000
+          - bss-service:8000
+          - oss-service:8000
+          - aaa-service:8000
+          - nms-service:8000
+          - ipam-service:8000
+          - siem-service:8000
+          - workforce-service:8000
+          - warehouse-service:8000
+          - aiops-service:8000
+          - device-management-service:8000
+          - tenancy-service:8000
+          - assurance-service:8000
+
+  # Infrastructure.
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+  - job_name: postgres-exporter
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+  - job_name: rabbitmq-exporter
+    static_configs:
+      - targets: ["rabbitmq:15692"]
+  - job_name: valkey
+    static_configs:
+      - targets: ["valkey:9121"]

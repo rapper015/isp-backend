@@ -1,0 +1,27 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "Tenant - Service Health",
+  "uid": "ass-tenant",
+  "tags": ["tenant", "assurance"],
+  "timezone": "utc",
+  "refresh": "1m",
+  "time": {"from": "now-24h", "to": "now"},
+  "templating": {"list": [{"name": "tenant", "type": "query", "datasource": "Prometheus",
+    "query": "label_values(slo_burn_rate, tenant)"}]},
+  "panels": [
+    {"type": "stat", "title": "Tenant Firing Alerts", "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+     "targets": [{"expr": "count(ALERTS{alertstate=\"firing\", tenant=\"$tenant\"})"}]},
+    {"type": "stat", "title": "Synthetic Availability", "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+     "targets": [{"expr": "sum(synthetic_check_success{tenant=\"$tenant\"}) / count(synthetic_check_success{tenant=\"$tenant\"})"}]},
+    {"type": "stat", "title": "SLI Ratio (avg)", "gridPos": {"h": 4, "w": 12, "x": 12, "y": 0},
+     "targets": [{"expr": "avg(slo_sli_ratio{tenant=\"$tenant\"})"}]},
+    {"type": "timeseries", "title": "Tenant SLI Ratio", "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+     "targets": [{"expr": "slo_sli_ratio{tenant=\"$tenant\"}", "legendFormat": "{{slo}}"}]}
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

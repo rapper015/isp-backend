@@ -1,0 +1,26 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "Executive - Platform Health",
+  "uid": "ass-exec",
+  "tags": ["executive", "assurance"],
+  "timezone": "utc",
+  "refresh": "5m",
+  "time": {"from": "now-7d", "to": "now"},
+  "templating": {"list": []},
+  "panels": [
+    {"type": "stat", "title": "Tenants With Alerts", "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+     "targets": [{"expr": "count(count by (tenant) (slo_burn_rate))"}]},
+    {"type": "stat", "title": "Major Incidents (7d)", "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+     "targets": [{"expr": "sum(increase(isp_incident_major_total[7d]))"}]},
+    {"type": "stat", "title": "Overall Availability (30d)", "gridPos": {"h": 4, "w": 12, "x": 12, "y": 0},
+     "targets": [{"expr": "avg(slo_sli_ratio)"}]},
+    {"type": "timeseries", "title": "Platform Average SLI Ratio", "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+     "targets": [{"expr": "avg(slo_sli_ratio) by (slo)", "legendFormat": "{{slo}}"}]}
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

@@ -1,0 +1,30 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "NOC - Service Availability",
+  "uid": "ass-noc",
+  "tags": ["noc", "assurance"],
+  "timezone": "utc",
+  "refresh": "30s",
+  "time": {"from": "now-6h", "to": "now"},
+  "templating": {"list": []},
+  "panels": [
+    {"type": "stat", "title": "Services Up", "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
+     "targets": [{"expr": "count(up{job=\"isp-services\"} == 1)"}]},
+    {"type": "stat", "title": "Services Down", "gridPos": {"h": 4, "w": 4, "x": 4, "y": 0},
+     "targets": [{"expr": "count(up{job=\"isp-services\"} == 0)"}]},
+    {"type": "stat", "title": "Firing Alerts", "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0},
+     "targets": [{"expr": "sum(ALERTS{alertstate=\"firing\"})"}]},
+    {"type": "timeseries", "title": "HTTP Error Rate (5xx)", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+     "targets": [{"expr": "sum(rate(isp_http_requests_total{status=~\"5..\"}[5m])) by (service) / clamp_min(sum(rate(isp_http_requests_total[5m])) by (service), 1)", "legendFormat": "{{service}}"}]},
+    {"type": "timeseries", "title": "p95 Latency", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+     "targets": [{"expr": "histogram_quantile(0.95, sum by (le, service) (rate(isp_http_request_duration_seconds_bucket[5m])))", "legendFormat": "{{service}}"}]},
+    {"type": "table", "title": "Active Incidents", "gridPos": {"h": 8, "w": 24, "x": 0, "y": 12},
+     "targets": [{"expr": "sum by (severity) (ALERTS{alertstate=\"firing\"})", "format": "table"}]}
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

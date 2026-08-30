@@ -1,0 +1,69 @@
+# OpenTelemetry Collector config: batch, retry and memory limits.
+# Raw metrics/logs/traces are stored by Prometheus / Loki / Tempo; the
+# assurance-service never stores raw telemetry.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+  resourcedetection:
+    detectors: [env, system]
+    timeout: 2s
+  attributes/redact:
+    actions:
+      # Never export high-cardinality/sensitive identifiers as labels.
+      - key: customer_id
+        action: delete
+      - key: subscriber_id
+        action: delete
+      - key: username
+        action: delete
+      - key: order_id
+        action: delete
+      - key: ip_address
+        action: delete
+      - key: mac_address
+        action: delete
+      - key: password
+        action: delete
+      - key: authorization
+        action: delete
+
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: isp
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, attributes/redact, batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, attributes/redact, batch]
+      exporters: [otlphttp/loki]
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [otlp/tempo]

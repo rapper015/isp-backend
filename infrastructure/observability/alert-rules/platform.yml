@@ -1,0 +1,118 @@
+# Alert rules for the ISP platform. Labels follow the assurance cardinality
+# policy (no customer IDs / usernames / order UUIDs / IPs / MACs in labels).
+groups:
+  - name: service-availability
+    rules:
+      - alert: ServiceDown
+        expr: up{job="isp-services"} == 0
+        for: 1m
+        labels:
+          severity: CRITICAL
+          team: NOC
+          component: service
+        annotations:
+          summary: "Service {{ $labels.instance }} is down"
+          runbook: "docs/noc-runbook.md#service-down"
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+            / clamp_min(sum(rate(http_requests_total[5m])), 1)
+          > 0.05
+        for: 5m
+        labels:
+          severity: HIGH
+          team: NOC
+          component: api
+        annotations:
+          summary: "High 5xx error rate"
+          runbook: "docs/incident-response-runbook.md"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_seconds_bucket[5m]))) > 1.0
+        for: 5m
+        labels:
+          severity: MEDIUM
+          team: NOC
+          component: api
+        annotations:
+          summary: "p95 latency above 1s"
+
+  - name: infrastructure
+    rules:
+      - alert: RabbitMQDown
+        expr: rabbitmq_queue_messages_ready == vector(-1)
+        for: 2m
+        labels:
+          severity: CRITICAL
+          team: PLATFORM
+          component: messaging
+        annotations:
+          summary: "RabbitMQ unavailable"
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: CRITICAL
+          team: PLATFORM
+          component: cache
+        annotations:
+          summary: "Valkey/Redis unavailable"
+
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: CRITICAL
+          team: PLATFORM
+          component: database
+        annotations:
+          summary: "PostgreSQL unavailable"
+
+      - alert: DiskAlmostFull
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) > 0.85
+        for: 10m
+        labels:
+          severity: HIGH
+          team: PLATFORM
+          component: storage
+        annotations:
+          summary: "Disk usage above 85%"
+
+  - name: slo-error-budgets
+    rules:
+      # Assumed SLI metric names exported by the OpenTelemetry Collector from
+      # service instruments. Budget signals come from the assurance service
+      # domain events; these rules surface burn-rate conditions.
+      - alert: SloFastBurn
+        expr: slo_burn_rate > 14.4
+        for: 5m
+        labels:
+          severity: CRITICAL
+          team: SRE
+          component: slo
+        annotations:
+          summary: "SLO {{ $labels.slo }} fast burn (budget exhaustion within ~2 days)"
+
+      - alert: SloSlowBurn
+        expr: slo_burn_rate >= 1 and slo_burn_rate < 14.4
+        for: 30m
+        labels:
+          severity: MEDIUM
+          team: SRE
+          component: slo
+        annotations:
+          summary: "SLO {{ $labels.slo }} slow burn"
+
+  - name: synthetic
+    rules:
+      - alert: SyntheticCheckFailing
+        expr: synthetic_check_success == 0
+        for: 5m
+        labels:
+          severity: HIGH
+          team: NOC
+          component: synthetic
+        annotations:
+          summary: "Synthetic check {{ $labels.check }} failing"

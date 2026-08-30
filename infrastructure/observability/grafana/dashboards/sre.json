@@ -1,0 +1,29 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "SRE - SLO & Error Budgets",
+  "uid": "ass-sre",
+  "tags": ["sre", "assurance"],
+  "timezone": "utc",
+  "refresh": "1m",
+  "time": {"from": "now-24h", "to": "now"},
+  "templating": {"list": [{"name": "slo", "type": "query", "datasource": "Prometheus",
+    "query": "label_values(slo_burn_rate, slo)"}]},
+  "panels": [
+    {"type": "stat", "title": "Fast Burn SLOs", "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+     "targets": [{"expr": "count(slo_burn_rate > 14.4)"}]},
+    {"type": "stat", "title": "Slow Burn SLOs", "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+     "targets": [{"expr": "count(slo_burn_rate >= 1 and slo_burn_rate < 14.4)"}]},
+    {"type": "stat", "title": "Budget Remaining (min)", "gridPos": {"h": 4, "w": 12, "x": 12, "y": 0},
+     "targets": [{"expr": "min(slo_remaining_budget) by (slo)"}]},
+    {"type": "timeseries", "title": "Error Budget Burn Rate", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+     "targets": [{"expr": "slo_burn_rate{$slo}", "legendFormat": "{{slo}}"}]},
+    {"type": "timeseries", "title": "SLI Ratio", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+     "targets": [{"expr": "slo_sli_ratio{$slo}", "legendFormat": "{{slo}}"}]}
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

@@ -55,6 +55,8 @@ services:
         condition: service_healthy
       tenancy-service:
         condition: service_healthy
+      assurance-service:
+        condition: service_healthy
     networks: [edge, platform]
 
   postgres:
@@ -63,7 +65,7 @@ services:
       POSTGRES_DB: isp
       POSTGRES_USER: isp
       POSTGRES_PASSWORD: isp
-      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy
+      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy,assurance
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
@@ -192,6 +194,86 @@ services:
       valkey: {condition: service_healthy}
     networks: [platform]
 
+  assurance-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: assurance-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: assurance-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/assurance}
+
+  assurance-worker:
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: assurance-service}}
+    command: ["python", "-m", "app.worker_runner"]
+    environment: {<<: *domain-environment, SERVICE_NAME: assurance-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/assurance}
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      valkey: {condition: service_healthy}
+    networks: [platform]
+
+  # ---- Optional observability stack (start with --profile observability) ----
+  # The assurance-service is the governance layer; metrics/logs/traces are stored
+  # by these components via the OpenTelemetry Collector (config under
+  # infrastructure/observability/).
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.112.0
+    profiles: ["observability"]
+    volumes:
+      - ./infrastructure/observability/collector.yaml:/etc/otelcol/config.yaml:ro
+    depends_on:
+      prometheus: {condition: service_started}
+      loki: {condition: service_started}
+      tempo: {condition: service_started}
+    expose: ["4317", "4318", "8889"]
+    networks: [platform]
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    profiles: ["observability"]
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=15d"]
+    volumes:
+      - ./infrastructure/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/observability/alert-rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    expose: ["9090"]
+    networks: [platform]
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    profiles: ["observability"]
+    command: ["--config.file=/etc/alertmanager/alertmanager.yml"]
+    volumes:
+      - ./infrastructure/observability/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    expose: ["9093"]
+    networks: [platform]
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    profiles: ["observability"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+    volumes:
+      - ./infrastructure/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    networks: [platform]
+
+  loki:
+    image: grafana/loki:3.1.1
+    profiles: ["observability"]
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    expose: ["3100"]
+    networks: [platform]
+
+  tempo:
+    image: grafana/tempo:2.5.0
+    profiles: ["observability"]
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./infrastructure/observability/tempo.yaml:/etc/tempo.yaml:ro
+    expose: ["3200", "4317", "4318"]
+    networks: [platform]
+
 networks:
   edge:
   platform:
@@ -201,3 +283,4 @@ volumes:
   postgres-data:
   valkey-data:
   device-firmware:
+  prometheus-data:

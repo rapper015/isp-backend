@@ -22,6 +22,7 @@ current code ("old one is the new base").
 | 4 | **BSS — Billing & Payments** (billing accounts, invoices, payment intents, webhooks, refunds, reconciliation, dunning, ledger, reports) | [`milestone-4-bss.md`](milestone-4-bss.md) |
 | 7 | **Device Management — TR-069 CPE Control Plane** (device identity/onboarding, vendor-neutral profiles, verified configuration jobs, drift, controlled actions, diagnostics, firmware canary rollouts, ACS instances) | [`milestone-7-device-management.md`](milestone-7-device-management.md) |
 | 8 | **Tenancy — Franchise & Multi-Tenant Management** (tenant registry/lifecycle/provisioning, tenant config & branding, org hierarchy, partners/franchises, scoped RBAC + SoD, service accounts, commissions, settlements, wallets, tenant-aware reports + platform aggregates) | [`milestone-8-tenancy.md`](milestone-8-tenancy.md) |
+| 9 | **Assurance — Observability & Service Assurance** (service catalogue, SLIs/SLOs/error budgets + immutable published versions, alert lifecycle + dedup/grouping/inhibition/silencing/flapping + routing, incidents + estimated-vs-confirmed impact + ticket links, root-cause evidence framework, postmortems + action items, versioned KPIs, maintenance windows, synthetic checks, dashboards/reports + platform aggregates, audit) | [`milestone-9-assurance.md`](milestone-9-assurance.md) |
 
 ## Conventions
 
@@ -33,6 +34,9 @@ current code ("old one is the new base").
     `X-Internal-API-Key` (inbound event ingestion)
   - `tenancy-service`: management JWT (`TENANCY_JWT_SECRET`, RBAC per endpoint) /
     `X-Internal-API-Key` (inbound event ingestion)
+  - `assurance-service`: management JWT (`ASSURANCE_JWT_SECRET`, RBAC per endpoint, elevated
+    permissions for incident close / postmortem / maintenance approve / platform aggregate) /
+    `X-Internal-API-Key` (inbound event + alert + observation ingestion)
 - **Tenant scoping**: `tenant_id` is passed as a query parameter or in the JSON
   body; all reads/writes are tenant-isolated. The device-management and
   tenancy services additionally validate the requested tenant against the

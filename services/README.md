@@ -20,6 +20,7 @@ capabilities are extracted incrementally.
 | AIOps | predictive automation | `aiops-service` foundation |
 | Device Management | TR-069 CPE control plane (identity, profiles, verified config, drift, diagnostics, firmware rollouts via GenieACS) | `device-management-service` (Milestone 7) |
 | Tenancy | franchise & multi-tenant management (tenant registry/lifecycle, config/branding, org hierarchy, partners, scoped RBAC + SoD, commissions, settlements, wallets, tenant-aware reports) | `tenancy-service` (Milestone 8) |
+| Assurance | observability & service assurance (service catalogue, SLI/SLO/error budgets, alert lifecycle, incidents, root cause, postmortems, KPIs, maintenance windows, synthetic checks, reports; governance layer only — raw telemetry lives in Prometheus/Loki/Tempo via OTel Collector) | `assurance-service` (Milestone 9) |
 
 New services must be created from `_template`, own their database, expose
 `/health`, and communicate with other services only through versioned HTTP or
