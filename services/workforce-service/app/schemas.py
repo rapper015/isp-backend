@@ -1,281 +1,142 @@
-"""API schemas for the workforce service. Domain rules stay in services/domain;
-these models only shape request/response contracts."""
-from __future__ import annotations
+"""Workforce pydantic schemas."""
+import uuid
+from datetime import datetime
 
-from datetime import datetime, time
-from uuid import UUID
-
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 
-class StrictModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-
-# ---------------------------------------------------------------------------
-# Work orders
-# ---------------------------------------------------------------------------
-class WorkOrderCreate(StrictModel):
-    tenant_id: UUID | None = None
-    work_order_type: str
-    customer_id: str | None = None
-    customer_name: str | None = None
-    service_subscription_id: str | None = None
-    service_location_id: str | None = None
-    oss_order_id: str | None = None
-    oss_order_number: str | None = None
-    support_ticket_id: str | None = None
-    support_ticket_number: str | None = None
-    nms_incident_id: str | None = None
-    billing_ref: str | None = None
-    franchise_id: str | None = None
-    reseller_id: str | None = None
-    branch_id: str | None = None
-    service_area_id: UUID | None = None
-    priority: str = "P3_MEDIUM"
-    severity: str = "SEV3"
-    latitude: float | None = None
-    longitude: float | None = None
-    address_line: str | None = None
-    scheduled_start: datetime | None = None
-    scheduled_end: datetime | None = None
-    instructions: str | None = None
-    source_channel: str = "API"
-    strategy: str | None = None
-    correlation_id: str | None = None
-    idempotency_key: str | None = None
-
-
-class ScheduleIn(StrictModel):
-    window_start: datetime
-    window_end: datetime
-    customer_preferred: bool = False
-    correlation_id: str | None = None
-
-
-class AssignIn(StrictModel):
-    strategy: str = "SKILL_BASED"
-    technician_id: UUID | None = None
-    reason: str | None = None
-    correlation_id: str | None = None
-
-
-class RejectIn(StrictModel):
-    technician_id: UUID
-    reason: str = Field(..., min_length=3)
-    correlation_id: str | None = None
-
-
-class BlockIn(StrictModel):
-    blocker_type: str
-    reason: str = Field(..., min_length=3)
-    severity: str = "MEDIUM"
-    correlation_id: str | None = None
-
-
-class PartsIn(StrictModel):
-    materials: list[dict] = []
-    reason: str | None = None
-    correlation_id: str | None = None
-
-
-class CompleteIn(StrictModel):
-    result_code: str
-    summary: str = Field(..., min_length=3)
-    root_cause_reference: str | None = None
-    correlation_id: str | None = None
-
-
-class ReasonIn(StrictModel):
-    reason: str = Field(..., min_length=3)
-    correlation_id: str | None = None
-
-
-class LinkOrderIn(StrictModel):
-    order_id: str
-    order_number: str | None = None
-    correlation_id: str | None = None
-
-
-class LinkTicketIn(StrictModel):
-    ticket_id: str
-    ticket_number: str | None = None
-    correlation_id: str | None = None
-
-
-class LinkIncidentIn(StrictModel):
-    incident_id: str
-    correlation_id: str | None = None
-
-
-class RelatedIn(StrictModel):
-    relation_type: str = "LINKED"
-    to_work_order_id: UUID
-
-
-# ---------------------------------------------------------------------------
-# Check-in / check-out
-# ---------------------------------------------------------------------------
-class CheckInIn(StrictModel):
-    device_timestamp: datetime | None = None
-    latitude: float | None = None
-    longitude: float | None = None
-    gps_accuracy_m: float | None = None
-    exception_reason: str | None = None
-    override_approved_by: str | None = None
-    offline: bool = False
-    network_available: bool = True
-    correlation_id: str | None = None
-
-
-# ---------------------------------------------------------------------------
-# Technician profiles
-# ---------------------------------------------------------------------------
-class TechnicianCreate(StrictModel):
-    user_ref: str
+class TechnicianIn(BaseModel):
     name: str
     phone: str | None = None
     email: str | None = None
-    employment_type: str = "EMPLOYEE"
-    team_code: str | None = None
-    supervisor_ref: str | None = None
-    base_lat: float | None = None
-    base_lng: float | None = None
-    vehicle_ref: str | None = None
-    max_daily_capacity: int = 4
-    supported_work_order_types: list[str] = []
-    service_area_ids: list[str] = []
+    skills: list[str] = Field(default_factory=list)
+    territories: list[str] = Field(default_factory=list)
 
 
-class SkillIn(StrictModel):
-    skill: str
-    proficiency: int = 3
-
-
-class CertificationIn(StrictModel):
-    certification: str
-    expires_at: str | None = None
-
-
-class AvailabilityIn(StrictModel):
-    available_date: str
-    start_time: time | None = None
-    end_time: time | None = None
-    status: str = "AVAILABLE"
-
-
-class ShiftIn(StrictModel):
-    day_of_week: int
-    start_time: time
-    end_time: time
-
-
-class StatusIn(StrictModel):
-    status: str
-    source: str = "API"
-    correlation_id: str | None = None
-
-
-class CertExceptionIn(StrictModel):
-    certification: str
-    reason: str = Field(..., min_length=3)
-
-
-# ---------------------------------------------------------------------------
-# Checklist / proof / QA
-# ---------------------------------------------------------------------------
-class ChecklistSubmitIn(StrictModel):
-    responses: dict
-    correlation_id: str | None = None
-
-
-class ProofIn(StrictModel):
-    evidence_key: str
-    evidence_type: str
-    file_ref: str | None = None
-    checksum: str | None = None
-    capture_timestamp: datetime | None = None
-    latitude: float | None = None
-    longitude: float | None = None
-    device_ref: str | None = None
-    checklist_item_code: str | None = None
-    correlation_id: str | None = None
-
-
-class MaterialIn(StrictModel):
-    material_code: str
-    quantity: int = Field(..., gt=0)
-    usage_type: str = "CONSUMED"
-    correlation_id: str | None = None
-
-
-class DeviceIn(StrictModel):
-    device_type: str = "ONT"
-    serial_number: str
-    mac_address: str | None = None
-    service_subscription_id: str | None = None
-    correlation_id: str | None = None
-
-
-class AcknowledgementIn(StrictModel):
-    method: str
-    masked_recipient: str | None = None
-    consent_text_version: str | None = None
-    result: str = "CONFIRMED"
-    exception: str | None = None
-    correlation_id: str | None = None
-
-
-class ReviewIn(StrictModel):
-    reason: str | None = None
-    rework: bool = True
-    correlation_id: str | None = None
-
-
-# ---------------------------------------------------------------------------
-# Field SLA
-# ---------------------------------------------------------------------------
-class SLAPolicyCreate(StrictModel):
-    code: str
+class TechnicianOut(BaseModel):
+    id: uuid.UUID
     name: str
+    phone: str | None
+    email: str | None
+    status: str
+    skills: list
+    territories: list
+    rating: float
+    joined_at: datetime
+
+    model_config = {"from_attributes": True}
 
 
-class SLATargetIn(StrictModel):
-    priority: str = "ALL"
-    kind: str = "TIME_TO_COMPLETE"
-    business_seconds: int = Field(..., gt=0)
+class WorkOrderIn(BaseModel):
+    title: str
+    type: str = "INSTALLATION"
+    customer_id: str | None = None
+    address: str | None = None
+    priority: str = "MEDIUM"
+    source_ticket_id: str | None = None
+    sla_minutes: int | None = Field(None, ge=15)
 
 
-class SLAPolicyVersionCreate(StrictModel):
-    definition: dict
-    targets: list[SLATargetIn]
-    activate: bool = False
+class WorkOrderOut(BaseModel):
+    id: uuid.UUID
+    ref_id: str
+    tenant_id: uuid.UUID
+    title: str
+    type: str
+    customer_id: str | None
+    address: str | None
+    status: str
+    priority: str
+    technician_id: uuid.UUID | None
+    source_ticket_id: str | None
+    sla_deadline: datetime | None
+    created_at: datetime
+    completed_at: datetime | None
+
+    model_config = {"from_attributes": True}
 
 
-class ActivateVersionIn(StrictModel):
-    version: int
+class TransitionIn(BaseModel):
+    transition: str
+    note: str | None = None
 
 
-class SLAExceptionIn(StrictModel):
-    arrival_deadline: datetime
-    completion_deadline: datetime
-    reason: str = Field(..., min_length=3)
+class AssignIn(BaseModel):
+    technician_id: uuid.UUID
+    scheduled_start: datetime | None = None
+    scheduled_end: datetime | None = None
+    notes: str | None = None
 
 
-# ---------------------------------------------------------------------------
-# Offline sync / dispatch
-# ---------------------------------------------------------------------------
-class OfflineSyncIn(StrictModel):
-    device_ref: str
-    commands: list[dict]
+class DispatchIn(BaseModel):
+    notes: str | None = None
 
 
-class PlanSequenceIn(StrictModel):
-    sequence: list[dict]
-    expected_version: int
+class LocationIn(BaseModel):
+    technician_id: uuid.UUID
+    lat: float
+    lon: float
+    work_order_id: uuid.UUID | None = None
 
 
-class ValidateAssignIn(StrictModel):
-    technician_id: UUID
-    window_start: datetime | None = None
-    window_end: datetime | None = None
+class ProofIn(BaseModel):
+    work_order_id: uuid.UUID | None = None
+    kind: str = "PHOTO"
+    evidence_key: str
+    visit_id: uuid.UUID | None = None
+
+
+class SiteCheckIn(BaseModel):
+    kind: str = "SITE_FEASIBILITY"
+    passed: bool = True
+    details: dict = Field(default_factory=dict)
+
+
+class ChecklistValidateIn(BaseModel):
+    completed: list[str] = Field(default_factory=list)
+
+
+class FeedbackIn(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+    comment: str | None = None
+
+
+class EscalationIn(BaseModel):
+    work_order_id: uuid.UUID
+    level: str = "LEVEL_1"
+    reason: str | None = None
+
+
+class InventoryItemIn(BaseModel):
+    item_type: str
+    serial_number: str | None = None
+    mac_address: str | None = None
+
+
+class ConsumableIn(BaseModel):
+    name: str
+    sku: str
+    quantity: int = 0
+    low_threshold: int = 5
+
+
+class ConsumeIn(BaseModel):
+    work_order_id: uuid.UUID
+    sku: str
+    quantity: int = Field(..., ge=1)
+
+
+class IssueIn(BaseModel):
+    work_order_id: uuid.UUID
+    technician_id: uuid.UUID | None = None
+
+
+class ShiftIn(BaseModel):
+    technician_id: uuid.UUID
+    start_time: datetime
+    end_time: datetime
+
+
+class HandoverIn(BaseModel):
+    accepted_by: str | None = None
+    notes: str | None = None

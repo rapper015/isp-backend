@@ -1,211 +1,154 @@
-"""Workforce security: management JWT + RBAC, technician mobile JWT, customer
-portal JWT and internal service auth. Tenant/customer/technician IDs are never
-trusted from the client alone — they are validated against the authenticated
-principal. Mobile tokens are short-lived; rate limiting is enforced."""
-import secrets
+"""Workforce security: management JWT + RBAC + technician + internal key."""
+import hmac
+import os
 from contextvars import ContextVar
-from os import getenv
+from uuid import UUID
 
 import jwt
 from fastapi import HTTPException, Request
 
-from .cache import limited
+from .context import TenantContext
 
-current_tenant: ContextVar[str | None] = ContextVar("workforce_current_tenant", default=None)
+current_tenant: ContextVar[TenantContext | None] = ContextVar("workforce_tenant_context", default=None)
 
 ROLE_PERMISSIONS = {
     "PLATFORM_ADMIN": {"*"},
     "ISP_OWNER": {"*"},
     "ISP_ADMIN": {"*"},
-    "FIELD_SUPERVISOR": {
-        "workforce.work.view", "workforce.work.assign", "workforce.work.reassign", "workforce.work.schedule",
-        "workforce.work.dispatch", "workforce.work.complete", "workforce.work.cancel",
-        "workforce.technician.view", "workforce.technician.manage", "workforce.dispatch.view",
-        "workforce.dispatch.edit", "workforce.qa.review", "workforce.sla.manage", "workforce.inventory.view",
-        "workforce.customer.contact.view", "workforce.gps.override", "workforce.audit.view", "workforce.export",
+    "FIELD_MANAGER": {
+        "technicians.manage", "technicians.view", "workorders.manage", "workorders.view",
+        "dispatch.manage", "inventory.manage", "inventory.view", "inventory.consume",
+        "shifts.manage", "escalations.manage", "kpi.view", "dashboard.view",
+        "fieldops.manage", "visits.manage", "proof.manage", "feedback.view",
+        "sla.view", "audit.view", "location.ingest",
     },
     "DISPATCHER": {
-        "workforce.work.view", "workforce.work.assign", "workforce.work.reassign", "workforce.work.schedule",
-        "workforce.work.dispatch", "workforce.technician.view", "workforce.dispatch.view", "workforce.dispatch.edit",
-        "workforce.customer.contact.view", "workforce.inventory.view",
+        "workorders.view", "workorders.manage", "dispatch.manage", "technicians.view",
+        "shifts.view", "escalations.manage", "dashboard.view", "location.ingest",
     },
-    "QA_REVIEWER": {
-        "workforce.work.view", "workforce.qa.review", "workforce.work.complete", "workforce.proof.review",
-        "workforce.audit.view",
+    "FIELD_TECHNICIAN": {
+        "workorders.view", "fieldops.manage", "visits.manage", "proof.manage",
+        "inventory.view", "inventory.consume", "feedback.view", "location.ingest",
     },
-    "INVENTORY_CONTROLLER": {
-        "workforce.work.view", "workforce.inventory.view", "workforce.inventory.manage", "workforce.audit.view",
+    "TENANT_ADMIN": {
+        "technicians.manage", "technicians.view", "workorders.manage", "workorders.view",
+        "dispatch.manage", "inventory.manage", "inventory.view", "inventory.consume",
+        "shifts.manage", "escalations.manage", "kpi.view", "dashboard.view",
+        "fieldops.manage", "visits.manage", "proof.manage", "feedback.view",
+        "sla.view", "audit.view", "location.ingest",
     },
-    "NOC_ENGINEER": {"workforce.work.view", "workforce.dispatch.view", "workforce.technician.view"},
-    "SUPPORT_AGENT": {"workforce.work.view", "workforce.work.create", "workforce.customer.contact.view"},
-    "OSS_OPERATOR": {"workforce.work.view", "workforce.work.create"},
-    "FRANCHISE_OPERATOR": {"workforce.work.view", "workforce.work.assign", "workforce.dispatch.view"},
-    "AUDITOR": {"workforce.work.view", "workforce.audit.view", "workforce.export", "workforce.report.view"},
-    "READ_ONLY": {"workforce.work.view"},
+    "AUDITOR": {"workorders.view", "technicians.view", "kpi.view", "sla.view",
+                "feedback.view", "dashboard.view", "audit.view"},
+    "READ_ONLY": {"workorders.view", "technicians.view", "kpi.view", "dashboard.view"},
     "super_admin": {"*"},
 }
 
+PERMISSION_CATALOG = (
+    "technicians.manage", "technicians.view", "workorders.manage", "workorders.view",
+    "dispatch.manage", "inventory.manage", "inventory.view", "inventory.consume",
+    "shifts.manage", "shifts.view", "escalations.manage", "kpi.view", "dashboard.view",
+    "fieldops.manage", "visits.manage", "proof.manage", "feedback.view",
+    "location.ingest", "sla.view",
+)
 
-def management_permission(method: str, path: str) -> str | None:
+INTERNAL_ROUTES = ("/api/workforce/v1/internal/",)
+
+
+def _secret() -> str:
+    s = os.getenv("WORKFORCE_JWT_SECRET")
+    if not s or len(s) < 32:
+        raise HTTPException(status_code=503, detail="WORKFORCE_JWT_SECRET not configured")
+    return s
+
+
+def internal_key_ok(key: str | None) -> bool:
+    expected = os.getenv("WORKFORCE_INTERNAL_API_KEY")
+    return bool(expected) and bool(key) and hmac.compare_digest(expected, key)
+
+
+def _decode_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, _secret(), algorithms=["HS256"])
+    except jwt.PyJWTError as exc:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {exc}")
+
+
+def _required_permission(method: str, path: str) -> str | None:
     if not path.startswith("/api/workforce"):
         return None
-    if "/portal/" in path:
-        return None
-    if "/technician/" in path:
-        return None
-    if path.endswith("/valid-actions") or "/events" in path or "/history" in path:
-        return "workforce.work.view"
-    if "/qa/" in path:
-        return "workforce.qa.review" if method in ("POST", "PUT") else "workforce.work.view"
-    if "/sla/" in path:
-        return "workforce.sla.manage" if method in ("POST", "PUT", "PATCH", "DELETE") else "workforce.work.view"
-    if "/inventory" in path:
-        return "workforce.inventory.manage" if method in ("POST", "PUT", "DELETE") else "workforce.inventory.view"
-    if "/dispatch/" in path:
-        return "workforce.dispatch.edit" if method in ("POST", "PUT", "DELETE") else "workforce.dispatch.view"
-    if "/technicians" in path or "/technician-profiles" in path:
-        return "workforce.technician.manage" if method in ("POST", "PUT", "PATCH", "DELETE") else "workforce.technician.view"
-    if "/reports" in path or "/export" in path:
-        return "workforce.report.view" if "/export" not in path else "workforce.export"
-    if "/audit" in path:
-        return "workforce.audit.view"
-    if "/proof" in path:
-        return "workforce.proof.review" if method in ("POST", "PUT") else "workforce.work.view"
-    if "/work-orders/" in path:
-        if method == "POST":
-            if path.endswith("/assign") or path.endswith("/reassign"):
-                return "workforce.work.assign"
-            if path.endswith("/schedule") or path.endswith("/reschedule"):
-                return "workforce.work.schedule"
-            if path.endswith("/dispatch"):
-                return "workforce.work.dispatch"
-            if path.endswith("/complete"):
-                return "workforce.work.complete"
-            if path.endswith("/cancel"):
-                return "workforce.work.cancel"
-            return "workforce.work.view"
-        return "workforce.work.view"
-    if path.rstrip("/").endswith("/work-orders"):
-        return "workforce.work.create" if method == "POST" else "workforce.work.view"
-    return "workforce.work.view"
+    p = path.rstrip("/").split("?")[0]
+    if "/work-orders" in p or "/workorders" in p:
+        if method in ("POST", "PUT", "PATCH") or "/complete" in p or "/transition" in p \
+                or "/escalate" in p or "/assign" in p or "/dispatch" in p:
+            return "workorders.manage"
+        return "workorders.view"
+    if "/technicians" in p:
+        if "/status" in p or method in ("POST", "PUT", "PATCH"):
+            return "technicians.manage"
+        return "technicians.view"
+    if "/dispatch" in p:
+        return "dispatch.manage"
+    if "/inventory" in p or "/consumables" in p or "/spare" in p:
+        if "/consume" in p or "/use" in p:
+            return "inventory.consume"
+        if method in ("POST", "PUT", "PATCH") or "/issue" in p or "/return" in p or "/sync" in p:
+            return "inventory.manage"
+        return "inventory.view"
+    if "/shifts" in p:
+        return "shifts.manage" if method in ("POST", "PUT", "PATCH") else "shifts.view"
+    if "/escalations" in p:
+        return "escalations.manage"
+    if "/kpi" in p:
+        return "kpi.view"
+    if "/feedback" in p:
+        return "feedback.view" if method == "GET" else "workorders.manage"
+    if "/visits" in p or "/proof" in p:
+        return "visits.manage"
+    if "/site-checks" in p or "/handover" in p or "/checklist" in p:
+        return "fieldops.manage"
+    if "/dashboard" in p:
+        return "dashboard.view"
+    if "/sla" in p:
+        return "sla.view"
+    if "/location" in p:
+        return "location.ingest"
+    if "/expert" in p or "/visualization" in p or "/overlay" in p:
+        return "workorders.manage" if method in ("POST", "PUT", "PATCH") else "workorders.view"
+    return None
 
 
-async def _json_tenant(request: Request) -> str | None:
-    try:
-        body = await request.json()
-    except Exception:
-        return None
-    return body.get("tenant_id") or body.get("tenantId")
+def get_auth_context(request: Request) -> TenantContext:
+    path = request.url.path
+    if any(path.startswith(r) for r in INTERNAL_ROUTES):
+        key = request.headers.get("X-Internal-API-Key")
+        if internal_key_ok(key):
+            return TenantContext(user_id="system:internal", role="DISPATCHER",
+                                 scope_kind="PLATFORM_AGGREGATE",
+                                 is_platform_aggregate=True,
+                                 permissions=set(ROLE_PERMISSIONS["DISPATCHER"]))
+        raise HTTPException(status_code=401, detail="Invalid internal API key")
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing bearer token")
+    claims = _decode_token(auth[7:])
+    role = claims.get("role", "READ_ONLY")
+    perms = set(ROLE_PERMISSIONS.get(role, set(ROLE_PERMISSIONS["READ_ONLY"])))
+    if claims.get("permissions"):
+        perms |= set(claims["permissions"])
+    tenant_raw = claims.get("tenant_id")
+    scope_kind = claims.get("scope_kind")
+    ctx = TenantContext(
+        user_id=claims.get("userId", "unknown"),
+        role=role,
+        tenant_id=UUID(tenant_raw) if tenant_raw else None,
+        permissions=perms,
+        scope_kind=scope_kind,
+        is_platform_aggregate=(scope_kind == "PLATFORM_AGGREGATE" or role in ("PLATFORM_ADMIN", "super_admin")),
+    )
+    current_tenant.set(ctx)
+    return ctx
 
 
-async def management_auth(request: Request) -> None:
-    header = request.headers.get("Authorization", "")
-    secret = getenv("WORKFORCE_JWT_SECRET", "")
-    if not header.startswith("Bearer ") or not secret:
-        raise HTTPException(401, "management authentication failed")
-    if len(secret) < 32:
-        raise HTTPException(503, "management authentication is not securely configured")
-    try:
-        claims = jwt.decode(header[7:], secret, algorithms=["HS256"])
-    except jwt.PyJWTError as error:
-        raise HTTPException(401, "invalid or expired management token") from error
-    required = management_permission(request.method, request.url.path)
-    role = claims.get("role", "")
-    permissions = set(claims.get("permissions", [])) | ROLE_PERMISSIONS.get(role, set())
-    if required and "*" not in permissions and required not in permissions:
-        raise HTTPException(403, "workforce permission denied")
-    claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
-    if claimed_tenant and role not in {"PLATFORM_ADMIN", "ISP_OWNER", "ISP_ADMIN", "super_admin"}:
-        supplied = request.query_params.get("tenant_id") or (await _json_tenant(request))
-        if supplied and not secrets.compare_digest(str(claimed_tenant), str(supplied)):
-            raise HTTPException(403, "tenant access denied")
-    remote = request.client.host if request.client else "unknown"
-    if not limited(f"workforce:management:{remote}:{request.url.path}",
-                   int(getenv("WORKFORCE_MANAGEMENT_RATE_LIMIT", "120")), 60):
-        raise HTTPException(429, "rate limit exceeded")
-    request.state.workforce_principal = {
-        "subject": claims.get("userId", claims.get("sub", "admin")),
-        "role": role,
-        "permissions": sorted(permissions),
-        "tenant_id": claimed_tenant,
-    }
-    current_tenant.set(claimed_tenant)
-
-
-def technician_principal(request: Request) -> dict:
-    principal = getattr(request.state, "workforce_technician_principal", None)
-    if principal is None:
-        raise HTTPException(401, "technician authentication required")
-    return principal
-
-
-async def technician_auth(request: Request) -> None:
-    header = request.headers.get("Authorization", "")
-    secret = getenv("WORKFORCE_TECHNICIAN_JWT_SECRET", "")
-    if not header.startswith("Bearer ") or not secret:
-        raise HTTPException(401, "technician authentication failed")
-    try:
-        claims = jwt.decode(header[7:], secret, algorithms=["HS256"])
-    except jwt.PyJWTError as error:
-        raise HTTPException(401, "invalid or expired technician token") from error
-    if claims.get("role") != "TECHNICIAN":
-        raise HTTPException(403, "technician role required")
-    technician_id = claims.get("technician_id")
-    tenant_id = claims.get("tenant_id") or claims.get("tenantId")
-    device_ref = claims.get("device_ref")
-    if not technician_id or not tenant_id:
-        raise HTTPException(401, "technician token missing identity")
-    remote = request.client.host if request.client else "unknown"
-    if not limited(f"workforce:technician:{remote}:{request.url.path}",
-                   int(getenv("WORKFORCE_TECHNICIAN_RATE_LIMIT", "180")), 60):
-        raise HTTPException(429, "rate limit exceeded")
-    request.state.workforce_technician_principal = {
-        "technician_id": str(technician_id),
-        "tenant_id": str(tenant_id),
-        "device_ref": device_ref,
-        "subject": claims.get("sub", technician_id),
-    }
-    current_tenant.set(str(tenant_id))
-
-
-def customer_principal(request: Request) -> dict:
-    principal = getattr(request.state, "workforce_customer_principal", None)
-    if principal is None:
-        raise HTTPException(401, "customer authentication required")
-    return principal
-
-
-async def customer_auth(request: Request) -> None:
-    header = request.headers.get("Authorization", "")
-    secret = getenv("WORKFORCE_CUSTOMER_JWT_SECRET", "")
-    if not header.startswith("Bearer ") or not secret:
-        raise HTTPException(401, "customer authentication failed")
-    try:
-        claims = jwt.decode(header[7:], secret, algorithms=["HS256"])
-    except jwt.PyJWTError as error:
-        raise HTTPException(401, "invalid or expired customer token") from error
-    if claims.get("role") not in ("CUSTOMER", "PORTAL_USER"):
-        raise HTTPException(403, "customer role required")
-    customer_id = claims.get("customer_id")
-    tenant_id = claims.get("tenant_id") or claims.get("tenantId")
-    if not customer_id or not tenant_id:
-        raise HTTPException(401, "customer token missing identity")
-    remote = request.client.host if request.client else "unknown"
-    if not limited(f"workforce:customer:{remote}:{request.url.path}",
-                   int(getenv("WORKFORCE_CUSTOMER_RATE_LIMIT", "60")), 60):
-        raise HTTPException(429, "rate limit exceeded")
-    request.state.workforce_customer_principal = {
-        "customer_id": str(customer_id),
-        "tenant_id": str(tenant_id),
-        "subject": claims.get("sub", customer_id),
-    }
-    current_tenant.set(str(tenant_id))
-
-
-def internal_service_auth(request: Request) -> None:
-    secret = getenv("WORKFORCE_INTERNAL_API_KEY", "")
-    header = request.headers.get("X-Internal-API-Key", "")
-    if not secret or not header:
-        raise HTTPException(401, "internal service authentication failed")
-    if not secrets.compare_digest(header, secret):
-        raise HTTPException(401, "internal service authentication failed")
+def require_permission(ctx: TenantContext, perm: str) -> None:
+    if "*" not in ctx.permissions and perm not in ctx.permissions:
+        raise HTTPException(status_code=403, detail=f"Missing permission: {perm}")

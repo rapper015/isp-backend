@@ -1,1164 +1,527 @@
-"""Workforce Service — field operations, work orders, dispatch, technician
-mobile, QA, field SLA and proof of work (Milestone 6).
-
-Explicit command endpoints only; no arbitrary status PATCHes. Technician and
-customer surfaces return only the data their role needs."""
-from contextlib import asynccontextmanager
-import secrets
-from datetime import date as _date
+"""Workforce Service API (Master Spec Batch 2: field operations)."""
+import json
+import uuid
+from datetime import datetime, timezone
 from os import getenv
-from uuid import UUID
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request, UploadFile, File, status
-from sqlalchemy import func, select
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
-from . import models  # noqa: F401
-from .database import Base, SessionLocal, engine
-from .domain.exceptions import WorkforceError
-from .models import (
-    Appointment,
-    FieldSLAInstance,
-    TechnicianProfile,
-    WorkOrder,
-    WorkOrderEvent,
-)
-from .schemas import (
-    AcknowledgementIn,
-    ActivateVersionIn,
-    AssignIn,
-    AvailabilityIn,
-    BlockIn,
-    CertExceptionIn,
-    CertificationIn,
-    CheckInIn,
-    ChecklistSubmitIn,
-    CompleteIn,
-    DeviceIn,
-    LinkIncidentIn,
-    LinkOrderIn,
-    LinkTicketIn,
-    MaterialIn,
-    OfflineSyncIn,
-    PartsIn,
-    PlanSequenceIn,
-    ProofIn,
-    ReasonIn,
-    RelatedIn,
-    ReviewIn,
-    ScheduleIn,
-    ShiftIn,
-    SLAExceptionIn,
-    SLAPolicyCreate,
-    SLAPolicyVersionCreate,
-    SkillIn,
-    StatusIn,
-    TechnicianCreate,
-    ValidateAssignIn,
-    WorkOrderCreate,
-)
-from .security import (
-    customer_auth,
-    customer_principal,
-    internal_service_auth,
-    management_auth,
-    technician_auth,
-    technician_principal,
-)
-from .services import (
-    appointment_service,
-    catalog_service,
-    checklist_service,
-    dispatch_service,
-    inventory_service,
-    offline_service,
-    proof_service,
-    qa_service,
-    sla_service,
-    technician_service,
-    workorder_service,
-)
-from .services.audit_service import correlation, work_order_events
+from . import events as ev
+from . import models, schemas
+from .context import TenantContext
+from .database import SessionLocal
+from .routing import enforce_scope, record_audit, require_tenant_id
+from .security import _required_permission, get_auth_context, require_permission
+from .services import (ChecklistService, DispatchService, EquipmentOverlayService,
+                       EscalationService, ExpertService, FailureVisualizationService,
+                       FeedbackService, FieldOpsService, InventoryService,
+                       KpiService, ShiftService, SlaService, SparePartService,
+                       TechnicianService, VisitService, WorkOrderService)
 
 
-@asynccontextmanager
-async def lifespan(_app: FastAPI):
-    Base.metadata.create_all(bind=engine)
-    session = SessionLocal()
+def _db():
+    db = SessionLocal()
     try:
-        catalog_service.ensure_global_defaults(session)
-        session.commit()
+        yield db
     finally:
-        session.close()
-    yield
+        db.close()
 
 
-app = FastAPI(title="Workforce Service", version="6.0.0", lifespan=lifespan)
+def _auth(perm: str):
+    def dep(request: Request, ctx: TenantContext = Depends(get_auth_context)) -> TenantContext:
+        require_permission(ctx, perm)
+        return ctx
+    return dep
 
 
-def db():
-    session = SessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
+app = FastAPI(title="Workforce Service", version="0.2.0", description="Field operations, dispatch, inventory, SLA/KPI")
 
 
-def _raise(error: Exception) -> None:
-    if isinstance(error, WorkforceError):
-        raise HTTPException(error.status_code, {"code": error.code, "detail": error.message}) from error
-    raise HTTPException(422, str(error)) from error
-
-
-def _actor(request: Request) -> str:
-    principal = getattr(request.state, "workforce_principal", None)
-    if principal:
-        return principal["subject"]
-    return "system"
-
-
-def _tid(tenant_id: UUID | None) -> UUID:
-    from .security import current_tenant
-
-    principal_tenant = current_tenant.get()
-    if tenant_id is not None:
-        if principal_tenant and not secrets.compare_digest(str(tenant_id), str(principal_tenant)):
-            raise HTTPException(403, "tenant access denied")
-        return tenant_id
-    if principal_tenant:
-        return UUID(principal_tenant)
-    raise HTTPException(422, "tenant_id is required")
-
-
-def _run(session: Session, fn, request: Request):
-    try:
-        result = fn()
-        session.commit()
-        return result
-    except WorkforceError as error:
-        session.rollback()
-        _raise(error)
-
-
-# ---------------------------------------------------------------------------
-# Serialization
-# ---------------------------------------------------------------------------
-def serialize_work_order(wo: WorkOrder, *, include_internal: bool = True) -> dict:
-    return {
-        "id": str(wo.id),
-        "work_order_number": wo.work_order_number,
-        "work_order_type": wo.work_order_type,
-        "priority": wo.priority,
-        "severity": wo.severity,
-        "status": wo.status,
-        "dispatch_state": wo.dispatch_state,
-        "source_channel": wo.source_channel,
-        "customer_id": wo.customer_id,
-        "customer_name": wo.customer_name,
-        "service_subscription_id": wo.service_subscription_id,
-        "service_location_id": wo.service_location_id,
-        "oss_order_id": wo.oss_order_id,
-        "oss_order_number": wo.oss_order_number,
-        "support_ticket_id": wo.support_ticket_id,
-        "support_ticket_number": wo.support_ticket_number,
-        "nms_incident_id": wo.nms_incident_id,
-        "assigned_technician_id": str(wo.assigned_technician_id) if wo.assigned_technician_id else None,
-        "assigned_technician_name": wo.assigned_technician_name if include_internal else None,
-        "scheduled_start": wo.scheduled_start.isoformat() if wo.scheduled_start else None,
-        "scheduled_end": wo.scheduled_end.isoformat() if wo.scheduled_end else None,
-        "field_sla_status": wo.field_sla_status,
-        "arrival_deadline": wo.arrival_deadline.isoformat() if wo.arrival_deadline else None,
-        "completion_deadline": wo.completion_deadline.isoformat() if wo.completion_deadline else None,
-        "latitude": wo.latitude,
-        "longitude": wo.longitude,
-        "address_line": wo.address_line,
-        "instructions": wo.instructions,
-        "result_code": wo.result_code,
-        "result_summary": wo.result_summary if include_internal else None,
-        "created_at": wo.created_at.isoformat() if wo.created_at else None,
-        "completed_at": wo.completed_at.isoformat() if wo.completed_at else None,
-    }
-
-
-def serialize_appointment(a: Appointment) -> dict:
-    return {"id": str(a.id), "work_order_id": str(a.work_order_id), "window_start": a.window_start.isoformat(),
-            "window_end": a.window_end.isoformat(), "status": a.status, "attempt_number": a.attempt_number,
-            "customer_preferred": a.customer_preferred,
-            "confirmed_at": a.confirmed_at.isoformat() if a.confirmed_at else None}
-
-
-def serialize_event(e: WorkOrderEvent) -> dict:
-    return {"id": str(e.id), "version": e.aggregate_version, "event_type": e.event_type,
-            "actor_type": e.actor_type, "actor_id": e.actor_id, "payload": e.payload,
-            "created_at": e.created_at.isoformat() if e.created_at else None}
-
-
-def _wo_or_404(session: Session, tenant_id, work_order_id: UUID) -> WorkOrder:
-    return workorder_service.get_work_order_or_404(session, tenant_id, work_order_id)
-
-
-# ---------------------------------------------------------------------------
-# Health
-# ---------------------------------------------------------------------------
 @app.get("/health")
 def health():
     return {"status": "ok", "service": getenv("SERVICE_NAME", "workforce-service")}
 
 
 @app.get("/status")
-def service_status():
-    return {"service": "workforce", "phase": "milestone-6-field-workforce-management"}
+def status():
+    return {"service": "workforce", "phase": "batch2", "published_events": ev.ALL_PUBLISHED}
 
 
-# ===========================================================================
-# Work orders — management
-# ===========================================================================
-@app.post("/api/workforce/work-orders", status_code=status.HTTP_201_CREATED, dependencies=[Depends(management_auth)])
-def create_work_order(payload: WorkOrderCreate, request: Request, session: Session = Depends(db)):
-    tenant_id = _tid(payload.tenant_id)
-    catalog_service.ensure_tenant_defaults(session, tenant_id)
+# ---------------------------------------------------------------------------
+# Technicians (features 329-330 foundation, 344 shifts, 346 KPI)
+# ---------------------------------------------------------------------------
+@app.post("/api/workforce/v1/technicians", status_code=201)
+def create_technician(body: schemas.TechnicianIn, request: Request,
+                      db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("technicians.manage"))):
+    require_tenant_id(ctx)
+    t = TechnicianService.create(db, ctx, body.model_dump())
+    return schemas.TechnicianOut.model_validate(t)
+
+
+@app.get("/api/workforce/v1/technicians")
+def list_technicians(request: Request, status: str | None = None,
+                     db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("technicians.view"))):
+    q = enforce_scope(db.query(models.Technician), models.Technician, ctx)
+    if status:
+        q = q.filter(models.Technician.status == status)
+    return [schemas.TechnicianOut.model_validate(t) for t in q.order_by(models.Technician.name).all()]
+
+
+@app.post("/api/workforce/v1/technicians/{tech_id}/status")
+def set_technician_status(tech_id: uuid.UUID, request: Request, payload: dict,
+                          db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("technicians.manage"))):
     try:
-        wo = workorder_service.create_work_order(
-            session, tenant_id,
-            work_order_type=payload.work_order_type, customer_id=payload.customer_id,
-            customer_name=payload.customer_name, service_subscription_id=payload.service_subscription_id,
-            service_location_id=payload.service_location_id, oss_order_id=payload.oss_order_id,
-            oss_order_number=payload.oss_order_number, support_ticket_id=payload.support_ticket_id,
-            support_ticket_number=payload.support_ticket_number, nms_incident_id=payload.nms_incident_id,
-            billing_ref=payload.billing_ref, franchise_id=payload.franchise_id, reseller_id=payload.reseller_id,
-            branch_id=payload.branch_id, service_area_id=payload.service_area_id, priority=payload.priority,
-            severity=payload.severity, latitude=payload.latitude, longitude=payload.longitude,
-            address_line=payload.address_line, scheduled_start=payload.scheduled_start,
-            scheduled_end=payload.scheduled_end, instructions=payload.instructions,
-            source_channel=payload.source_channel, strategy=payload.strategy,
-            correlation_id=payload.correlation_id, idempotency_key=payload.idempotency_key,
-            actor=_actor(request), actor_type="agent")
-        session.commit()
-        session.refresh(wo)
-        return serialize_work_order(wo)
-    except WorkforceError as error:
-        _raise(error)
+        t = TechnicianService.set_status(db, ctx, tech_id, payload.get("status", ""))
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return schemas.TechnicianOut.model_validate(t)
 
 
-@app.get("/api/workforce/work-orders", dependencies=[Depends(management_auth)])
-def list_work_orders(
-    tenant_id: UUID | None = Query(default=None),
-    status_: str | None = Query(default=None, alias="status"),
-    work_order_type: str | None = Query(default=None),
-    priority: str | None = Query(default=None),
-    technician_id: UUID | None = Query(default=None),
-    customer_id: str | None = Query(default=None),
-    service_location_id: str | None = Query(default=None),
-    oss_order_id: str | None = Query(default=None),
-    support_ticket_id: str | None = Query(default=None),
-    sla_status: str | None = Query(default=None),
-    search: str | None = Query(default=None),
-    session: Session = Depends(db),
-):
-    tenant_id = _tid(tenant_id)
-    stmt = select(WorkOrder).where(WorkOrder.tenant_id == tenant_id).order_by(WorkOrder.created_at.desc())
-    if status_:
-        stmt = stmt.where(WorkOrder.status == status_)
-    if work_order_type:
-        stmt = stmt.where(WorkOrder.work_order_type == work_order_type)
-    if priority:
-        stmt = stmt.where(WorkOrder.priority == priority)
-    if technician_id:
-        stmt = stmt.where(WorkOrder.assigned_technician_id == technician_id)
-    if customer_id:
-        stmt = stmt.where(WorkOrder.customer_id == customer_id)
-    if service_location_id:
-        stmt = stmt.where(WorkOrder.service_location_id == service_location_id)
-    if oss_order_id:
-        stmt = stmt.where(WorkOrder.oss_order_id == oss_order_id)
-    if support_ticket_id:
-        stmt = stmt.where(WorkOrder.support_ticket_id == support_ticket_id)
-    if sla_status:
-        stmt = stmt.where(WorkOrder.field_sla_status == sla_status)
-    if search:
-        like = f"%{search}%"
-        stmt = stmt.where((WorkOrder.work_order_number.ilike(like)) | (WorkOrder.customer_name.ilike(like))
-                          | (WorkOrder.support_ticket_number.ilike(like)) | (WorkOrder.oss_order_number.ilike(like)))
-    return [serialize_work_order(wo) for wo in session.scalars(stmt.limit(200))]
-
-
-@app.get("/api/workforce/work-orders/{work_order_id}", dependencies=[Depends(management_auth)])
-def work_order_detail(work_order_id: UUID, tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    tenant = _tid(tenant_id)
-    wo = _wo_or_404(session, tenant, work_order_id)
-    data = serialize_work_order(wo)
-    data["events"] = [serialize_event(e) for e in work_order_events(session, wo.id)]
-    data["appointments"] = [serialize_appointment(a) for a in session.scalars(
-        select(Appointment).where(Appointment.work_order_id == wo.id).order_by(Appointment.attempt_number))]
-    data["proof"] = [{"id": str(p.id), "evidence_type": p.evidence_type, "verification_state": p.verification_state}
-                     for p in proof_service.proofs_for_work_order(session, tenant, wo.id)]
-    data["checklist"] = wo.checklist_snapshot
-    return data
-
-
-@app.get("/api/workforce/work-orders/{work_order_id}/valid-actions", dependencies=[Depends(management_auth)])
-def valid_actions(work_order_id: UUID, tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    wo = _wo_or_404(session, _tid(tenant_id), work_order_id)
-    return {"status": wo.status, "allowed": workorder_service.valid_actions(wo)}
-
-
-@app.get("/api/workforce/work-orders/{work_order_id}/events", dependencies=[Depends(management_auth)])
-def events(work_order_id: UUID, tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    wo = _wo_or_404(session, _tid(tenant_id), work_order_id)
-    return [serialize_event(e) for e in work_order_events(session, wo.id)]
-
-
-# -- lifecycle commands -----------------------------------------------------
-@app.post("/api/workforce/work-orders/{work_order_id}/validate", dependencies=[Depends(management_auth)])
-def validate_wo(work_order_id: UUID, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        return serialize_work_order(workorder_service.validate_work_order(session, _tid(tenant_id), work_order_id, actor=_actor(request)))
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/schedule", dependencies=[Depends(management_auth)])
-def schedule_wo(work_order_id: UUID, payload: ScheduleIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        wo = _wo_or_404(session, _tid(tenant_id), work_order_id)
-        appointment = appointment_service.schedule(session, _tid(tenant_id), wo, window_start=payload.window_start,
-                                                   window_end=payload.window_end, customer_preferred=payload.customer_preferred,
-                                                   actor=_actor(request), correlation_id=payload.correlation_id)
-        return {"appointment": serialize_appointment(appointment), "work_order": serialize_work_order(wo)}
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/reschedule", dependencies=[Depends(management_auth)])
-def reschedule_wo(work_order_id: UUID, payload: ScheduleIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        wo = _wo_or_404(session, _tid(tenant_id), work_order_id)
-        if wo.current_appointment_id is None:
-            raise HTTPException(422, "no appointment to reschedule")
-        appointment = appointment_service.reschedule(session, _tid(tenant_id), wo.current_appointment_id,
-                                                     window_start=payload.window_start, window_end=payload.window_end,
-                                                     reason="reschedule requested", actor=_actor(request),
-                                                     correlation_id=payload.correlation_id)
-        return {"appointment": serialize_appointment(appointment), "work_order": serialize_work_order(wo)}
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/assign", dependencies=[Depends(management_auth)])
-def assign_wo(work_order_id: UUID, payload: AssignIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        wo = workorder_service.assign_work_order(session, _tid(tenant_id), work_order_id, strategy=payload.strategy,
-                                                 technician_id=payload.technician_id, reason=payload.reason,
-                                                 actor=_actor(request), correlation_id=payload.correlation_id)
-        return serialize_work_order(wo)
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/reassign", dependencies=[Depends(management_auth)])
-def reassign_wo(work_order_id: UUID, payload: AssignIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        if not payload.reason:
-            raise HTTPException(422, "reassignment requires a reason")
-        wo = workorder_service.assign_work_order(session, _tid(tenant_id), work_order_id, strategy=payload.strategy,
-                                                 technician_id=payload.technician_id, reason=payload.reason,
-                                                 actor=_actor(request), correlation_id=payload.correlation_id)
-        return serialize_work_order(wo)
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/dispatch", dependencies=[Depends(management_auth)])
-def dispatch_wo(work_order_id: UUID, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        return serialize_work_order(workorder_service.dispatch_work_order(session, _tid(tenant_id), work_order_id, actor=_actor(request)))
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/cancel", dependencies=[Depends(management_auth)])
-def cancel_wo(work_order_id: UUID, payload: ReasonIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        return serialize_work_order(workorder_service.cancel_work_order(session, _tid(tenant_id), work_order_id,
-                                                                        reason=payload.reason, actor=_actor(request),
-                                                                        correlation_id=payload.correlation_id))
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/fail", dependencies=[Depends(management_auth)])
-def fail_wo(work_order_id: UUID, payload: ReasonIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        return serialize_work_order(workorder_service.fail_work_order(session, _tid(tenant_id), work_order_id,
-                                                                      reason=payload.reason, actor=_actor(request),
-                                                                      correlation_id=payload.correlation_id))
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/complete", dependencies=[Depends(management_auth)])
-def complete_wo(work_order_id: UUID, payload: CompleteIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        return serialize_work_order(workorder_service.complete_work_order(
-            session, _tid(tenant_id), work_order_id, result_code=payload.result_code, summary=payload.summary,
-            root_cause_reference=payload.root_cause_reference, actor=_actor(request),
-            correlation_id=payload.correlation_id))
-    return _run(session, fn, request)
-
-
-# -- links ------------------------------------------------------------------
-@app.post("/api/workforce/work-orders/{work_order_id}/link-order", dependencies=[Depends(management_auth)])
-def link_order(work_order_id: UUID, payload: LinkOrderIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        return serialize_work_order(workorder_service.link_oss_order(session, _tid(tenant_id), work_order_id,
-                                                                     order_id=payload.order_id, order_number=payload.order_number,
-                                                                     actor=_actor(request), correlation_id=payload.correlation_id))
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/link-ticket", dependencies=[Depends(management_auth)])
-def link_ticket(work_order_id: UUID, payload: LinkTicketIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        return serialize_work_order(workorder_service.link_ticket(session, _tid(tenant_id), work_order_id,
-                                                                  ticket_id=payload.ticket_id, ticket_number=payload.ticket_number,
-                                                                  actor=_actor(request), correlation_id=payload.correlation_id))
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/link-incident", dependencies=[Depends(management_auth)])
-def link_incident(work_order_id: UUID, payload: LinkIncidentIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        return serialize_work_order(workorder_service.link_incident(session, _tid(tenant_id), work_order_id,
-                                                                    incident_id=payload.incident_id, actor=_actor(request),
-                                                                    correlation_id=payload.correlation_id))
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/related", dependencies=[Depends(management_auth)])
-def related(work_order_id: UUID, payload: RelatedIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        return serialize_work_order(workorder_service.link_related(session, _tid(tenant_id), work_order_id,
-                                                                   relation_type=payload.relation_type,
-                                                                   to_work_order_id=payload.to_work_order_id,
-                                                                   actor=_actor(request)))
-    return _run(session, fn, request)
-
-
-# ===========================================================================
-# QA
-# ===========================================================================
-@app.get("/api/workforce/qa/pending", dependencies=[Depends(management_auth)])
-def qa_pending(tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    tenant_id = _tid(tenant_id)
-    reviews = qa_service.pending_reviews(session, tenant_id)
-    return [{"id": str(r.id), "work_order_id": str(r.work_order_id), "state": r.state,
-             "created_at": r.created_at.isoformat() if r.created_at else None} for r in reviews]
-
-
-@app.get("/api/workforce/work-orders/{work_order_id}/proof", dependencies=[Depends(management_auth)])
-def work_order_proof(work_order_id: UUID, tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    tenant = _tid(tenant_id)
-    wo = _wo_or_404(session, tenant, work_order_id)
-    return [{"id": str(p.id), "evidence_type": p.evidence_type, "verification_state": p.verification_state,
-             "checksum": p.checksum, "capture_timestamp": p.capture_timestamp.isoformat() if p.capture_timestamp else None,
-             "latitude": p.latitude, "longitude": p.longitude, "reviewer": p.reviewer,
-             "rejection_reason": p.rejection_reason} for p in proof_service.proofs_for_work_order(session, tenant, wo.id)]
-
-
-@app.post("/api/workforce/qa/{work_order_id}/approve", dependencies=[Depends(management_auth)])
-def qa_approve(work_order_id: UUID, payload: ReviewIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        review = qa_service.approve_review(session, _tid(tenant_id), work_order_id, reviewer=_actor(request),
-                                           reason=payload.reason, correlation_id=payload.correlation_id)
-        return {"id": str(review.id), "state": review.state, "work_order_id": str(work_order_id)}
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/qa/{work_order_id}/reject", dependencies=[Depends(management_auth)])
-def qa_reject(work_order_id: UUID, payload: ReviewIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        if not payload.reason:
-            raise HTTPException(422, "rejection requires a reason")
-        review = qa_service.reject_review(session, _tid(tenant_id), work_order_id, reviewer=_actor(request),
-                                          reason=payload.reason, rework=payload.rework,
-                                          correlation_id=payload.correlation_id)
-        return {"id": str(review.id), "state": review.state, "work_order_id": str(work_order_id)}
-    return _run(session, fn, request)
-
-
-# ===========================================================================
-# Field SLA
-# ===========================================================================
-@app.post("/api/workforce/sla/policies", status_code=status.HTTP_201_CREATED, dependencies=[Depends(management_auth)])
-def create_sla_policy(payload: SLAPolicyCreate, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        policy = sla_service.create_policy(session, _tid(tenant_id), code=payload.code, name=payload.name, actor=_actor(request))
-        return {"id": str(policy.id), "code": policy.code}
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/sla/policies/{policy_id}/versions", status_code=status.HTTP_201_CREATED, dependencies=[Depends(management_auth)])
-def create_sla_version(policy_id: UUID, payload: SLAPolicyVersionCreate, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        version = sla_service.create_version(session, _tid(tenant_id), policy_id, definition=payload.definition,
-                                             targets=[t.model_dump() for t in payload.targets],
-                                             actor=_actor(request), activate=payload.activate)
-        return {"id": str(version.id), "version": version.version, "active": version.is_active}
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/sla/policies/{policy_id}/activate", dependencies=[Depends(management_auth)])
-def activate_sla_version(policy_id: UUID, payload: ActivateVersionIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        version = sla_service.activate_version(session, _tid(tenant_id), policy_id, payload.version, actor=_actor(request))
-        return {"id": str(version.id), "version": version.version, "active": True}
-    return _run(session, fn, request)
-
-
-@app.get("/api/workforce/work-orders/{work_order_id}/sla", dependencies=[Depends(management_auth)])
-def work_order_sla(work_order_id: UUID, tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    wo = _wo_or_404(session, _tid(tenant_id), work_order_id)
-    sla = sla_service.get_field_sla(session, wo)
-    return sla_service.sla_timeline(session, sla) if sla else None
-
-
-@app.post("/api/workforce/work-orders/{work_order_id}/sla/exception", dependencies=[Depends(management_auth)])
-def sla_exception(work_order_id: UUID, payload: SLAExceptionIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        wo = _wo_or_404(session, _tid(tenant_id), work_order_id)
-        sla = sla_service.apply_exception(session, _tid(tenant_id), wo, arrival_deadline=payload.arrival_deadline,
-                                          completion_deadline=payload.completion_deadline, reason=payload.reason,
-                                          actor=_actor(request))
-        wo.arrival_deadline = sla.arrival_deadline
-        wo.completion_deadline = sla.completion_deadline
-        return {"arrival_deadline": sla.arrival_deadline.isoformat(), "completion_deadline": sla.completion_deadline.isoformat()}
-    return _run(session, fn, request)
-
-
-@app.get("/api/workforce/sla/at-risk", dependencies=[Depends(management_auth)])
-def sla_at_risk(tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    tenant_id = _tid(tenant_id)
-    slas = list(session.scalars(select(FieldSLAInstance).where(
-        FieldSLAInstance.tenant_id == tenant_id, FieldSLAInstance.status.in_(("AT_RISK", "BREACHED")))))
-    return [{"work_order_id": str(s.work_order_id), "status": s.status,
-             "arrival_deadline": s.arrival_deadline.isoformat(), "completion_deadline": s.completion_deadline.isoformat(),
-             "at_risk_at": s.at_risk_at.isoformat() if s.at_risk_at else None,
-             "breach_at": s.breach_at.isoformat() if s.breach_at else None} for s in slas]
-
-
-# ===========================================================================
-# Dispatch
-# ===========================================================================
-@app.get("/api/workforce/dispatch/unassigned", dependencies=[Depends(management_auth)])
-def dispatch_unassigned(tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    return [serialize_work_order(wo) for wo in dispatch_service.unassigned_work(session, _tid(tenant_id))]
-
-
-@app.get("/api/workforce/dispatch/board", dependencies=[Depends(management_auth)])
-def dispatch_board(tenant_id: UUID | None = Query(default=None), date_: str | None = Query(default=None, alias="date"),
-                   session: Session = Depends(db)):
-    on_date = _date.fromisoformat(date_) if date_ else _date.today()
-    return dispatch_service.technician_board(session, _tid(tenant_id), on_date)
-
-
-@app.get("/api/workforce/dispatch/recommendations/{work_order_id}", dependencies=[Depends(management_auth)])
-def dispatch_recommendations(work_order_id: UUID, tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    return {"recommendations": dispatch_service.recommendations(session, _tid(tenant_id), work_order_id)}
-
-
-@app.post("/api/workforce/dispatch/validate-assignment", dependencies=[Depends(management_auth)])
-async def validate_assignment(request: Request, tenant_id: UUID | None = Query(default=None),
-                              session: Session = Depends(db)):
+@app.post("/api/workforce/v1/internal/ingest/location")
+def ingest_location(body: schemas.LocationIn, request: Request,
+                    ctx: TenantContext = Depends(_auth("location.ingest"))):
+    """GPS tracking ingest (feature 342) from the technician app / internal key."""
+    db = SessionLocal()
     try:
-        body = await request.json()
-    except Exception:
-        raise HTTPException(422, "invalid body") from None
-    work_order_id = body.get("work_order_id")
-    technician_id = body.get("technician_id")
-    if not work_order_id or not technician_id:
-        raise HTTPException(422, "work_order_id and technician_id are required")
-    return dispatch_service.validate_assignment(session, _tid(tenant_id), UUID(str(work_order_id)),
-                                                UUID(str(technician_id)),
-                                                window_start=body.get("window_start"),
-                                                window_end=body.get("window_end"))
+        t = TechnicianService.update_location(db, ctx, body.technician_id, body.lat, body.lon)
+        return {"technician_id": str(t.id), "lat": t.last_lat, "lon": t.last_lon,
+                "updated_at": t.location_updated_at}
+    finally:
+        db.close()
 
 
-@app.post("/api/workforce/dispatch/bulk-preview", dependencies=[Depends(management_auth)])
-async def bulk_preview(request: Request, tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
+# ---------------------------------------------------------------------------
+# Work orders (features 329, 330, 333, 334, 349)
+# ---------------------------------------------------------------------------
+@app.post("/api/workforce/v1/work-orders", status_code=201)
+def create_work_order(body: schemas.WorkOrderIn, request: Request,
+                      db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    require_tenant_id(ctx)
+    wo = WorkOrderService.create(db, ctx, body.model_dump())
+    return schemas.WorkOrderOut.model_validate(wo)
+
+
+@app.get("/api/workforce/v1/work-orders")
+def list_work_orders(request: Request, status: str | None = None, type: str | None = None,
+                     limit: int = Query(200, le=1000),
+                     db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.view"))):
+    q = enforce_scope(db.query(models.WorkOrder), models.WorkOrder, ctx)
+    if status:
+        q = q.filter(models.WorkOrder.status == status)
+    if type:
+        q = q.filter(models.WorkOrder.type == type)
+    return [schemas.WorkOrderOut.model_validate(wo) for wo in
+            q.order_by(models.WorkOrder.created_at.desc()).limit(limit).all()]
+
+
+@app.get("/api/workforce/v1/work-orders/{wo_id}")
+def get_work_order(wo_id: uuid.UUID, request: Request, db: Session = Depends(_db),
+                   ctx: TenantContext = Depends(_auth("workorders.view"))):
+    wo = enforce_scope(db.query(models.WorkOrder).filter(
+        models.WorkOrder.id == wo_id), models.WorkOrder, ctx).first()
+    if not wo:
+        raise HTTPException(status_code=404, detail="Work order not found")
+    return schemas.WorkOrderOut.model_validate(wo)
+
+
+@app.post("/api/workforce/v1/work-orders/{wo_id}/assign")
+def assign_work_order(wo_id: uuid.UUID, body: schemas.AssignIn, request: Request,
+                      db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("dispatch.manage"))):
     try:
-        body = await request.json()
-    except Exception:
-        raise HTTPException(422, "invalid body") from None
-    work_order_ids = body.get("work_order_ids", [])
-    return {"previews": dispatch_service.bulk_assignment_preview(session, _tid(tenant_id),
-                                                                 [UUID(str(x)) for x in work_order_ids])}
+        wo = WorkOrderService.assign(db, ctx, wo_id, body.technician_id, body.notes,
+                                     body.scheduled_start, body.scheduled_end)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return schemas.WorkOrderOut.model_validate(wo)
 
 
-@app.get("/api/workforce/dispatch/plans/{technician_id}", dependencies=[Depends(management_auth)])
-def get_plan(technician_id: UUID, tenant_id: UUID | None = Query(default=None),
-             date_: str | None = Query(default=None, alias="date"), session: Session = Depends(db)):
-    plan_date = date_ or _date.today().isoformat()
-    plan = dispatch_service.get_dispatch_plan(session, _tid(tenant_id), technician_id, plan_date)
-    return {"technician_id": str(technician_id), "plan_date": plan.plan_date, "sequence": plan.sequence,
-            "version": plan.version}
-
-
-@app.post("/api/workforce/dispatch/plans/{technician_id}/sequence", dependencies=[Depends(management_auth)])
-def update_plan(technician_id: UUID, payload: PlanSequenceIn, tenant_id: UUID | None = Query(default=None),
-                date_: str | None = Query(default=None, alias="date"), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    plan_date = date_ or _date.today().isoformat()
-    plan = dispatch_service.get_dispatch_plan(session, _tid(tenant_id), technician_id, plan_date)
-
-    def fn():
-        from ..domain.dispatch import apply_sequence
-
-        updated = apply_sequence(session, _tid(tenant_id), plan.id, payload.sequence,
-                                 expected_version=payload.expected_version, edited_by=_actor(request))
-        return {"version": updated.version, "sequence": updated.sequence}
-    return _run(session, fn, request)
-
-
-@app.get("/api/workforce/dispatch/plans/{technician_id}/route", dependencies=[Depends(management_auth)])
-def build_route(technician_id: UUID, tenant_id: UUID | None = Query(default=None),
-                date_: str | None = Query(default=None, alias="date"), session: Session = Depends(db)):
-    plan_date = date_ or _date.today().isoformat()
-    return dispatch_service.build_route(session, _tid(tenant_id), technician_id, plan_date)
-
-
-# ===========================================================================
-# Technician profiles (management)
-# ===========================================================================
-@app.post("/api/workforce/technicians", status_code=status.HTTP_201_CREATED, dependencies=[Depends(management_auth)])
-def create_technician(payload: TechnicianCreate, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        technician = technician_service.create_technician(
-            session, _tid(tenant_id), user_ref=payload.user_ref, name=payload.name, phone=payload.phone,
-            email=payload.email, employment_type=payload.employment_type, team_code=payload.team_code,
-            supervisor_ref=payload.supervisor_ref, base_lat=payload.base_lat, base_lng=payload.base_lng,
-            vehicle_ref=payload.vehicle_ref, max_daily_capacity=payload.max_daily_capacity,
-            supported_work_order_types=payload.supported_work_order_types,
-            service_area_ids=payload.service_area_ids, actor=_actor(request))
-        return _serialize_technician(technician)
-    return _run(session, fn, request)
-
-
-@app.get("/api/workforce/technicians", dependencies=[Depends(management_auth)])
-def list_technicians(tenant_id: UUID | None = Query(default=None), active: bool | None = Query(default=None),
-                     session: Session = Depends(db)):
-    tenant_id = _tid(tenant_id)
-    stmt = select(TechnicianProfile).where(TechnicianProfile.tenant_id == tenant_id).order_by(TechnicianProfile.name)
-    if active is not None:
-        stmt = stmt.where(TechnicianProfile.is_active.is_(active))
-    return [_serialize_technician(t) for t in session.scalars(stmt)]
-
-
-def _serialize_technician(t: TechnicianProfile) -> dict:
-    return {"id": str(t.id), "user_ref": t.user_ref, "name": t.name, "phone": t.phone, "email": t.email,
-            "employment_type": t.employment_type, "team_code": t.team_code, "supervisor_ref": t.supervisor_ref,
-            "is_active": t.is_active, "operational_status": t.operational_status,
-            "base_lat": t.base_lat, "base_lng": t.base_lng, "vehicle_ref": t.vehicle_ref,
-            "max_daily_capacity": t.max_daily_capacity, "service_area_ids": t.service_area_ids}
-
-
-@app.post("/api/workforce/technicians/{technician_id}/skills", dependencies=[Depends(management_auth)])
-def add_skill(technician_id: UUID, payload: SkillIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        skill = technician_service.add_skill(session, _tid(tenant_id), technician_id, skill=payload.skill,
-                                             proficiency=payload.proficiency, actor=_actor(request))
-        return {"id": str(skill.id), "skill": skill.skill, "proficiency": skill.proficiency}
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/technicians/{technician_id}/certifications", dependencies=[Depends(management_auth)])
-def add_certification(technician_id: UUID, payload: CertificationIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    from datetime import date as _date
-
-    def fn():
-        expires = _date.fromisoformat(payload.expires_at) if payload.expires_at else None
-        cert = technician_service.add_certification(session, _tid(tenant_id), technician_id,
-                                                    certification=payload.certification, expires_at=expires,
-                                                    actor=_actor(request))
-        return {"id": str(cert.id), "certification": cert.certification, "expires_at": str(cert.expires_at)}
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/technicians/{technician_id}/availability", dependencies=[Depends(management_auth)])
-def set_availability(technician_id: UUID, payload: AvailabilityIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    from datetime import date as _date
-
-    def fn():
-        row = technician_service.set_availability(session, _tid(tenant_id), technician_id,
-                                                  available_date=_date.fromisoformat(payload.available_date),
-                                                  start_time=payload.start_time, end_time=payload.end_time,
-                                                  status=payload.status, actor=_actor(request))
-        return {"id": str(row.id), "available_date": str(row.available_date), "status": row.status}
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/technicians/{technician_id}/shifts", dependencies=[Depends(management_auth)])
-def set_shift(technician_id: UUID, payload: ShiftIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        row = technician_service.set_shift(session, _tid(tenant_id), technician_id, day_of_week=payload.day_of_week,
-                                           start_time=payload.start_time, end_time=payload.end_time, actor=_actor(request))
-        return {"id": str(row.id), "day_of_week": row.day_of_week}
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/technicians/{technician_id}/status", dependencies=[Depends(management_auth)])
-def set_status(technician_id: UUID, payload: StatusIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        tech = technician_service.transition_status(session, _tid(tenant_id), technician_id, to_status=payload.status,
-                                                    source=payload.source, actor=_actor(request),
-                                                    correlation_id=payload.correlation_id)
-        return {"id": str(tech.id), "status": tech.operational_status}
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/technicians/{technician_id}/certification-exceptions", dependencies=[Depends(management_auth)])
-def certification_exception(technician_id: UUID, payload: CertExceptionIn, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):  # noqa: E501
-    def fn():
-        from .domain import technicians as tech_rules
-
-        result = tech_rules.add_certification_exception(session, _tid(tenant_id), technician_id,
-                                                        payload.certification, reason=payload.reason,
-                                                        approved_by=_actor(request))
-        return result
-    return _run(session, fn, request)
-
-
-# ===========================================================================
-# Technician mobile API
-# ===========================================================================
-def _technician(request: Request) -> dict:
-    return technician_principal(request)
-
-
-def _tech_wo(session: Session, request: Request, work_order_id: UUID) -> WorkOrder:
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    technician_id = UUID(principal["technician_id"])
-    wo = _wo_or_404(session, tenant, work_order_id)
-    if str(wo.assigned_technician_id) != str(technician_id):
-        raise HTTPException(403, "work order not assigned to this technician")
-    return wo
-
-
-@app.get("/api/workforce/technician/me", dependencies=[Depends(technician_auth)])
-def technician_me(request: Request):
-    return _technician(request)
-
-
-@app.get("/api/workforce/technician/assignments", dependencies=[Depends(technician_auth)])
-def technician_assignments(request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    technician_id = UUID(principal["technician_id"])
-    orders = list(session.scalars(select(WorkOrder).where(
-        WorkOrder.tenant_id == tenant, WorkOrder.assigned_technician_id == technician_id,
-        WorkOrder.status.notin_(("COMPLETED", "FAILED", "CANCELLED"))).order_by(WorkOrder.scheduled_start)))
-    return [_serialize_technician_wo(wo) for wo in orders]
-
-
-def _serialize_technician_wo(wo: WorkOrder) -> dict:
-    """Technician-safe view: only the customer info necessary for the work."""
-    data = serialize_work_order(wo, include_internal=False)
-    data["checklist"] = wo.checklist_snapshot
-    data["completion_requirements"] = wo.completion_requirements
-    return data
-
-
-@app.get("/api/workforce/technician/assignments/{work_order_id}", dependencies=[Depends(technician_auth)])
-def technician_assignment_detail(work_order_id: UUID, request: Request, session: Session = Depends(db)):
-    wo = _tech_wo(session, request, work_order_id)
-    return _serialize_technician_wo(wo)
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/accept", dependencies=[Depends(technician_auth)])
-def technician_accept(work_order_id: UUID, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    technician_id = UUID(principal["technician_id"])
-    wo = _tech_wo(session, request, work_order_id)
-
-    def fn():
-        return serialize_work_order(workorder_service.accept_assignment(session, tenant, work_order_id,
-                                                                        technician_id=technician_id,
-                                                                        actor=principal["subject"]))
-    return _run(session, fn, request)
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/reject", dependencies=[Depends(technician_auth)])
-def technician_reject(work_order_id: UUID, payload: ReasonIn, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    technician_id = UUID(principal["technician_id"])
-    _tech_wo(session, request, work_order_id)
-
-    def fn():
-        return serialize_work_order(workorder_service.reject_assignment(session, tenant, work_order_id,
-                                                                        technician_id=technician_id,
-                                                                        reason=payload.reason, actor=principal["subject"]))
-    return _run(session, fn, request)
-
-
-def _tech_run(session, fn):
+@app.post("/api/workforce/v1/work-orders/{wo_id}/dispatch")
+def dispatch_work_order(wo_id: uuid.UUID, body: schemas.DispatchIn, request: Request,
+                        db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("dispatch.manage"))):
     try:
-        result = fn()
-        session.commit()
-        return result
-    except WorkforceError as error:
-        session.rollback()
-        _raise(error)
+        wo = WorkOrderService.dispatch(db, ctx, wo_id, body.notes)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return schemas.WorkOrderOut.model_validate(wo)
 
 
-@app.post("/api/workforce/technician/assignments/{work_order_id}/start-travel", dependencies=[Depends(technician_auth)])
-def technician_start_travel(work_order_id: UUID, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
-    return _tech_run(session, lambda: serialize_work_order(
-        workorder_service.start_travel(session, tenant, work_order_id, actor=principal["subject"])))
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/check-in", dependencies=[Depends(technician_auth)])
-def technician_check_in(work_order_id: UUID, payload: CheckInIn, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    technician_id = UUID(principal["technician_id"])
-    _tech_wo(session, request, work_order_id)
-
-    def fn():
-        wo = workorder_service.check_in_work_order(
-            session, tenant, work_order_id, technician_id=technician_id,
-            payload=payload.model_dump(), actor=principal["subject"],
-            correlation_id=payload.correlation_id, device_ref=principal.get("device_ref"))
-        return {"work_order": serialize_work_order(wo), "status": "ARRIVED"}
-    return _tech_run(session, fn)
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/check-out", dependencies=[Depends(technician_auth)])
-def technician_check_out(work_order_id: UUID, payload: CheckInIn, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    technician_id = UUID(principal["technician_id"])
-    _tech_wo(session, request, work_order_id)
-
-    def fn():
-        workorder_service.check_out_work_order(session, tenant, work_order_id, technician_id=technician_id,
-                                               payload=payload.model_dump(), actor=principal["subject"],
-                                               correlation_id=payload.correlation_id, device_ref=principal.get("device_ref"))
-        return {"status": "CHECKED_OUT"}
-    return _tech_run(session, fn)
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/start-work", dependencies=[Depends(technician_auth)])
-def technician_start_work(work_order_id: UUID, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
-    return _tech_run(session, lambda: serialize_work_order(
-        workorder_service.start_work(session, tenant, work_order_id, actor=principal["subject"])))
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/pause", dependencies=[Depends(technician_auth)])
-def technician_pause(work_order_id: UUID, payload: ReasonIn, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
-    return _tech_run(session, lambda: serialize_work_order(
-        workorder_service.pause_work_order(session, tenant, work_order_id, reason=payload.reason,
-                                           actor=principal["subject"])))
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/resume", dependencies=[Depends(technician_auth)])
-def technician_resume(work_order_id: UUID, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
-    return _tech_run(session, lambda: serialize_work_order(
-        workorder_service.resume_work_order(session, tenant, work_order_id, actor=principal["subject"])))
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/blocker", dependencies=[Depends(technician_auth)])
-def technician_blocker(work_order_id: UUID, payload: BlockIn, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
-    return _tech_run(session, lambda: serialize_work_order(
-        workorder_service.record_blocker(session, tenant, work_order_id, blocker_type=payload.blocker_type,
-                                         reason=payload.reason, severity=payload.severity,
-                                         actor=principal["subject"], correlation_id=payload.correlation_id)))
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/parts", dependencies=[Depends(technician_auth)])
-def technician_parts(work_order_id: UUID, payload: PartsIn, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
-    return _tech_run(session, lambda: serialize_work_order(
-        workorder_service.request_parts(session, tenant, work_order_id, materials=payload.materials,
-                                        reason=payload.reason, actor=principal["subject"],
-                                        correlation_id=payload.correlation_id)))
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/remote-action", dependencies=[Depends(technician_auth)])
-def technician_remote_action(work_order_id: UUID, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
-    return _tech_run(session, lambda: serialize_work_order(
-        workorder_service.request_remote_action(session, tenant, work_order_id, actor=principal["subject"])))
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/checklist", dependencies=[Depends(technician_auth)])
-def technician_checklist_submit(work_order_id: UUID, payload: ChecklistSubmitIn, request: Request, session: Session = Depends(db)):  # noqa: E501
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
-
-    def fn():
-        checklist = checklist_service.submit_responses(session, tenant, work_order_id,
-                                                       responses=payload.responses,
-                                                       submitted_by=principal["subject"],
-                                                       correlation_id=payload.correlation_id)
-        return {"checklist_id": str(checklist.id), "responses": len(payload.responses)}
-    return _tech_run(session, fn)
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/proof", dependencies=[Depends(technician_auth)])
-def technician_proof(work_order_id: UUID, payload: ProofIn, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    technician_id = UUID(principal["technician_id"])
-    _tech_wo(session, request, work_order_id)
-
-    def fn():
-        proof = proof_service.add_proof(session, tenant, work_order_id, evidence_key=payload.evidence_key,
-                                        evidence_type=payload.evidence_type, file_ref=payload.file_ref,
-                                        checksum=payload.checksum, capture_timestamp=payload.capture_timestamp,
-                                        latitude=payload.latitude, longitude=payload.longitude,
-                                        device_ref=payload.device_ref, technician_id=technician_id,
-                                        checklist_item_code=payload.checklist_item_code, actor=principal["subject"],
-                                        correlation_id=payload.correlation_id)
-        return {"proof_id": str(proof.id), "evidence_type": proof.evidence_type, "status": "RECORDED"}
-    return _tech_run(session, fn)
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/materials", dependencies=[Depends(technician_auth)])
-def technician_materials(work_order_id: UUID, payload: MaterialIn, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    technician_id = UUID(principal["technician_id"])
-    _tech_wo(session, request, work_order_id)
-
-    def fn():
-        usage = inventory_service.record_material_usage(session, tenant, work_order_id,
-                                                        material_code=payload.material_code,
-                                                        quantity=payload.quantity, usage_type=payload.usage_type,
-                                                        technician_id=technician_id, actor=principal["subject"],
-                                                        correlation_id=payload.correlation_id)
-        return {"material_usage_id": str(usage.id), "material_code": usage.material_code}
-    return _tech_run(session, fn)
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/devices", dependencies=[Depends(technician_auth)])
-def technician_devices(work_order_id: UUID, payload: DeviceIn, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    technician_id = UUID(principal["technician_id"])
-    _tech_wo(session, request, work_order_id)
-
-    def fn():
-        installation = inventory_service.record_device_installation(
-            session, tenant, work_order_id, device_type=payload.device_type, serial_number=payload.serial_number,
-            mac_address=payload.mac_address, service_subscription_id=payload.service_subscription_id,
-            technician_id=technician_id, actor=principal["subject"], correlation_id=payload.correlation_id)
-        return {"device_installation_id": str(installation.id), "serial_number": installation.serial_number}
-    return _tech_run(session, fn)
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/acknowledgement", dependencies=[Depends(technician_auth)])
-def technician_acknowledgement(work_order_id: UUID, payload: AcknowledgementIn, request: Request, session: Session = Depends(db)):  # noqa: E501
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
-
-    def fn():
-        ack = proof_service.record_customer_acknowledgement(
-            session, tenant, work_order_id, method=payload.method, masked_recipient=payload.masked_recipient,
-            consent_text_version=payload.consent_text_version, result=payload.result, exception=payload.exception,
-            actor=principal["subject"])
-        return {"acknowledgement_id": str(ack.id), "method": ack.method}
-    return _tech_run(session, fn)
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/finish", dependencies=[Depends(technician_auth)])
-def technician_finish(work_order_id: UUID, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
-    return _tech_run(session, lambda: serialize_work_order(
-        workorder_service.finish_execution(session, tenant, work_order_id, actor=principal["subject"])))
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/verify", dependencies=[Depends(technician_auth)])
-def technician_verify(work_order_id: UUID, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
-    return _tech_run(session, lambda: serialize_work_order(
-        workorder_service.submit_for_verification(session, tenant, work_order_id, actor=principal["subject"])))
-
-
-@app.post("/api/workforce/technician/assignments/{work_order_id}/attachments", dependencies=[Depends(technician_auth)])
-async def technician_attachment(work_order_id: UUID, request: Request, file: UploadFile = File(...),
-                                session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    _tech_wo(session, request, work_order_id)
+@app.post("/api/workforce/v1/work-orders/{wo_id}/transition")
+def transition_work_order(wo_id: uuid.UUID, body: schemas.TransitionIn, request: Request,
+                          db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
     try:
-        attachment = await proof_service.store_attachment(session, tenant, work_order_id, file,
-                                                          uploader_type="TECHNICIAN",
-                                                          uploader_id=principal["subject"])
-        session.commit()
-        return {"id": str(attachment.id), "original_name": attachment.original_name, "size_bytes": attachment.size_bytes,
-                "checksum_sha256": attachment.checksum_sha256}
-    except WorkforceError as error:
-        session.rollback()
-        _raise(error)
+        wo = WorkOrderService.transition(db, ctx, wo_id, body.transition, body.note)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return schemas.WorkOrderOut.model_validate(wo)
 
 
-@app.get("/api/workforce/work-orders/{work_order_id}/attachments/{attachment_id}/download", dependencies=[Depends(management_auth)])
-def download_attachment(work_order_id: UUID, attachment_id: UUID, tenant_id: UUID | None = Query(default=None),
-                        session: Session = Depends(db)):
-    from fastapi.responses import FileResponse
-
+@app.post("/api/workforce/v1/work-orders/{wo_id}/complete")
+def complete_work_order(wo_id: uuid.UUID, payload: dict = None, request: Request = None,
+                        db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    payload = payload or {}
     try:
-        path, content_type = proof_service.load_attachment(session, _tid(tenant_id), work_order_id, attachment_id)
-        return FileResponse(path, media_type=content_type)
-    except WorkforceError as error:
-        _raise(error)
+        wo = WorkOrderService.complete(db, ctx, wo_id, payload.get("note"))
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return schemas.WorkOrderOut.model_validate(wo)
 
 
-@app.post("/api/workforce/technician/sync", dependencies=[Depends(technician_auth)])
-def technician_sync(payload: OfflineSyncIn, request: Request, session: Session = Depends(db)):
-    principal = _technician(request)
-    tenant = UUID(principal["tenant_id"])
-    return offline_service.process_offline_commands(session, tenant, device_ref=payload.device_ref,
-                                                    commands=payload.commands, actor=principal["subject"])
+@app.get("/api/workforce/v1/dispatch/suggest")
+def suggest_technicians(request: Request, work_order_id: uuid.UUID,
+                        skills: str | None = None,
+                        db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("dispatch.manage"))):
+    skill_list = skills.split(",") if skills else None
+    candidates = DispatchService.suggest(db, ctx, work_order_id, skill_list)
+    return [schemas.TechnicianOut.model_validate(t) for t in candidates]
 
 
-# ===========================================================================
-# Customer portal
-# ===========================================================================
-@app.get("/api/workforce/portal/appointments", dependencies=[Depends(customer_auth)])
-def portal_appointments(request: Request, session: Session = Depends(db)):
-    principal = customer_principal(request)
-    tenant = UUID(principal["tenant_id"])
-    customer_id = principal["customer_id"]
-    rows = list(session.scalars(select(Appointment).join(WorkOrder, Appointment.work_order_id == WorkOrder.id).where(
-        WorkOrder.tenant_id == tenant, WorkOrder.customer_id == customer_id,
-        Appointment.status.in_(("CUSTOMER_CONFIRMATION_PENDING", "CONFIRMED", "TECHNICIAN_DISPATCHED")))))
-    return [{"id": str(a.id), "work_order_number": _wo_number(session, a.work_order_id),
-             "window_start": a.window_start.isoformat(), "window_end": a.window_end.isoformat(),
-             "status": a.status, "attempt_number": a.attempt_number} for a in rows]
+# ---------------------------------------------------------------------------
+# Field ops: checklist, site checks, visits, proof, handover (features 1111-1116, 1119)
+# ---------------------------------------------------------------------------
+@app.post("/api/workforce/v1/checklist-templates", status_code=201)
+def set_checklist_template(request: Request, payload: dict,
+                           db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("fieldops.manage"))):
+    t = ChecklistService.set_template(db, ctx, payload.get("work_order_type", "INSTALLATION"),
+                                      payload.get("items", []))
+    return {"id": str(t.id), "work_order_type": t.work_order_type, "items": t.items}
 
 
-def _wo_number(session: Session, work_order_id) -> str | None:
-    wo = session.get(WorkOrder, work_order_id)
-    return wo.work_order_number if wo else None
+@app.post("/api/workforce/v1/work-orders/{wo_id}/checklist/validate")
+def validate_checklist(wo_id: uuid.UUID, body: schemas.ChecklistValidateIn, request: Request,
+                       db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("fieldops.manage"))):
+    try:
+        valid, missing = ChecklistService.validate(db, ctx, wo_id, body.completed)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    if not valid:
+        raise HTTPException(status_code=422, detail={"valid": False, "missing": missing})
+    return {"valid": True, "missing": missing}
 
 
-@app.post("/api/workforce/portal/appointments/{appointment_id}/confirm", dependencies=[Depends(customer_auth)])
-def portal_confirm_appointment(appointment_id: UUID, request: Request, session: Session = Depends(db)):
-    principal = customer_principal(request)
-    tenant = UUID(principal["tenant_id"])
-    appointment = appointment_service.get_appointment_or_404(session, tenant, appointment_id)
-    _assert_customer_appointment(session, tenant, principal["customer_id"], appointment_id)
-
-    def fn():
-        return serialize_appointment(appointment_service.confirm(session, tenant, appointment_id, actor=principal["subject"]))
-    return _run(session, fn, request)
+@app.post("/api/workforce/v1/work-orders/{wo_id}/site-checks", status_code=201)
+def add_site_check(wo_id: uuid.UUID, body: schemas.SiteCheckIn, request: Request,
+                   db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("fieldops.manage"))):
+    c = FieldOpsService.site_check(db, ctx, wo_id, body.kind, body.passed, body.details)
+    return {"id": str(c.id), "kind": c.kind, "passed": c.passed}
 
 
-@app.post("/api/workforce/portal/appointments/{appointment_id}/reschedule", dependencies=[Depends(customer_auth)])
-def portal_reschedule(appointment_id: UUID, payload: ScheduleIn, request: Request, session: Session = Depends(db)):
-    principal = customer_principal(request)
-    tenant = UUID(principal["tenant_id"])
-    _assert_customer_appointment(session, tenant, principal["customer_id"], appointment_id)
-
-    def fn():
-        appointment = appointment_service.reschedule(session, tenant, appointment_id,
-                                                     window_start=payload.window_start, window_end=payload.window_end,
-                                                     reason="customer requested reschedule", actor=principal["subject"])
-        return serialize_appointment(appointment)
-    return _run(session, fn, request)
+@app.get("/api/workforce/v1/work-orders/{wo_id}/site-checks")
+def list_site_checks(wo_id: uuid.UUID, request: Request, db: Session = Depends(_db),
+                     ctx: TenantContext = Depends(_auth("fieldops.manage"))):
+    q = enforce_scope(db.query(models.SiteCheck).filter(
+        models.SiteCheck.work_order_id == wo_id), models.SiteCheck, ctx)
+    return [{"id": str(c.id), "kind": c.kind, "passed": c.passed, "details": c.details,
+             "checked_at": c.checked_at} for c in q.all()]
 
 
-def _assert_customer_appointment(session: Session, tenant, customer_id: str, appointment_id: UUID) -> None:
-    appointment = appointment_service.get_appointment_or_404(session, tenant, appointment_id)
-    wo = session.get(WorkOrder, appointment.work_order_id)
-    if wo is None or wo.customer_id != customer_id:
-        raise HTTPException(403, "appointment not for this customer")
+@app.post("/api/workforce/v1/work-orders/{wo_id}/visits", status_code=201)
+def record_visit(wo_id: uuid.UUID, request: Request, payload: dict,
+                 db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("visits.manage"))):
+    v = VisitService.record(db, ctx, wo_id, uuid.UUID(payload.get("technician_id")),
+                            payload.get("visit_type", "SITE"), payload.get("lat"),
+                            payload.get("lon"), payload.get("notes"))
+    return {"id": str(v.id), "visit_type": v.visit_type, "created_at": v.created_at}
 
 
-@app.get("/api/workforce/portal/work-orders/{work_order_id}", dependencies=[Depends(customer_auth)])
-def portal_work_order(work_order_id: UUID, request: Request, session: Session = Depends(db)):
-    """Privacy-safe status view for the customer: no exact technician location,
-    no internal notes, no proof files."""
-    principal = customer_principal(request)
-    tenant = UUID(principal["tenant_id"])
-    wo = _wo_or_404(session, tenant, work_order_id)
-    if wo.customer_id != principal["customer_id"]:
-        raise HTTPException(403, "work order not for this customer")
-    appointment = session.get(Appointment, wo.current_appointment_id) if wo.current_appointment_id else None
+@app.post("/api/workforce/v1/work-orders/{wo_id}/proof", status_code=201)
+def add_proof(wo_id: uuid.UUID, body: schemas.ProofIn, request: Request,
+              db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("proof.manage"))):
+    from sqlalchemy.exc import IntegrityError
+    try:
+        p = VisitService.add_proof(db, ctx, wo_id, body.kind, body.evidence_key, body.visit_id)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Duplicate evidence key")
+    return {"id": str(p.id), "kind": p.kind, "evidence_key": p.evidence_key}
+
+
+@app.get("/api/workforce/v1/work-orders/{wo_id}/proof")
+def list_proof(wo_id: uuid.UUID, request: Request, db: Session = Depends(_db),
+               ctx: TenantContext = Depends(_auth("proof.manage"))):
+    q = enforce_scope(db.query(models.ProofOfWork).filter(
+        models.ProofOfWork.work_order_id == wo_id), models.ProofOfWork, ctx)
+    return [{"id": str(p.id), "kind": p.kind, "evidence_key": p.evidence_key,
+             "created_at": p.created_at} for p in q.all()]
+
+
+@app.post("/api/workforce/v1/work-orders/{wo_id}/handover", status_code=201)
+def handover(wo_id: uuid.UUID, body: schemas.HandoverIn, request: Request,
+             db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("fieldops.manage"))):
+    h = FieldOpsService.handover(db, ctx, wo_id, body.accepted_by, body.notes)
+    return {"id": str(h.id), "accepted_by": h.accepted_by, "signed_at": h.signed_at}
+
+
+# ---------------------------------------------------------------------------
+# Inventory (features 337, 338, 339)
+# ---------------------------------------------------------------------------
+@app.post("/api/workforce/v1/inventory/items", status_code=201)
+def add_inventory_item(body: schemas.InventoryItemIn, request: Request,
+                       db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("inventory.manage"))):
+    require_tenant_id(ctx)
+    it = InventoryService.add_item(db, ctx, body.model_dump())
+    return {"id": str(it.id), "item_type": it.item_type, "status": it.status}
+
+
+@app.get("/api/workforce/v1/inventory/items")
+def list_inventory(request: Request, status: str | None = None,
+                   db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("inventory.view"))):
+    q = enforce_scope(db.query(models.InventoryItem), models.InventoryItem, ctx)
+    if status:
+        q = q.filter(models.InventoryItem.status == status)
+    return [{"id": str(i.id), "item_type": i.item_type, "serial_number": i.serial_number,
+             "mac_address": i.mac_address, "status": i.status} for i in q.all()]
+
+
+@app.post("/api/workforce/v1/inventory/items/{item_id}/issue")
+def issue_item(item_id: uuid.UUID, body: schemas.IssueIn, request: Request,
+               db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("inventory.manage"))):
+    try:
+        it = InventoryService.issue(db, ctx, item_id, body.work_order_id, body.technician_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"id": str(it.id), "status": it.status, "work_order_id": str(it.work_order_id)}
+
+
+@app.post("/api/workforce/v1/inventory/items/{item_id}/return")
+def return_item(item_id: uuid.UUID, request: Request,
+                db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("inventory.manage"))):
+    try:
+        it = InventoryService.return_item(db, ctx, item_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"id": str(it.id), "status": it.status, "returned_at": it.returned_at}
+
+
+@app.post("/api/workforce/v1/inventory/sync")
+def sync_inventory(request: Request, payload: dict,
+                   db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("inventory.manage"))):
+    return InventoryService.sync_stock(db, ctx, payload.get("stock", []))
+
+
+@app.post("/api/workforce/v1/inventory/consumables", status_code=201)
+def add_consumable(body: schemas.ConsumableIn, request: Request,
+                   db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("inventory.manage"))):
+    c = InventoryService.add_consumable(db, ctx, body.model_dump())
+    return {"id": str(c.id), "name": c.name, "sku": c.sku, "quantity": c.quantity}
+
+
+@app.post("/api/workforce/v1/inventory/consumables/consume")
+def consume_consumable(body: schemas.ConsumeIn, request: Request,
+                       db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("inventory.consume"))):
+    try:
+        c = InventoryService.consume(db, ctx, body.work_order_id, body.sku, body.quantity)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"consumption_id": str(c.id), "sku": body.sku, "quantity": body.quantity}
+
+
+# ---------------------------------------------------------------------------
+# Shifts, feedback, escalations, SLA, KPI (features 344, 348, 349, 347, 346, 1490)
+# ---------------------------------------------------------------------------
+@app.post("/api/workforce/v1/shifts", status_code=201)
+def create_shift(body: schemas.ShiftIn, request: Request,
+                 db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("shifts.manage"))):
+    s = ShiftService.create(db, ctx, body.model_dump())
+    return {"id": str(s.id), "technician_id": str(s.technician_id), "status": s.status}
+
+
+@app.post("/api/workforce/v1/work-orders/{wo_id}/feedback", status_code=201)
+def submit_feedback(wo_id: uuid.UUID, body: schemas.FeedbackIn, request: Request,
+                    db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    f = FeedbackService.submit(db, ctx, wo_id, body.rating, body.comment)
+    return {"id": str(f.id), "rating": f.rating}
+
+
+@app.get("/api/workforce/v1/feedback")
+def list_feedback(request: Request, db: Session = Depends(_db),
+                  ctx: TenantContext = Depends(_auth("feedback.view"))):
+    q = enforce_scope(db.query(models.Feedback), models.Feedback, ctx)
+    return [{"id": str(f.id), "work_order_id": str(f.work_order_id), "rating": f.rating,
+             "comment": f.comment, "created_at": f.created_at} for f in
+            q.order_by(models.Feedback.created_at.desc()).limit(200).all()]
+
+
+@app.post("/api/workforce/v1/escalations", status_code=201)
+def create_escalation(body: schemas.EscalationIn, request: Request,
+                      db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("escalations.manage"))):
+    e = EscalationService.create(db, ctx, body.work_order_id, body.level, body.reason)
+    return {"id": str(e.id), "level": e.level, "status": e.status}
+
+
+@app.post("/api/workforce/v1/escalations/{esc_id}/resolve")
+def resolve_escalation(esc_id: uuid.UUID, request: Request,
+                       db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("escalations.manage"))):
+    try:
+        e = EscalationService.resolve(db, ctx, esc_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"id": str(e.id), "status": e.status}
+
+
+@app.post("/api/workforce/v1/sla/evaluate")
+def evaluate_sla(request: Request, db: Session = Depends(_db),
+                 ctx: TenantContext = Depends(_auth("sla.view"))):
+    return SlaService.evaluate(db, ctx)
+
+
+@app.get("/api/workforce/v1/kpis/technician/{tech_id}")
+def get_kpi(tech_id: uuid.UUID, request: Request, period: str = "DAY",
+            db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("kpi.view"))):
+    q = enforce_scope(db.query(models.TechnicianKPI).filter(
+        models.TechnicianKPI.technician_id == tech_id,
+        models.TechnicianKPI.period == period), models.TechnicianKPI, ctx)
+    row = q.first()
+    if not row:
+        raise HTTPException(status_code=404, detail="KPI not computed yet")
+    return {"technician_id": str(row.technician_id), "period": row.period,
+            "jobs_completed": row.jobs_completed, "avg_rating": row.avg_rating,
+            "sla_compliance_pct": row.sla_compliance_pct,
+            "productivity_score": row.productivity_score, "computed_at": row.computed_at}
+
+
+@app.get("/api/workforce/v1/dashboard/summary")
+def dashboard_summary(request: Request, db: Session = Depends(_db),
+                      ctx: TenantContext = Depends(_auth("dashboard.view"))):
+    wo_q = enforce_scope(db.query(models.WorkOrder), models.WorkOrder, ctx)
+    tech_q = enforce_scope(db.query(models.Technician), models.Technician, ctx)
+    esc_q = enforce_scope(db.query(models.Escalation), models.Escalation, ctx)
     return {
-        "work_order_number": wo.work_order_number,
-        "work_order_type": wo.work_order_type,
-        "status": wo.status,
-        "scheduled_start": wo.scheduled_start.isoformat() if wo.scheduled_start else None,
-        "scheduled_end": wo.scheduled_end.isoformat() if wo.scheduled_end else None,
-        "expected_arrival_deadline": wo.arrival_deadline.isoformat() if wo.arrival_deadline else None,
-        "appointment_status": appointment.status if appointment else None,
-        "technician_status": "privacy-safe" if wo.assigned_technician_id else None,
-        "result_code": wo.result_code,
+        "total_work_orders": wo_q.count(),
+        "open_work_orders": wo_q.filter(models.WorkOrder.status.notin_(
+            ["COMPLETED", "CANCELLED"])).count(),
+        "available_technicians": tech_q.filter(models.Technician.status == "AVAILABLE").count(),
+        "open_escalations": esc_q.filter(models.Escalation.status == "OPEN").count(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
-# ===========================================================================
-# Reports / audit
-# ===========================================================================
-@app.get("/api/workforce/reports/overview", dependencies=[Depends(management_auth)])
-def report_overview(tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    tenant_id = _tid(tenant_id)
-    from .enums import OPEN_WORK_ORDER_STATES
-
-    open_states = tuple(OPEN_WORK_ORDER_STATES)
-    return {
-        "open_work_orders": session.scalar(select(func.count(WorkOrder.id)).where(
-            WorkOrder.tenant_id == tenant_id, WorkOrder.status.in_(open_states))) or 0,
-        "unassigned": session.scalar(select(func.count(WorkOrder.id)).where(
-            WorkOrder.tenant_id == tenant_id, WorkOrder.assigned_technician_id.is_(None),
-            WorkOrder.status.in_(open_states))) or 0,
-        "at_risk": session.scalar(select(func.count(FieldSLAInstance.id)).where(
-            FieldSLAInstance.tenant_id == tenant_id, FieldSLAInstance.status == "AT_RISK")) or 0,
-        "breached": session.scalar(select(func.count(FieldSLAInstance.id)).where(
-            FieldSLAInstance.tenant_id == tenant_id, FieldSLAInstance.status == "BREACHED")) or 0,
-        "qa_pending": session.scalar(select(func.count(models.QualityReview.id)).where(
-            models.QualityReview.tenant_id == tenant_id, models.QualityReview.state.in_(("PENDING", "UNDER_REVIEW")))) or 0,
-        "completed": session.scalar(select(func.count(WorkOrder.id)).where(
-            WorkOrder.tenant_id == tenant_id, WorkOrder.status == "COMPLETED")) or 0,
-    }
+@app.get("/api/workforce/v1/audit-log")
+def list_audit(request: Request, action: str | None = None, limit: int = Query(200, le=1000),
+               db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("audit.view"))):
+    q = enforce_scope(db.query(models.WorkforceAuditLog), models.WorkforceAuditLog, ctx)
+    if action:
+        q = q.filter(models.WorkforceAuditLog.action == action)
+    rows = q.order_by(models.WorkforceAuditLog.created_at.desc()).limit(limit).all()
+    return [{"id": str(r.id), "actor": r.actor, "action": r.action, "resource": r.resource,
+             "resource_id": r.resource_id, "outcome": r.outcome, "detail": r.detail,
+             "created_at": r.created_at} for r in rows]
 
 
-@app.get("/api/workforce/reports/tickets", dependencies=[Depends(management_auth)])
-def report_by_status(tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    tenant_id = _tid(tenant_id)
-    rows = session.execute(select(WorkOrder.status, func.count(WorkOrder.id)).where(
-        WorkOrder.tenant_id == tenant_id).group_by(WorkOrder.status)).all()
-    return {"by_status": {status_: count for status_, count in rows}}
+# ---------------------------------------------------------------------------
+# Remote expert assistance + failure visualization + AR overlay (Batch 8)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/workforce/v1/expert/sessions", status_code=201)
+def start_expert_session(body: dict, request: Request,
+                         db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    s = ExpertService.start(db, ctx, body)
+    return {"id": str(s.id), "work_order_id": s.work_order_id, "expert_id": s.expert_id,
+            "channel": s.channel, "status": s.status}
 
 
-@app.get("/api/workforce/audit", dependencies=[Depends(management_auth)])
-def audit_log(tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    tenant_id = _tid(tenant_id)
-    from .models import AuditLog
+@app.get("/api/workforce/v1/expert/sessions")
+def list_expert_sessions(request: Request, db: Session = Depends(_db),
+                         ctx: TenantContext = Depends(_auth("workorders.view"))):
+    q = enforce_scope(db.query(models.ExpertSession), models.ExpertSession, ctx)
+    return [{"id": str(r.id), "work_order_id": r.work_order_id, "expert_id": r.expert_id,
+             "channel": r.channel, "status": r.status} for r in q.all()]
 
-    rows = list(session.scalars(select(AuditLog).where(AuditLog.tenant_id == tenant_id)
-                                .order_by(AuditLog.created_at.desc()).limit(200)))
-    return [{"id": str(a.id), "event_type": a.event_type, "entity_type": a.entity_type, "entity_id": a.entity_id,
-             "actor": a.actor, "reason": a.reason,
-             "created_at": a.created_at.isoformat() if a.created_at else None} for a in rows]
 
+@app.post("/api/workforce/v1/expert/sessions/{session_id}/end")
+def end_expert_session(session_id: uuid.UUID, request: Request,
+                       db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    try:
+        s = ExpertService.end(db, ctx, session_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"id": str(s.id), "status": s.status}
+
+
+@app.post("/api/workforce/v1/failure/visualizations", status_code=201)
+def render_failure_visualization(body: dict, request: Request,
+                                 db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    v = FailureVisualizationService.render(db, ctx, body)
+    return {"id": str(v.id), "work_order_id": v.work_order_id, "fault_type": v.fault_type,
+            "rendered": v.rendered}
+
+
+@app.get("/api/workforce/v1/failure/visualizations")
+def list_failure_visualizations(request: Request, db: Session = Depends(_db),
+                                ctx: TenantContext = Depends(_auth("workorders.view"))):
+    q = enforce_scope(db.query(models.FailureVisualization), models.FailureVisualization, ctx)
+    return [{"id": str(r.id), "work_order_id": r.work_order_id, "fault_type": r.fault_type,
+             "rendered": r.rendered} for r in q.all()]
+
+
+@app.post("/api/workforce/v1/failure/visualizations/{vis_id}/rendered")
+def mark_visualization_rendered(vis_id: uuid.UUID, request: Request,
+                                db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    try:
+        v = FailureVisualizationService.mark_rendered(db, ctx, vis_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"id": str(v.id), "rendered": v.rendered}
+
+
+@app.post("/api/workforce/v1/equipment/overlays", status_code=201)
+def recognize_equipment(body: dict, request: Request,
+                        db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    o = EquipmentOverlayService.recognize(db, ctx, body)
+    return {"id": str(o.id), "work_order_id": o.work_order_id, "device_id": o.device_id,
+            "recognized_model": o.recognized_model}
+
+
+@app.get("/api/workforce/v1/equipment/overlays")
+def list_equipment_overlays(request: Request, db: Session = Depends(_db),
+                            ctx: TenantContext = Depends(_auth("workorders.view"))):
+    q = enforce_scope(db.query(models.EquipmentOverlay), models.EquipmentOverlay, ctx)
+    return [{"id": str(r.id), "work_order_id": r.work_order_id, "device_id": r.device_id,
+             "recognized_model": r.recognized_model} for r in q.all()]
+
+
+# ---------------------------------------------------------------------------
+# Spare parts management (feature 338)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/workforce/v1/spare-parts", status_code=201)
+def register_spare_part(body: dict, request: Request,
+                        db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("inventory.manage"))):
+    p = SparePartService.register(db, ctx, body)
+    return {"id": str(p.id), "part_code": p.part_code, "name": p.name,
+            "quantity": p.quantity, "min_stock": p.min_stock, "status": p.status}
+
+
+@app.get("/api/workforce/v1/spare-parts")
+def list_spare_parts(request: Request, db: Session = Depends(_db),
+                     ctx: TenantContext = Depends(_auth("inventory.view"))):
+    q = enforce_scope(db.query(models.SparePart), models.SparePart, ctx)
+    return [{"id": str(r.id), "part_code": r.part_code, "name": r.name,
+             "quantity": r.quantity, "min_stock": r.min_stock,
+             "used_count": r.used_count, "status": r.status} for r in q.all()]
+
+
+@app.post("/api/workforce/v1/spare-parts/{part_id}/use")
+def use_spare_part(part_id: uuid.UUID, body: dict, request: Request,
+                   db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("inventory.consume"))):
+    try:
+        p = SparePartService.use(db, ctx, part_id, int(body.get("quantity", 1)))
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    return {"id": str(p.id), "part_code": p.part_code, "quantity": p.quantity,
+            "used_count": p.used_count, "status": p.status}

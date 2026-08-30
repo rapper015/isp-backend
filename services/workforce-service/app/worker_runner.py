@@ -1,31 +1,36 @@
-"""Worker process entry point: periodic tasks + RabbitMQ consumption loop."""
+"""Workforce worker loop: SLA sweep, KPI compute, PM scheduling, outbox."""
+import logging
+import os
 import time
-from os import getenv
 
 from .database import SessionLocal
-from . import tasks  # noqa: F401
+
+log = logging.getLogger("workforce.worker")
+INTERVAL = float(os.getenv("WORKFORCE_WORKER_INTERVAL", "30"))
 
 
-def run_once() -> dict:
+def run_once():
+    from . import tasks
     session = SessionLocal()
     try:
-        return {
-            "published": tasks.flush_outbox(session),
-            "sla": tasks.evaluate_field_slas(session),
-            "escalations": tasks.run_escalations(session),
-            "reminders": tasks.send_appointment_reminders(session),
-            "stuck": len(tasks.detect_stuck_work_orders(session)),
-        }
+        tasks.deliver_outbox(session)
+        tasks.sweep_sla(session)
+        tasks.compute_kpis(session)
+        tasks.schedule_preventive_maintenance(session)
     finally:
         session.close()
 
 
-def run_loop(interval_seconds: float | None = None) -> None:  # pragma: no cover - long-running
-    interval = interval_seconds or float(getenv("WORKFORCE_WORKER_INTERVAL", "10"))
+def main():
+    logging.basicConfig(level=logging.INFO)
+    log.info("workforce worker started (interval=%ss)", INTERVAL)
     while True:
-        run_once()
-        time.sleep(interval)
+        try:
+            run_once()
+        except Exception as exc:  # noqa: BLE001
+            log.exception("worker cycle failed: %s", exc)
+        time.sleep(INTERVAL)
 
 
 if __name__ == "__main__":
-    run_loop()
+    main()

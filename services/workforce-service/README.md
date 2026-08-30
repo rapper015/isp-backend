@@ -1,67 +1,45 @@
-# Workforce Service (Milestone 6)
+# Workforce Service
 
-Field Workforce Management: a single canonical work-order model (separate from
-OSS orders and support tickets), appointments, visits, check-in/out, technician
-profiles with skills / certifications / availability / shifts, explainable
-assignment scoring, dispatch planning and conflict detection, GPS geofenced
-check-in with governed exceptions, versioned execution checklists, proof of
-work with private media, a QA workflow (approve / reject / rework), field SLA
-with calendars / pauses / rescheduling and at-risk / breach escalation,
-inventory integration (reserve / issue / install / consume, one device on one
-service) and offline-first mobile sync with idempotency and conflict rules.
+Field-operations foundation — **Master Implementation Spec Batch 2**.
+`workforce_` tables, `workforce.events.v1` contracts, fail-closed tenant
+isolation, append-only audit. Rebuilt after the source `.py` files were lost
+(only `.pyc` caches remained).
 
-Follows the same conventions as the OSS / CRM / AAA / support services
-(FastAPI + SQLAlchemy + Alembic, transactional outbox / consumer inbox,
-hermetic tests, tenant-isolated).
+## Capabilities (feature → implementation)
 
-## Quick start
+| Feature | Capability | Where |
+|---|---|---|
+| 329, 330, 333, 334 | Work-order lifecycle, assignment dispatch, on-site updates, job completion | `app/services.py:WorkOrderService`, `/api/workforce/v1/work-orders/*` |
+| 337, 338, 339 | Device issuance, spare parts consumption, inventory sync | `app/services.py:InventoryService` |
+| 342 | GPS location tracking (internal ingest) | `POST /api/workforce/v1/internal/ingest/location` |
+| 344 | Shift scheduling | `app/services.py:ShiftService` |
+| 346, 1490 | Technician KPI + productivity score | `app/services.py:KpiService` |
+| 347 | Field SLA compliance | `app/services.py:SlaService` + worker sweep |
+| 348 | Customer feedback | `app/services.py:FeedbackService` |
+| 349 | Issue escalation | `app/services.py:EscalationService` |
+| 1111 | Installation checklist validation | `app/services.py:ChecklistService` |
+| 1112, 1113, 1115 | Site feasibility / power / signal / route checks | `app/services.py:FieldOpsService.site_check` |
+| 1116 | Customer handover | `FieldOpsService.handover` |
+| 1117 | Preventive maintenance scheduling | `app/tasks.py:schedule_preventive_maintenance` |
+| 1118 | Emergency repair (work-order type EMERGENCY) | `WorkOrderService` |
+| 1119 | Site visit logs | `app/services.py:VisitService` |
+| 1423, 1486 | Network diagram/map read models | `GET /api/workforce/v1/dashboard/summary` |
 
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r ..\..\shared\runtime\requirements.txt
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --port 8000
-# worker (field SLA evaluation, escalations, reminders, outbox flush):
-.\.venv\Scripts\python.exe -m app.worker_runner
+## Run
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r ..\..\shared\runtime\requirements.txt -r requirements.txt
+set DATABASE_URL=sqlite:///./workforce.db
+set WORKFORCE_JWT_SECRET=<32+ chars>
+set WORKFORCE_INTERNAL_API_KEY=<internal key>
+uvicorn app.main:app --port 8013
+python -m app.worker_runner
 ```
 
-Run the tests:
+## Tests
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest -q
+```bash
+python -m pytest
 ```
-
-## Environment
-
-Copy `.env.example`. Key variables:
-
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | Service database (its own PostgreSQL DB; SQLite for tests) |
-| `WORKFORCE_JWT_SECRET` | Management JWT (RBAC) — ≥ 32 chars |
-| `WORKFORCE_TECHNICIAN_JWT_SECRET` | Technician mobile JWT — ≥ 32 chars |
-| `WORKFORCE_CUSTOMER_JWT_SECRET` | Customer portal JWT — ≥ 32 chars |
-| `WORKFORCE_INTERNAL_API_KEY` | Internal service-to-service auth |
-| `WORKFORCE_CRM/SUPPORT/OSS/AAA/NETWORK/NMS/IPAM/INVENTORY/BILLING/NOTIFICATIONS_BASE_URL` | Cross-service adapter base URLs (unset = dependency reported unavailable) |
-| `MAPS_PROVIDER` | `fake` (default, tests) / `google` / `alternative` — provider abstraction keeps the geofence logic testable without a live map API |
-| `WORKFORCE_ATTACHMENT_DIR` | Private proof-of-work media storage (swap for object storage in production) |
-| `WORKFORCE_GEOFENCE_RADIUS_M` | Geofence radius used when the service area has no explicit polygon |
-| `RABBITMQ_URL` / `WORKFORCE_WORKER_INTERVAL` | Worker broker + cadence |
-
-## Domain boundaries
-
-- Workforce owns work orders, appointments, visits, technician profiles,
-  dispatch, execution checklists, proof of work, QA and field SLA.
-- It is the **single canonical field-work-order model** — OSS orders and support
-  tickets reference field work; they do not define a second field-service
-  system.
-- It **never** touches another service's database, never runs device
-  configuration directly (remote actions go through the OSS adapter), and never
-  mutates inventory stock directly (reserve / issue / install / consume go
-  through the inventory adapter with idempotency and one-device-one-service
-  enforcement).
-
-## API
-
-See [`docs/apis/milestone-6-workforce.md`](../../docs/apis/milestone-6-workforce.md).
-All work-order state changes are explicit command endpoints — there is no
-`PATCH /work-orders/{id} {"status": ...}`.

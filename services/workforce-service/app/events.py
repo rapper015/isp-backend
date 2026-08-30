@@ -1,121 +1,66 @@
-"""Workforce event naming + transactional outbox/inbox helpers.
-
-The outbox table is the durable record; a worker publishes to RabbitMQ on
-`workforce.events.v1`. The inbox guarantees at-least-once delivery with
-idempotent processing. Domain events never carry proof files or unnecessary PII."""
-from __future__ import annotations
-
+"""Workforce event contracts (`workforce.events.v1`) + outbox/inbox helpers."""
 import uuid
+from datetime import datetime, timezone
 
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .models import InboxMessage, OutboxEvent
+from . import models
 
-EXCHANGE = "workforce.events.v1"
-RETRY_EXCHANGE = "workforce.retry.v1"
-DEAD_LETTER_EXCHANGE = "workforce.dead.v1"
-SERVICE = "workforce-service"
+CONTEXT = "workforce"
 
 PUBLISHED_TOPOLOGY = {
-    "work_order": [
-        "workforce.work_order.created.v1",
-        "workforce.work_order.validated.v1",
-        "workforce.work_order.scheduled.v1",
-        "workforce.work_order.assigned.v1",
-        "workforce.work_order.assignment_accepted.v1",
-        "workforce.work_order.dispatched.v1",
-        "workforce.work_order.technician_arrived.v1",
-        "workforce.work_order.execution_started.v1",
-        "workforce.work_order.blocked.v1",
-        "workforce.work_order.remote_action_requested.v1",
-        "workforce.work_order.execution_completed.v1",
-        "workforce.work_order.qa_approved.v1",
-        "workforce.work_order.qa_rejected.v1",
-        "workforce.work_order.completed.v1",
-        "workforce.work_order.failed.v1",
-        "workforce.work_order.cancelled.v1",
-        "workforce.work_order.sla_at_risk.v1",
-        "workforce.work_order.sla_breached.v1",
-        "workforce.work_order.appointment_confirmed.v1",
-        "workforce.work_order.appointment_rescheduled.v1",
-        "workforce.appointment.confirmation_requested.v1",
-        "workforce.work_order.checkin.v1",
-        "workforce.work_order.checkout.v1",
-    ],
-    "inventory": [
-        "workforce.inventory.device_installed.v1",
-        "workforce.inventory.device_recovered.v1",
-        "workforce.inventory.material_used.v1",
-    ],
+    "workforce.workorder.created.v1": "A field work order was created.",
+    "workforce.workorder.assigned.v1": "A work order was assigned to a technician.",
+    "workforce.workorder.dispatched.v1": "A technician was dispatched.",
+    "workforce.workorder.transitioned.v1": "A work order changed state.",
+    "workforce.workorder.completed.v1": "A work order was completed with proof.",
+    "workforce.workorder.escalated.v1": "A work order was escalated.",
+    "workforce.technician.location.updated.v1": "A technician reported GPS location.",
+    "workforce.feedback.submitted.v1": "Customer feedback was submitted.",
+    "workforce.inventory.issued.v1": "A device was issued to a technician.",
+    "workforce.inventory.synced.v1": "Field inventory was reconciled with the warehouse.",
+    "workforce.sla.breached.v1": "A field SLA deadline was missed.",
+    "workforce.expert.session.started.v1": "A remote expert assistance session started.",
+    "workforce.failure.visualization.rendered.v1": "An onsite failure visualization was rendered.",
+    "workforce.equipment.device.recognized.v1": "A device was recognized for AR overlay.",
+    "workforce.spareparts.used.v1": "A spare part was consumed in the field.",
 }
 
-CONSUMED_EVENTS = {
-    "oss.order.field_work_required.v1",
-    "oss.order.provisioning_ready.v1",
-    "support.ticket.field_visit_requested.v1",
-    "nms.repair_required.v1",
-    "inventory.reservation_confirmed.v1",
-    "oss.service.activation_completed.v1",
-    "oss.service.activation_failed.v1",
-    "crm.customer.updated.v1",
-    "workforce.appointment.customer_confirmed.v1",
+CONSUMED_TOPOLOGY = {
+    "crm.ticket.created.v1": "Open a work order from a support ticket.",
+    "oss.asset.allocated.v1": "Sync issued asset custody.",
+    "oss.maintenance.scheduled.v1": "Create a preventive maintenance work order.",
+    "nms.incident.declared.v1": "Create an emergency repair work order.",
 }
 
-CONSUMED_ALIASES = {
-    "order.field_work_required.v1": "oss.order.field_work_required.v1",
-    "order.provisioning_ready.v1": "oss.order.provisioning_ready.v1",
-    "ticket.field_visit_requested.v1": "support.ticket.field_visit_requested.v1",
-    "repair_required.v1": "nms.repair_required.v1",
-    "reservation_confirmed.v1": "inventory.reservation_confirmed.v1",
-    "service.activation_completed.v1": "oss.service.activation_completed.v1",
-    "service.activation_failed.v1": "oss.service.activation_failed.v1",
-    "customer.updated.v1": "crm.customer.updated.v1",
-    "appointment.customer_confirmed.v1": "workforce.appointment.customer_confirmed.v1",
-}
-
-ALL_EVENT_TYPES = {t for ts in PUBLISHED_TOPOLOGY.values() for t in ts}
+ALL_PUBLISHED = sorted(PUBLISHED_TOPOLOGY)
 
 
-def canonical_event_type(event_type: str) -> str:
-    return CONSUMED_ALIASES.get(event_type, event_type)
-
-
-def publish_outbox(
-    session: Session,
-    event_type: str,
-    payload: dict,
-    tenant_id: uuid.UUID | None = None,
-    correlation_id: str | None = None,
-    idempotency_key: str | None = None,
-) -> OutboxEvent:
-    if event_type not in ALL_EVENT_TYPES:
-        raise ValueError(f"unknown event type {event_type!r}")
-    row = OutboxEvent(
-        tenant_id=tenant_id,
-        event_type=event_type,
-        correlation_id=correlation_id,
-        idempotency_key=idempotency_key,
-        payload=payload,
-    )
+def publish(session: Session, event_type: str, aggregate_type: str,
+            aggregate_id: str | uuid.UUID, payload: dict, tenant_id=None) -> models.Outbox:
+    row = models.Outbox(event_type=event_type, aggregate_type=aggregate_type,
+                        aggregate_id=str(aggregate_id), tenant_id=tenant_id, payload=payload)
     session.add(row)
+    session.flush()
     return row
 
 
-def consume_once(session: Session, event_id: str, consumer: str = "workforce-handler") -> bool:
-    existing = session.get(InboxMessage, (event_id, consumer))
-    if existing is not None:
+def consume_once(session: Session, message_id: str, event_type: str,
+                 payload: dict, tenant_id=None) -> bool:
+    if session.query(models.Inbox).filter(models.Inbox.message_id == message_id).first():
         return False
-    session.add(InboxMessage(event_id=event_id, consumer=consumer))
+    session.add(models.Inbox(message_id=message_id, event_type=event_type,
+                             tenant_id=tenant_id, payload=payload))
+    session.flush()
     return True
 
 
-def unprocessed_events(session: Session) -> list[OutboxEvent]:
-    return list(
-        session.scalars(
-            select(OutboxEvent)
-            .where(OutboxEvent.published_at.is_(None))
-            .order_by(OutboxEvent.occurred_at)
-            .limit(200)
-        )
-    )
+def envelope(event_type: str, payload: dict, source: str = CONTEXT) -> dict:
+    return {
+        "id": str(uuid.uuid4()),
+        "type": event_type,
+        "source": source,
+        "specversion": "1.0",
+        "time": datetime.now(timezone.utc).isoformat(),
+        "data": payload,
+    }
