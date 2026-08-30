@@ -14,11 +14,19 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .database import Base, SessionLocal, engine
-from .models import (AuditLog, Branch, Customer, ExternalReference, Franchise, KycCase, KycDocument, Lead, LeadInteraction, FollowUp, ServiceLocation, Tenant, TimelineEntry)
+from .models import (AuditLog, Branch, Customer, ExternalReference, FederationLink, Franchise, KycCase, KycDocument, Lead, LeadInteraction, FollowUp, ServiceLocation, Tenant, TicketSuggestion, TimelineEntry)
 from .schemas import (AddressCreate, BranchIn, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
 from .security import internal_service_auth
 from .services import (caf_service, conversion_service, customer_360, customer_service, duplicate_service, kyc_service, lead_service, lifecycle_service, merge_service, risk_service)
 from .services.audit_service import record_audit
+from .services.ecosystem_service import (
+    EscalationService,
+    FederationService,
+    PartnerService,
+    RegulatoryService,
+    SuggestionService,
+    TicketSlaService,
+)
 from .validation import ValidationError
 
 SERVICE_NAME = getenv("SERVICE_NAME", "crm-service")
@@ -795,3 +803,150 @@ def create_branch_legacy(payload: BranchIn, session: Session = Depends(db)):
     session.add(item)
     session.commit()
     return {"id": str(item.id), "branch_code": item.branch_code}
+
+
+# ===========================================================================
+# Partners & ecosystem (Batch 6: 823, 825, 826, 400)
+# ===========================================================================
+
+@app.post("/api/crm/partners", status_code=201, dependencies=[Depends(internal_service_auth)])
+def create_partner(payload: dict, tenant_id: UUID, request: Request, session: Session = Depends(db)):
+    p = PartnerService.create(session, tenant_id, payload, actor_of(request))
+    return {"id": str(p.id), "code": p.code, "name": p.name, "status": p.status}
+
+
+@app.post("/api/crm/partners/{partner_id}/performance", dependencies=[Depends(internal_service_auth)])
+def record_partner_performance(partner_id: UUID, payload: dict, tenant_id: UUID,
+                               request: Request, session: Session = Depends(db)):
+    row = PartnerService.record_performance(session, tenant_id, partner_id,
+                                            payload.get("period", "MONTH"), payload.get("kpi", {}),
+                                            actor_of(request))
+    return {"id": str(row.id), "period": row.period, "kpi": row.kpi}
+
+
+@app.post("/api/crm/partners/{partner_id}/sla/evaluate", dependencies=[Depends(internal_service_auth)])
+def evaluate_partner_sla(partner_id: UUID, tenant_id: UUID, request: Request,
+                         session: Session = Depends(db)):
+    try:
+        p = PartnerService.evaluate_sla(session, tenant_id, partner_id, actor_of(request))
+    except KeyError:
+        raise HTTPException(404, "partner not found")
+    return {"id": str(p.id), "sla_pct": p.sla_pct, "performance_score": p.performance_score,
+            "breaches": p.breaches}
+
+
+@app.post("/api/crm/partners/{partner_id}/hierarchy", dependencies=[Depends(internal_service_auth)])
+def add_partner_hierarchy(partner_id: UUID, payload: dict, tenant_id: UUID,
+                          session: Session = Depends(db)):
+    parent_id = UUID(str(payload["parent_id"])) if payload.get("parent_id") else None
+    try:
+        node = PartnerService.add_hierarchy(session, tenant_id, partner_id, parent_id)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"partner_id": str(node.partner_id), "level": node.level,
+            "parent_id": str(node.parent_id) if node.parent_id else None}
+
+
+@app.get("/api/crm/partners/hierarchy/tree", dependencies=[Depends(internal_service_auth)])
+def partner_hierarchy_tree(tenant_id: UUID, session: Session = Depends(db)):
+    return PartnerService.tree(session, tenant_id)
+
+
+@app.post("/api/crm/federations", status_code=201, dependencies=[Depends(internal_service_auth)])
+def create_federation(payload: dict, tenant_id: UUID, request: Request,
+                      session: Session = Depends(db)):
+    link = FederationService.create_link(session, tenant_id, payload, actor_of(request))
+    return {"id": str(link.id), "operator_name": link.operator_name, "direction": link.direction,
+            "status": link.status}
+
+
+@app.get("/api/crm/federations", dependencies=[Depends(internal_service_auth)])
+def list_federations(tenant_id: UUID, session: Session = Depends(db)):
+    rows = session.scalars(select(FederationLink).where(
+        FederationLink.tenant_id == tenant_id)).all()
+    return [{"id": str(l.id), "operator_name": l.operator_name, "direction": l.direction,
+             "protocol": l.protocol, "status": l.status} for l in rows]
+
+
+# ===========================================================================
+# SLA timers, escalations, suggestions, regulatory (Batch 6: 310, 392, 391, 1191)
+# ===========================================================================
+
+@app.post("/api/crm/tickets/sla/start", status_code=201, dependencies=[Depends(internal_service_auth)])
+def start_ticket_sla(payload: dict, tenant_id: UUID, request: Request,
+                     session: Session = Depends(db)):
+    t = TicketSlaService.start_timer(session, tenant_id, payload.get("ticket_id"),
+                                     int(payload.get("sla_minutes", 240)), actor_of(request))
+    return {"id": str(t.id), "ticket_id": t.ticket_id, "deadline": t.deadline, "breached": t.breached}
+
+
+@app.post("/api/crm/tickets/sla/evaluate", dependencies=[Depends(internal_service_auth)])
+def evaluate_ticket_sla(tenant_id: UUID, session: Session = Depends(db)):
+    return {"breached": TicketSlaService.evaluate(session, tenant_id)}
+
+
+@app.post("/api/crm/tickets/sla/resolve", dependencies=[Depends(internal_service_auth)])
+def resolve_ticket_sla(payload: dict, tenant_id: UUID, session: Session = Depends(db)):
+    try:
+        t = TicketSlaService.resolve(session, tenant_id, payload.get("ticket_id"))
+    except KeyError:
+        raise HTTPException(404, "sla timer not found")
+    return {"ticket_id": t.ticket_id, "breached": t.breached, "resolved_at": t.resolved_at}
+
+
+@app.post("/api/crm/tickets/escalations", status_code=201, dependencies=[Depends(internal_service_auth)])
+def escalate_ticket(payload: dict, tenant_id: UUID, request: Request,
+                    session: Session = Depends(db)):
+    e = EscalationService.escalate(session, tenant_id, payload.get("ticket_id"),
+                                   payload.get("level", "LEVEL_1"), payload.get("reason"),
+                                   actor_of(request))
+    return {"id": str(e.id), "ticket_id": e.ticket_id, "level": e.level, "status": e.status}
+
+
+@app.post("/api/crm/tickets/escalations/{escalation_id}/resolve", dependencies=[Depends(internal_service_auth)])
+def resolve_ticket_escalation(escalation_id: UUID, tenant_id: UUID,
+                              session: Session = Depends(db)):
+    try:
+        e = EscalationService.resolve(session, tenant_id, escalation_id)
+    except KeyError:
+        raise HTTPException(404, "escalation not found")
+    return {"id": str(e.id), "status": e.status, "resolved_at": e.resolved_at}
+
+
+@app.post("/api/crm/tickets/suggestions", status_code=201, dependencies=[Depends(internal_service_auth)])
+def suggest_resolution(payload: dict, tenant_id: UUID, request: Request,
+                       session: Session = Depends(db)):
+    s = SuggestionService.suggest(session, tenant_id, payload.get("ticket_id"),
+                                  payload.get("issue", ""), actor_of(request))
+    return {"id": str(s.id), "ticket_id": s.ticket_id, "suggestion": s.suggestion,
+            "source": s.source, "confidence": s.confidence}
+
+
+@app.get("/api/crm/tickets/suggestions", dependencies=[Depends(internal_service_auth)])
+def list_suggestions(tenant_id: UUID, ticket_id: str | None = None,
+                     session: Session = Depends(db)):
+    stmt = select(TicketSuggestion).where(TicketSuggestion.tenant_id == tenant_id)
+    if ticket_id:
+        stmt = stmt.where(TicketSuggestion.ticket_id == ticket_id)
+    rows = session.scalars(stmt.order_by(TicketSuggestion.created_at.desc()).limit(100)).all()
+    return [{"id": str(s.id), "ticket_id": s.ticket_id, "suggestion": s.suggestion,
+             "source": s.source, "confidence": s.confidence} for s in rows]
+
+
+@app.post("/api/crm/regulatory/track", status_code=201, dependencies=[Depends(internal_service_auth)])
+def track_regulatory(payload: dict, tenant_id: UUID, request: Request,
+                     session: Session = Depends(db)):
+    r = RegulatoryService.track(session, tenant_id, payload.get("reseller_id"),
+                                payload.get("report_type"), actor_of(request))
+    return {"id": str(r.id), "reseller_id": r.reseller_id, "report_type": r.report_type,
+            "status": r.status}
+
+
+@app.post("/api/crm/regulatory/submit", dependencies=[Depends(internal_service_auth)])
+def submit_regulatory(payload: dict, tenant_id: UUID, session: Session = Depends(db)):
+    try:
+        r = RegulatoryService.submit(session, tenant_id, payload.get("reseller_id"),
+                                     payload.get("report_type"))
+    except KeyError:
+        raise HTTPException(404, "regulatory record not found")
+    return {"id": str(r.id), "status": r.status, "submitted_at": r.submitted_at}

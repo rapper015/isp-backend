@@ -36,6 +36,14 @@ CRM_EVENTS = (
     "crm.customer.risk_changed.v1",
     "crm.followup.due.v1",
     "crm.followup.overdue.v1",
+    "crm.partner.created.v1",
+    "crm.partner.performance.updated.v1",
+    "crm.partner.sla_evaluated.v1",
+    "crm.federation.linked.v1",
+    "crm.ticket.sla_breached.v1",
+    "crm.ticket.escalated.v1",
+    "crm.suggestion.generated.v1",
+    "crm.regulatory.tracked.v1",
 )
 
 

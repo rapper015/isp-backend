@@ -1,6 +1,6 @@
 # Client Feature Coverage — 1,500 reconciled rows
 
-Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=52, MISSING=75, PARTIAL=1197
+Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=43, CONDITIONAL_FUTURE=52, MISSING=64, PARTIAL=1206
 
 | ID | Owner | Access | Priority | Module / Submodule | Feature | Status |
 |---|---|---|---|---|---|---|
@@ -96,7 +96,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 90 | crm-service | CSR | P1 | CRM / Retention | Retention Campaign | PARTIAL |
 | 91 | crm-service | CSR | P1 | CRM / Retention | Feedback Collection | PARTIAL |
 | 92 | crm-service | CSR | P1 | CRM / Retention | NPS Tracking | PARTIAL |
-| 93 | crm-service | CSR | P2 | CRM / Retention | Loyalty Programs | MISSING |
+| 93 | crm-service | CSR | P2 | CRM / Retention | Loyalty Programs | PARTIAL |
 | 94 | crm-service | CSR | P0 | CRM / Archive | Customer Archive | PARTIAL |
 | 95 | crm-service | AUD | P0 | CRM / Archive | Data Retrieval | PARTIAL |
 | 96 | crm-service | AUD | P0 | CRM / Archive | Retention Policy | PARTIAL |
@@ -313,13 +313,13 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 307 | crm-service | CSR | P0 | SLA/ITSM / Ticketing | Ticket Categorization | PARTIAL |
 | 308 | crm-service | CSR | P0 | SLA/ITSM / Ticketing | SLA Binding | PARTIAL |
 | 309 | crm-service | SYS | P0 | SLA/ITSM / SLA Mgmt | SLA Definition | PARTIAL |
-| 310 | crm-service | SYS | P0 | SLA/ITSM / SLA Mgmt | SLA Timer | MISSING |
+| 310 | crm-service | SYS | P0 | SLA/ITSM / SLA Mgmt | SLA Timer | PARTIAL |
 | 311 | crm-service | SYS | P0 | SLA/ITSM / SLA Mgmt | SLA Breach Detection | PARTIAL |
-| 312 | crm-service | SYS | P0 | SLA/ITSM / SLA Mgmt | SLA Escalation | PARTIAL |
+| 312 | crm-service | SYS | P0 | SLA/ITSM / SLA Mgmt | SLA Escalation | COMPLETE |
 | 313 | crm-service | CSR | P0 | SLA/ITSM / Ticketing | Ticket Comments | PARTIAL |
 | 314 | crm-service | CSR | P1 | SLA/ITSM / Ticketing | Attachment Mgmt | PARTIAL |
 | 315 | crm-service | CSR | P1 | SLA/ITSM / Ticketing | Ticket Merge | PARTIAL |
-| 316 | crm-service | CSR | P1 | SLA/ITSM / Ticketing | Ticket Split | MISSING |
+| 316 | crm-service | CSR | P1 | SLA/ITSM / Ticketing | Ticket Split | PARTIAL |
 | 317 | crm-service | CSR | P1 | SLA/ITSM / Ticketing | Knowledge Base Link | PARTIAL |
 | 318 | crm-service | CSR | P0 | SLA/ITSM / Ticketing | Auto Ticket Creation | PARTIAL |
 | 319 | crm-service | CSR | P0 | SLA/ITSM / Ticketing | Customer Notification | PARTIAL |
@@ -394,8 +394,8 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 388 | crm-service | SYS | P0 | Reseller / Integration | API Access | BLOCKED_EXTERNAL |
 | 389 | crm-service | SYS | P0 | Reseller / Integration | Webhook Events | BLOCKED_EXTERNAL |
 | 390 | crm-service | AUD | P0 | Reseller / Audit | Reseller Audit Logs | PARTIAL |
-| 391 | crm-service | AUD | P0 | Reseller / Compliance | Regulatory Tracking | MISSING |
-| 392 | crm-service | RES | P0 | Reseller / Support | Ticket Escalation | MISSING |
+| 391 | crm-service | AUD | P0 | Reseller / Compliance | Regulatory Tracking | PARTIAL |
+| 392 | crm-service | RES | P0 | Reseller / Support | Ticket Escalation | COMPLETE |
 | 393 | crm-service | RES | P1 | Reseller / Support | Knowledge Base | PARTIAL |
 | 394 | crm-service | RES | P1 | Reseller / Automation | Auto Provision Rules | PARTIAL |
 | 395 | crm-service | SYS | P0 | Reseller / Analytics | Performance Analytics | PARTIAL |
@@ -403,7 +403,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 397 | crm-service | SYS | P0 | Reseller / Security | Fraud Detection | PARTIAL |
 | 398 | crm-service | SYS | P0 | Reseller / Security | Access Monitoring | PARTIAL |
 | 399 | crm-service | SYS | P0 | Reseller / Scaling | Multi-Tenant Reseller | PARTIAL |
-| 400 | crm-service | SYS | P0 | Reseller / Scaling | Hierarchy Scaling | MISSING |
+| 400 | crm-service | SYS | P0 | Reseller / Scaling | Hierarchy Scaling | PARTIAL |
 | 401 | siem-service | AUD | P0 | Compliance / Regulatory | Regulatory Framework Setup | PARTIAL |
 | 402 | siem-service | AUD | P0 | Compliance / Regulatory | License Management | PARTIAL |
 | 403 | siem-service | AUD | P0 | Compliance / Regulatory | Circle/Region Mapping | MISSING |
@@ -825,11 +825,11 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 819 | bss-service | SYS | P0 | API Economy / Monetization | Rate Plan Enforcement | PARTIAL |
 | 820 | bss-service | SYS | P0 | API Economy / Monetization | API Revenue Tracking | PARTIAL |
 | 821 | crm-service | SYS | P0 | Ecosystem / Partner Mgmt | Partner Onboarding | PARTIAL |
-| 822 | crm-service | SYS | P1 | Ecosystem / Partner Mgmt | Partner Certification | MISSING |
-| 823 | crm-service | SYS | P0 | Ecosystem / Partner Mgmt | Partner Performance | MISSING |
+| 822 | crm-service | SYS | P1 | Ecosystem / Partner Mgmt | Partner Certification | PARTIAL |
+| 823 | crm-service | SYS | P0 | Ecosystem / Partner Mgmt | Partner Performance | PARTIAL |
 | 824 | crm-service | SYS | P0 | Ecosystem / Partner Mgmt | Partner Lifecycle | PARTIAL |
-| 825 | crm-service | SYS | P0 | Ecosystem / Partner Mgmt | Partner SLA Mgmt | MISSING |
-| 826 | crm-service | SYS | P0 | Ecosystem / Federation | Cross Operator Federation | MISSING |
+| 825 | crm-service | SYS | P0 | Ecosystem / Partner Mgmt | Partner SLA Mgmt | PARTIAL |
+| 826 | crm-service | SYS | P0 | Ecosystem / Federation | Cross Operator Federation | PARTIAL |
 | 827 | crm-service | SYS | P1 | Ecosystem / Federation | Roaming Support | PARTIAL |
 | 828 | crm-service | SYS | P0 | Ecosystem / Federation | Identity Federation | PARTIAL |
 | 829 | crm-service | SYS | P0 | Ecosystem / Federation | Billing Federation | PARTIAL |
@@ -1194,7 +1194,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=41, CONDITIONAL_FUTURE=5
 | 1188 | core-platform-service | SYS | P1 | UX / Experience | UX Optimization | PARTIAL |
 | 1189 | crm-service | SYS | P1 | Support / Knowledge | KB Auto Generation | PARTIAL |
 | 1190 | crm-service | SYS | P1 | Support / Knowledge | KB Feedback Loop | MISSING |
-| 1191 | crm-service | SYS | P0 | Support / Automation | Suggested Resolutions | MISSING |
+| 1191 | crm-service | SYS | P0 | Support / Automation | Suggested Resolutions | PARTIAL |
 | 1192 | aiops-service | SYS | P0 | Operations / Intelligence | Ops Command Dashboard | PARTIAL |
 | 1193 | aiops-service | SYS | P0 | Operations / Intelligence | System Health Score | PARTIAL |
 | 1194 | aiops-service | SYS | P0 | Operations / Intelligence | Risk Score Engine | PARTIAL |

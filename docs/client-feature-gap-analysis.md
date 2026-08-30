@@ -4,11 +4,11 @@
 
 | Status | Count |
 |---|---|
-| PARTIAL | 1197 |
+| PARTIAL | 1206 |
 | BLOCKED_EXTERNAL | 135 |
-| MISSING | 75 |
+| MISSING | 64 |
 | CONDITIONAL_FUTURE | 52 |
-| COMPLETE | 41 |
+| COMPLETE | 43 |
 
 ## By owner
 | Owner | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
@@ -17,7 +17,7 @@
 | aiops-service | 1 | 2 | 51 | 16 | 113 |
 | bss-service | 5 | 0 | 0 | 6 | 181 |
 | core-platform-service | 83 | 25 | 1 | 11 | 284 |
-| crm-service | 4 | 0 | 0 | 14 | 123 |
+| crm-service | 4 | 2 | 0 | 3 | 132 |
 | data-warehouse-service | 2 | 2 | 0 | 7 | 55 |
 | ipam-service | 2 | 0 | 0 | 0 | 6 |
 | nms-service | 5 | 1 | 0 | 8 | 100 |
@@ -28,9 +28,9 @@
 ## By priority
 | Priority | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
 |---|---|---|---|---|---|
-| P0 | 93 | 36 | 1 | 28 | 852 |
-| P1 | 42 | 5 | 8 | 45 | 338 |
-| P2 | 0 | 0 | 41 | 2 | 7 |
+| P0 | 93 | 38 | 1 | 20 | 858 |
+| P1 | 42 | 5 | 8 | 43 | 340 |
+| P2 | 0 | 0 | 41 | 1 | 8 |
 | P3 | 0 | 0 | 2 | 0 | 0 |
 
 ## Missing / partial P0 and P1 (implementation backlog)
@@ -299,13 +299,12 @@
 - **307** [P0] crm-service: Ticket Categorization (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **308** [P0] crm-service: SLA Binding (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **309** [P0] crm-service: SLA Definition (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **310** [P0] crm-service: SLA Timer (MISSING) — no implementation evidence found in owning service
+- **310** [P0] crm-service: SLA Timer (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **311** [P0] crm-service: SLA Breach Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **312** [P0] crm-service: SLA Escalation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **313** [P0] crm-service: Ticket Comments (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **314** [P1] crm-service: Attachment Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **315** [P1] crm-service: Ticket Merge (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **316** [P1] crm-service: Ticket Split (MISSING) — no implementation evidence found in owning service
+- **316** [P1] crm-service: Ticket Split (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **317** [P1] crm-service: Knowledge Base Link (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **318** [P0] crm-service: Auto Ticket Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **319** [P0] crm-service: Customer Notification (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -371,8 +370,7 @@
 - **386** [P0] crm-service: Role-Based Access (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **387** [P0] crm-service: Feature Control (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **390** [P0] crm-service: Reseller Audit Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **391** [P0] crm-service: Regulatory Tracking (MISSING) — no implementation evidence found in owning service
-- **392** [P0] crm-service: Ticket Escalation (MISSING) — no implementation evidence found in owning service
+- **391** [P0] crm-service: Regulatory Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **393** [P1] crm-service: Knowledge Base (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **394** [P1] crm-service: Auto Provision Rules (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **395** [P0] crm-service: Performance Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -380,7 +378,7 @@
 - **397** [P0] crm-service: Fraud Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **398** [P0] crm-service: Access Monitoring (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **399** [P0] crm-service: Multi-Tenant Reseller (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **400** [P0] crm-service: Hierarchy Scaling (MISSING) — no implementation evidence found in owning service
+- **400** [P0] crm-service: Hierarchy Scaling (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **401** [P0] siem-service: Regulatory Framework Setup (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **402** [P0] siem-service: License Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **403** [P0] siem-service: Circle/Region Mapping (MISSING) — no implementation evidence found in owning service
@@ -708,11 +706,11 @@
 - **819** [P0] bss-service: Rate Plan Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **820** [P0] bss-service: API Revenue Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **821** [P0] crm-service: Partner Onboarding (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **822** [P1] crm-service: Partner Certification (MISSING) — no implementation evidence found in owning service
-- **823** [P0] crm-service: Partner Performance (MISSING) — no implementation evidence found in owning service
+- **822** [P1] crm-service: Partner Certification (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **823** [P0] crm-service: Partner Performance (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **824** [P0] crm-service: Partner Lifecycle (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **825** [P0] crm-service: Partner SLA Mgmt (MISSING) — no implementation evidence found in owning service
-- **826** [P0] crm-service: Cross Operator Federation (MISSING) — no implementation evidence found in owning service
+- **825** [P0] crm-service: Partner SLA Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **826** [P0] crm-service: Cross Operator Federation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **827** [P1] crm-service: Roaming Support (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **828** [P0] crm-service: Identity Federation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **829** [P0] crm-service: Billing Federation (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1013,7 +1011,7 @@
 - **1188** [P1] core-platform-service: UX Optimization (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1189** [P1] crm-service: KB Auto Generation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1190** [P1] crm-service: KB Feedback Loop (MISSING) — no implementation evidence found in owning service
-- **1191** [P0] crm-service: Suggested Resolutions (MISSING) — no implementation evidence found in owning service
+- **1191** [P0] crm-service: Suggested Resolutions (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1192** [P0] aiops-service: Ops Command Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1193** [P0] aiops-service: System Health Score (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1194** [P0] aiops-service: Risk Score Engine (PARTIAL) — partial evidence; acceptance criteria incomplete

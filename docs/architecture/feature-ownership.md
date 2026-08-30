@@ -19,10 +19,10 @@ Total features: 404
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 4 |
-| COMPLETE | 0 |
+| COMPLETE | 2 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 14 |
-| PARTIAL | 123 |
+| MISSING | 3 |
+| PARTIAL | 132 |
 
 Total features: 141
 

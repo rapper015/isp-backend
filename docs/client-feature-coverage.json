@@ -1,10 +1,10 @@
 {
   "total": 1500,
   "status_counts": {
-    "PARTIAL": 1197,
-    "COMPLETE": 41,
+    "PARTIAL": 1206,
+    "COMPLETE": 43,
     "BLOCKED_EXTERNAL": 135,
-    "MISSING": 75,
+    "MISSING": 64,
     "CONDITIONAL_FUTURE": 52
   },
   "rows": [
@@ -2572,13 +2572,13 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\events.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\state_machine.py",
           "services\\crm-service\\app\\models\\caf.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
           "services\\crm-service\\legacy\\customers\\models.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0001_initial.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0002_customercodesequence_customer_deleted_at.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0003_alter_customer_status.py"
+          "services\\crm-service\\legacy\\customers\\migrations\\0001_initial.py"
         ],
         "word_hits": [
           "proposal",
@@ -2829,12 +2829,13 @@
           "kyc",
           "audit",
           "verify",
+          "compliance",
           "records"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -3184,14 +3185,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\crm-service\\app\\events.py",
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\models\\customer.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
           "services\\crm-service\\app\\services\\conversion_service.py",
-          "services\\crm-service\\legacy\\customers\\franchises.py",
-          "services\\crm-service\\legacy\\customers\\views.py",
-          "services\\crm-service\\legacy\\customers\\management\\commands\\import_legacy_users.py",
-          "services\\crm-service\\legacy\\kyc\\models.py",
-          "services\\crm-service\\legacy\\kyc\\views.py"
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\legacy\\customers\\franchises.py"
         ],
         "word_hits": [
           "relationship",
@@ -3202,7 +3203,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -3320,12 +3321,13 @@
         ],
         "word_hits": [
           "request",
-          "raise"
+          "raise",
+          "tickets"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -3391,11 +3393,11 @@
           "services\\crm-service\\app\\enums.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\services\\conversion_service.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
           "services\\crm-service\\legacy\\customers\\models.py",
           "services\\crm-service\\legacy\\customers\\management\\commands\\import_legacy_users.py",
           "services\\crm-service\\legacy\\customers\\migrations\\0003_area_branch_customer_address_proof_available_and_more.py",
-          "services\\crm-service\\legacy\\lifecycle\\risk.py",
-          "services\\crm-service\\legacy\\resellers\\scoping.py"
+          "services\\crm-service\\legacy\\lifecycle\\risk.py"
         ],
         "word_hits": [
           "usage",
@@ -3558,7 +3560,7 @@
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\state_machine.py",
           "services\\crm-service\\app\\models\\caf.py",
-          "services\\crm-service\\app\\models\\kyc.py"
+          "services\\crm-service\\app\\models\\ecosystem.py"
         ],
         "word_hits": [
           "kyc",
@@ -3710,9 +3712,9 @@
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\tasks.py",
           "services\\crm-service\\app\\models\\caf.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\lead.py",
-          "services\\crm-service\\app\\models\\lifecycle.py",
-          "services\\crm-service\\app\\services\\caf_service.py"
+          "services\\crm-service\\app\\models\\lifecycle.py"
         ],
         "word_hits": [
           "net",
@@ -3741,29 +3743,29 @@
       "dependencies": "71",
       "source_event": "LoyaltyGranted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\tasks.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
           "services\\crm-service\\app\\services\\audit_service.py",
-          "services\\crm-service\\app\\services\\caf_service.py",
-          "services\\crm-service\\app\\services\\conversion_service.py",
-          "services\\crm-service\\app\\services\\customer_service.py"
+          "services\\crm-service\\app\\services\\caf_service.py"
         ],
         "word_hits": [
           "system"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -3829,7 +3831,7 @@
           "services\\crm-service\\app\\models\\audit.py",
           "services\\crm-service\\app\\models\\caf.py",
           "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\models\\kyc.py"
+          "services\\crm-service\\app\\models\\ecosystem.py"
         ],
         "word_hits": [
           "data",
@@ -3937,6 +3939,7 @@
           "services\\crm-service\\app\\state_machine.py",
           "services\\crm-service\\app\\models\\lifecycle.py",
           "services\\crm-service\\app\\services\\duplicate_service.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
           "services\\crm-service\\app\\services\\risk_service.py",
           "services\\crm-service\\legacy\\lifecycle\\risk.py",
           "services\\crm-service\\legacy\\lifecycle\\transitions.py"
@@ -12047,13 +12050,14 @@
           "services\\crm-service\\app\\models\\base.py"
         ],
         "word_hits": [
+          "ticket",
           "create",
           "request"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12086,13 +12090,15 @@
           "services\\crm-service\\app\\models\\caf.py"
         ],
         "word_hits": [
+          "ticket",
           "create",
-          "update"
+          "update",
+          "tickets"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12120,18 +12126,19 @@
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\models\\base.py",
-          "services\\crm-service\\app\\services\\customer_service.py",
-          "services\\crm-service\\legacy\\customers\\franchises.py",
-          "services\\crm-service\\legacy\\customers\\models.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\customer_service.py"
         ],
         "word_hits": [
+          "ticket",
           "update",
           "details"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12160,10 +12167,11 @@
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\state_machine.py",
-          "services\\crm-service\\app\\models\\lead.py",
-          "services\\crm-service\\app\\models\\__init__.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\lead.py"
         ],
         "word_hits": [
+          "ticket",
           "assignment",
           "assign",
           "agent",
@@ -12172,7 +12180,7 @@
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12196,24 +12204,26 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\events.py",
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\state_machine.py",
           "services\\crm-service\\app\\tasks.py",
           "services\\crm-service\\app\\models\\caf.py",
-          "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\models\\kyc.py"
+          "services\\crm-service\\app\\models\\customer.py"
         ],
         "word_hits": [
+          "ticket",
           "status",
           "open",
           "progress",
+          "resolved",
           "closed"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 6,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12243,17 +12253,18 @@
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\state_machine.py",
-          "services\\crm-service\\app\\models\\lead.py"
+          "services\\crm-service\\app\\models\\ecosystem.py"
         ],
         "word_hits": [
+          "ticket",
           "priority",
           "set",
           "levels"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12283,16 +12294,17 @@
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\models\\audit.py",
           "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\models\\kyc.py"
+          "services\\crm-service\\app\\models\\ecosystem.py"
         ],
         "word_hits": [
+          "ticket",
           "issue",
           "type"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12315,19 +12327,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\lead.py",
-          "services\\crm-service\\app\\services\\lead_service.py",
-          "services\\crm-service\\legacy\\kyc\\views.py"
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\app\\services\\lead_service.py"
         ],
         "word_hits": [
           "sla",
-          "attach"
+          "attach",
+          "ticket"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12388,24 +12405,31 @@
       "dependencies": "309",
       "source_event": "SLATracking",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\lead.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
           "services\\crm-service\\app\\services\\lead_service.py"
         ],
         "word_hits": [
-          "sla"
+          "sla",
+          "timer",
+          "resolution"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -12424,21 +12448,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\lead.py",
+          "services\\crm-service\\app\\models\\__init__.py",
           "services\\crm-service\\app\\services\\duplicate_service.py",
-          "services\\crm-service\\app\\services\\lead_service.py",
-          "services\\crm-service\\tests\\test_crm_e2e.py",
-          "services\\crm-service\\tests\\test_crm_leads.py"
+          "services\\crm-service\\app\\services\\ecosystem_service.py"
         ],
         "word_hits": [
           "sla",
+          "breach",
           "detection"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12458,30 +12485,33 @@
       "dependencies": "311",
       "source_event": "Escalated",
       "backend_treatment": "FULL BACKEND",
-      "status": "PARTIAL",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
           "services\\crm-service\\app\\database.py",
+          "services\\crm-service\\app\\events.py",
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\lead.py",
-          "services\\crm-service\\app\\services\\duplicate_service.py",
-          "services\\crm-service\\app\\services\\lead_service.py",
-          "services\\crm-service\\app\\services\\risk_service.py",
-          "services\\crm-service\\legacy\\customers\\models.py"
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\duplicate_service.py"
         ],
         "word_hits": [
           "sla",
-          "auto"
+          "escalation",
+          "auto",
+          "escalate",
+          "breaches"
         ],
-        "event_hit": false,
-        "route_hit": false,
+        "event_hit": true,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
+        "missing_acceptance": null
       }
     },
     {
@@ -12500,23 +12530,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\crm-service\\app\\events.py",
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\tasks.py",
           "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\models\\lead.py",
-          "services\\crm-service\\app\\models\\lifecycle.py",
-          "services\\crm-service\\app\\models\\__init__.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\lead.py"
         ],
         "word_hits": [
+          "ticket",
           "internal",
           "external"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12580,16 +12611,18 @@
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\state_machine.py",
           "services\\crm-service\\app\\validation.py",
-          "services\\crm-service\\app\\services\\conversion_service.py"
+          "services\\crm-service\\app\\models\\ecosystem.py"
         ],
         "word_hits": [
+          "ticket",
           "merge",
-          "duplicate"
+          "duplicate",
+          "tickets"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12609,23 +12642,30 @@
       "dependencies": "301",
       "source_event": "TicketSplit",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\security.py",
-          "services\\crm-service\\legacy\\kyc\\views.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\legacy\\kyc\\views.py",
+          "services\\crm-service\\migrations\\versions\\0002_crm_ecosystem.py"
         ],
         "word_hits": [
+          "ticket",
           "split"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -12686,21 +12726,22 @@
         "files": [
           "services\\crm-service\\app\\database.py",
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\events.py",
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\services\\customer_360.py",
-          "services\\crm-service\\app\\services\\duplicate_service.py",
-          "services\\crm-service\\app\\services\\risk_service.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
           "auto",
+          "ticket",
           "nms"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12762,24 +12803,25 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\crm-service\\app\\events.py",
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\state_machine.py",
           "services\\crm-service\\app\\validation.py",
           "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\services\\conversion_service.py",
-          "services\\crm-service\\app\\services\\customer_service.py",
-          "services\\crm-service\\app\\services\\duplicate_service.py",
-          "services\\crm-service\\app\\services\\kyc_service.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\conversion_service.py"
         ],
         "word_hits": [
+          "ticket",
           "closure",
           "validation",
           "ensure"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 3,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -12842,6 +12884,7 @@
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\tasks.py",
           "services\\crm-service\\app\\models\\customer.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
           "services\\crm-service\\app\\services\\lead_service.py",
           "services\\crm-service\\legacy\\customers\\franchises.py",
           "services\\crm-service\\legacy\\customers\\models.py",
@@ -13031,13 +13074,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\crm-service\\tests\\test_crm_kyc.py"
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\migrations\\versions\\0002_crm_ecosystem.py",
+          "services\\crm-service\\tests\\test_crm_kyc.py",
+          "services\\crm-service\\tests\\test_ecosystem.py"
         ],
-        "word_hits": [],
+        "word_hits": [
+          "ticket",
+          "automation"
+        ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 0,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -13065,9 +13118,9 @@
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\models\\caf.py",
           "services\\crm-service\\app\\models\\customer.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\lifecycle.py",
-          "services\\crm-service\\app\\models\\tenant.py",
-          "services\\crm-service\\app\\services\\conversion_service.py"
+          "services\\crm-service\\app\\models\\tenant.py"
         ],
         "word_hits": [
           "approval",
@@ -14010,8 +14063,8 @@
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\models\\base.py",
-          "services\\crm-service\\app\\services\\customer_service.py",
-          "services\\crm-service\\legacy\\customers\\franchises.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
           "update",
@@ -14045,13 +14098,13 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\security.py",
-          "services\\crm-service\\legacy\\customers\\franchises.py",
-          "services\\crm-service\\legacy\\customers\\models.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0005_franchise_reseller_franchise.py",
-          "services\\crm-service\\legacy\\leads\\models.py",
-          "services\\crm-service\\legacy\\leads\\views.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\legacy\\customers\\franchises.py"
         ],
         "word_hits": [
           "reseller",
@@ -14059,7 +14112,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -14094,15 +14147,17 @@
         ],
         "word_hits": [
           "level",
+          "hierarchy",
           "define",
           "reseller",
           "tree",
+          "master",
           "sub"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 5,
+        "hit_count": 7,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -14131,8 +14186,8 @@
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\state_machine.py",
-          "services\\crm-service\\app\\models\\lead.py",
-          "services\\crm-service\\app\\models\\__init__.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\lead.py"
         ],
         "word_hits": [
           "parent",
@@ -14172,17 +14227,18 @@
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\security.py",
-          "services\\crm-service\\app\\services\\conversion_service.py",
-          "services\\crm-service\\app\\services\\customer_360.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
           "limit",
+          "hierarchy",
           "levels"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -14245,13 +14301,13 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
           "services\\crm-service\\legacy\\customers\\franchises.py",
-          "services\\crm-service\\legacy\\customers\\models.py",
-          "services\\crm-service\\legacy\\customers\\management\\commands\\import_legacy_users.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0005_franchise_reseller_franchise.py",
-          "services\\crm-service\\legacy\\leads\\models.py",
-          "services\\crm-service\\legacy\\leads\\views.py"
+          "services\\crm-service\\legacy\\customers\\models.py"
         ],
         "word_hits": [
           "reseller",
@@ -14261,7 +14317,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -14286,21 +14342,22 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
           "services\\crm-service\\app\\services\\conversion_service.py",
-          "services\\crm-service\\app\\services\\__init__.py",
-          "services\\crm-service\\legacy\\kyc\\models.py",
-          "services\\crm-service\\legacy\\kyc\\migrations\\0001_initial.py",
-          "services\\crm-service\\legacy\\leads\\models.py",
-          "services\\crm-service\\legacy\\leads\\migrations\\0001_initial.py"
+          "services\\crm-service\\app\\services\\ecosystem_service.py"
         ],
         "word_hits": [
-          "business"
+          "business",
+          "performance"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -14410,18 +14467,20 @@
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\state_machine.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\lead.py",
-          "services\\crm-service\\app\\services\\lead_service.py",
-          "services\\crm-service\\legacy\\customers\\management\\commands\\export_crm_customers.py"
+          "services\\crm-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
+          "ticket",
           "handle",
-          "assigned"
+          "assigned",
+          "tickets"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -15375,9 +15434,9 @@
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\services\\conversion_service.py",
-          "services\\crm-service\\app\\services\\customer_360.py",
-          "services\\crm-service\\app\\services\\customer_service.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\conversion_service.py"
         ],
         "word_hits": [
           "role",
@@ -15445,13 +15504,13 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\security.py",
-          "services\\crm-service\\legacy\\customers\\franchises.py",
-          "services\\crm-service\\legacy\\customers\\models.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0005_franchise_reseller_franchise.py",
-          "services\\crm-service\\legacy\\leads\\models.py",
-          "services\\crm-service\\legacy\\leads\\views.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\legacy\\customers\\franchises.py"
         ],
         "word_hits": [
           "access",
@@ -15460,7 +15519,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -15529,8 +15588,8 @@
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\state_machine.py",
           "services\\crm-service\\app\\models\\audit.py",
-          "services\\crm-service\\app\\models\\lead.py",
-          "services\\crm-service\\app\\models\\__init__.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\lead.py"
         ],
         "word_hits": [
           "reseller",
@@ -15560,22 +15619,31 @@
       "dependencies": "Core-46",
       "source_event": "ComplianceLogged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\crm-service\\app\\enums.py"
+          "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\migrations\\versions\\0002_crm_ecosystem.py",
+          "services\\crm-service\\tests\\test_ecosystem.py"
         ],
         "word_hits": [
+          "regulatory",
+          "compliance",
           "reporting"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -15591,18 +15659,31 @@
       "dependencies": "ITSM-312",
       "source_event": "Escalated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
-        "files": [],
-        "word_hits": [],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "files": [
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\migrations\\versions\\0002_crm_ecosystem.py",
+          "services\\crm-service\\tests\\test_ecosystem.py"
+        ],
+        "word_hits": [
+          "ticket",
+          "escalation",
+          "escalate",
+          "operator"
+        ],
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": null
       }
     },
     {
@@ -15667,17 +15748,18 @@
           "services\\crm-service\\app\\state_machine.py",
           "services\\crm-service\\app\\models\\caf.py",
           "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\services\\caf_service.py"
+          "services\\crm-service\\app\\models\\ecosystem.py"
         ],
         "word_hits": [
           "auto",
+          "provision",
           "rules",
           "activation"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -15701,22 +15783,23 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
-          "services\\crm-service\\legacy\\customers\\franchises.py",
-          "services\\crm-service\\legacy\\customers\\models.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0005_franchise_reseller_franchise.py",
-          "services\\crm-service\\legacy\\leads\\models.py",
-          "services\\crm-service\\legacy\\leads\\views.py",
-          "services\\crm-service\\legacy\\leads\\migrations\\0002_alter_lead_branch_alter_lead_franchise.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\legacy\\customers\\franchises.py"
         ],
         "word_hits": [
+          "performance",
           "analytics",
           "reseller"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -15740,13 +15823,13 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
           "services\\crm-service\\legacy\\customers\\franchises.py",
-          "services\\crm-service\\legacy\\customers\\models.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0005_franchise_reseller_franchise.py",
-          "services\\crm-service\\legacy\\leads\\models.py",
-          "services\\crm-service\\legacy\\leads\\views.py",
-          "services\\crm-service\\legacy\\leads\\migrations\\0002_alter_lead_branch_alter_lead_franchise.py"
+          "services\\crm-service\\legacy\\customers\\models.py"
         ],
         "word_hits": [
           "churn",
@@ -15755,7 +15838,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -15780,13 +15863,13 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
           "services\\crm-service\\app\\services\\duplicate_service.py",
-          "services\\crm-service\\app\\services\\lead_service.py",
-          "services\\crm-service\\legacy\\customers\\franchises.py",
-          "services\\crm-service\\legacy\\customers\\models.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0005_franchise_reseller_franchise.py",
-          "services\\crm-service\\legacy\\leads\\models.py"
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\app\\services\\lead_service.py"
         ],
         "word_hits": [
           "detection",
@@ -15820,7 +15903,8 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
-          "services\\crm-service\\app\\security.py"
+          "services\\crm-service\\app\\security.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py"
         ],
         "word_hits": [
           "access",
@@ -15889,23 +15973,32 @@
       "dependencies": "354",
       "source_event": "HierarchyScaled",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
           "services\\crm-service\\legacy\\customers\\management\\commands\\export_crm_customers.py",
-          "services\\crm-service\\legacy\\customers\\management\\commands\\import_legacy_users.py"
+          "services\\crm-service\\legacy\\customers\\management\\commands\\import_legacy_users.py",
+          "services\\crm-service\\migrations\\versions\\0002_crm_ecosystem.py"
         ],
         "word_hits": [
-          "handle"
+          "hierarchy",
+          "scaling",
+          "handle",
+          "partner"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -32221,22 +32314,25 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\state_machine.py",
           "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\services\\conversion_service.py",
-          "services\\crm-service\\app\\services\\customer_service.py",
-          "services\\crm-service\\legacy\\customers\\models.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0003_alter_customer_status.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
+          "partner",
           "onboarding",
-          "onboard"
+          "onboard",
+          "ecosystem",
+          "partners"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -32256,18 +32352,28 @@
       "dependencies": "821",
       "source_event": "PartnerCertified",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\migrations\\versions\\0002_crm_ecosystem.py",
+          "services\\crm-service\\tests\\test_ecosystem.py"
+        ],
+        "word_hits": [
+          "partner"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -32283,18 +32389,31 @@
       "dependencies": "Analytics-468",
       "source_event": "KPICalculated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\migrations\\versions\\0002_crm_ecosystem.py",
+          "services\\crm-service\\tests\\test_ecosystem.py"
+        ],
+        "word_hits": [
+          "partner",
+          "performance",
+          "kpi",
+          "partners"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -32320,15 +32439,16 @@
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\state_machine.py",
           "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\models\\lifecycle.py"
+          "services\\crm-service\\app\\models\\ecosystem.py"
         ],
         "word_hits": [
+          "partner",
           "lifecycle"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -32348,24 +32468,31 @@
       "dependencies": "804",
       "source_event": "PartnerSLAUpdated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\lead.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
           "services\\crm-service\\app\\services\\lead_service.py"
         ],
         "word_hits": [
-          "sla"
+          "partner",
+          "sla",
+          "partners"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -32381,22 +32508,31 @@
       "dependencies": "771",
       "source_event": "FederationLinked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\crm-service\\app\\services\\audit_service.py"
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\audit_service.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\migrations\\versions\\0002_crm_ecosystem.py",
+          "services\\crm-service\\tests\\test_ecosystem.py"
         ],
         "word_hits": [
-          "cross"
+          "cross",
+          "operator",
+          "federation"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -32417,6 +32553,7 @@
         "files": [
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\models\\caf.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\services\\audit_service.py",
           "services\\crm-service\\app\\services\\caf_service.py"
         ],
@@ -32462,6 +32599,7 @@
         ],
         "word_hits": [
           "identity",
+          "federation",
           "cross",
           "tenant",
           "identities"
@@ -32469,7 +32607,7 @@
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -32493,23 +32631,24 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\kyc.py",
-          "services\\crm-service\\app\\services\\audit_service.py",
-          "services\\crm-service\\app\\services\\conversion_service.py",
-          "services\\crm-service\\app\\services\\kyc_service.py",
-          "services\\crm-service\\legacy\\customers\\models.py",
-          "services\\crm-service\\legacy\\customers\\management\\commands\\import_legacy_users.py"
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\audit_service.py"
         ],
         "word_hits": [
           "billing",
+          "federation",
           "cross",
           "provider"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -46188,12 +46327,12 @@
         "files": [
           "services\\crm-service\\app\\database.py",
           "services\\crm-service\\app\\main.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\services\\duplicate_service.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
           "services\\crm-service\\app\\services\\risk_service.py",
           "services\\crm-service\\legacy\\customers\\models.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0001_initial.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0002_customercodesequence_customer_deleted_at.py",
-          "services\\crm-service\\legacy\\customers\\migrations\\0003_area_branch_customer_address_proof_available_and_more.py"
+          "services\\crm-service\\legacy\\customers\\migrations\\0001_initial.py"
         ],
         "word_hits": [
           "auto",
@@ -46254,18 +46393,28 @@
       "dependencies": "ITSM-317",
       "source_event": "SuggestionGenerated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\crm-service\\app\\main.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\migrations\\versions\\0002_crm_ecosystem.py",
+          "services\\crm-service\\tests\\test_ecosystem.py"
+        ],
+        "word_hits": [
+          "suggested",
+          "resolutions",
+          "suggestions"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -47714,13 +47863,15 @@
         ],
         "word_hits": [
           "issue",
+          "resolution",
           "fix",
-          "pre"
+          "pre",
+          "ticket"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -49295,11 +49446,11 @@
           "services\\crm-service\\app\\database.py",
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\lifecycle.py",
           "services\\crm-service\\app\\services\\customer_360.py",
           "services\\crm-service\\app\\services\\duplicate_service.py",
-          "services\\crm-service\\app\\services\\lifecycle_service.py",
-          "services\\crm-service\\app\\services\\risk_service.py"
+          "services\\crm-service\\app\\services\\ecosystem_service.py"
         ],
         "word_hits": [
           "auto",
@@ -49334,7 +49485,8 @@
           "services\\crm-service\\app\\enums.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\legacy\\lifecycle\\analytics.py",
-          "services\\crm-service\\migrations\\versions\\0001_crm_baseline.py"
+          "services\\crm-service\\migrations\\versions\\0001_crm_baseline.py",
+          "services\\crm-service\\migrations\\versions\\0002_crm_ecosystem.py"
         ],
         "word_hits": [
           "downgrade",
@@ -51221,20 +51373,21 @@
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\models\\customer.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\lead.py",
           "services\\crm-service\\app\\services\\conversion_service.py",
-          "services\\crm-service\\app\\services\\customer_service.py",
-          "services\\crm-service\\app\\services\\duplicate_service.py"
+          "services\\crm-service\\app\\services\\customer_service.py"
         ],
         "word_hits": [
           "renewal",
+          "automation",
           "auto",
           "plan"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -51296,16 +51449,22 @@
         "files": [
           "services\\crm-service\\app\\events.py",
           "services\\crm-service\\app\\main.py",
-          "services\\crm-service\\legacy\\lifecycle\\transitions.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\__init__.py",
+          "services\\crm-service\\app\\services\\ecosystem_service.py",
+          "services\\crm-service\\legacy\\lifecycle\\transitions.py",
+          "services\\crm-service\\migrations\\versions\\0002_crm_ecosystem.py",
+          "services\\crm-service\\tests\\test_ecosystem.py"
         ],
         "word_hits": [
+          "ticket",
           "routing",
           "route"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -54627,13 +54786,13 @@
       "evidence": {
         "files": [
           "services\\crm-service\\app\\enums.py",
+          "services\\crm-service\\app\\events.py",
+          "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\state_machine.py",
           "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\models\\lead.py",
-          "services\\crm-service\\app\\services\\conversion_service.py",
-          "services\\crm-service\\app\\services\\customer_service.py",
-          "services\\crm-service\\app\\services\\lead_service.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\lead.py"
         ],
         "word_hits": [
           "onboarding",
@@ -54641,7 +54800,7 @@
           "ensure"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -55274,17 +55433,18 @@
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\security.py",
           "services\\crm-service\\app\\models\\customer.py",
-          "services\\crm-service\\app\\models\\lead.py",
-          "services\\crm-service\\app\\services\\duplicate_service.py"
+          "services\\crm-service\\app\\models\\ecosystem.py",
+          "services\\crm-service\\app\\models\\lead.py"
         ],
         "word_hits": [
           "sales",
+          "automation",
           "auto"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -56609,9 +56769,9 @@
           "services\\crm-service\\app\\main.py",
           "services\\crm-service\\app\\schemas.py",
           "services\\crm-service\\app\\models\\customer.py",
+          "services\\crm-service\\app\\models\\ecosystem.py",
           "services\\crm-service\\app\\models\\lead.py",
-          "services\\crm-service\\app\\services\\audit_service.py",
-          "services\\crm-service\\app\\services\\conversion_service.py"
+          "services\\crm-service\\app\\services\\audit_service.py"
         ],
         "word_hits": [
           "cross",
