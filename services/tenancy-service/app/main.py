@@ -82,6 +82,7 @@ from .services import (
     tenant_service,
     wallet_service,
 )
+from .services.governance_service import CampaignService, GovernanceService, NotificationService
 
 
 @asynccontextmanager
@@ -1016,3 +1017,291 @@ def audit_log(tenant_id: UUID | None = Query(default=None), limit: int = Query(d
              "action": r.action, "actor": r.actor, "resource_type": r.resource_type,
              "resource_id": r.resource_id, "reason": r.reason, "correlation_id": r.correlation_id,
              "occurred_at": r.occurred_at.isoformat() if r.occurred_at else None} for r in rows]
+
+
+# ===========================================================================
+# Governance — messaging & campaigns (Batch 4: 514, 518, 520, 523, 525, 543)
+# ===========================================================================
+
+@app.post("/api/tenancy/governance/notifications", status_code=201, dependencies=[Depends(management_auth)])
+def create_notification(payload: dict, request: Request, session: Session = Depends(db)):
+    n = NotificationService.create(session, _tid(None), payload)
+    return {"id": str(n.id), "recipient": n.recipient, "channel": n.channel, "status": n.status}
+
+
+@app.post("/api/tenancy/governance/notifications/{notif_id}/retry", dependencies=[Depends(management_auth)])
+def retry_notification(notif_id: UUID, request: Request, session: Session = Depends(db)):
+    try:
+        n = NotificationService.retry(session, _tid(None), notif_id)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"id": str(n.id), "status": n.status, "attempts": n.attempts}
+
+
+@app.post("/api/tenancy/governance/notifications/{notif_id}/deliver", dependencies=[Depends(management_auth)])
+def deliver_notification(notif_id: UUID, request: Request, session: Session = Depends(db)):
+    try:
+        n = NotificationService.deliver(session, _tid(None), notif_id)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"id": str(n.id), "status": n.status, "delivered_at": n.delivered_at}
+
+
+@app.get("/api/tenancy/governance/notifications/delivery/{notif_id}", dependencies=[Depends(management_auth)])
+def delivery_status(notif_id: UUID, session: Session = Depends(db)):
+    n = session.get(models.Notification, notif_id)
+    if n is None or n.tenant_id != _tid(None):
+        raise HTTPException(404, "notification not found")
+    return {"id": str(n.id), "status": n.status, "sent_at": n.sent_at, "delivered_at": n.delivered_at,
+            "read_at": n.read_at, "attempts": n.attempts}
+
+
+@app.post("/api/tenancy/governance/campaigns", status_code=201, dependencies=[Depends(management_auth)])
+def create_campaign(payload: dict, request: Request, session: Session = Depends(db)):
+    c = CampaignService.create(session, _tid(None), payload)
+    return {"id": str(c.id), "name": c.name, "status": c.status}
+
+
+@app.post("/api/tenancy/governance/campaigns/{campaign_id}/schedule", dependencies=[Depends(management_auth)])
+def schedule_campaign(campaign_id: UUID, payload: dict, request: Request, session: Session = Depends(db)):
+    from datetime import datetime as _dt
+    try:
+        c = CampaignService.schedule(session, _tid(None), campaign_id,
+                                     _dt.fromisoformat(payload.get("schedule_at").replace("Z", "+00:00")))
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"id": str(c.id), "status": c.status, "schedule_at": c.schedule_at}
+
+
+@app.post("/api/tenancy/governance/campaigns/{campaign_id}/execute", dependencies=[Depends(management_auth)])
+def execute_campaign(campaign_id: UUID, request: Request, session: Session = Depends(db)):
+    try:
+        c = CampaignService.execute(session, _tid(None), campaign_id)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"id": str(c.id), "status": c.status, "audience_size": len(c.audience or []),
+            "executed_at": c.executed_at}
+
+
+@app.post("/api/tenancy/governance/campaigns/{campaign_id}/track", dependencies=[Depends(management_auth)])
+def track_campaign(campaign_id: UUID, payload: dict, request: Request, session: Session = Depends(db)):
+    try:
+        r = CampaignService.track(session, _tid(None), campaign_id, payload.get("recipient"),
+                                  payload.get("event", "OPENED"))
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"recipient": r.recipient, "status": r.status, "converted_at": r.converted_at}
+
+
+@app.get("/api/tenancy/governance/campaigns/{campaign_id}/analytics", dependencies=[Depends(management_auth)])
+def campaign_analytics(campaign_id: UUID, session: Session = Depends(db)):
+    m = CampaignService.analytics(session, _tid(None), campaign_id)
+    return {"campaign_id": str(campaign_id), "sent": m.sent_count, "opened": m.opened_count,
+            "clicked": m.clicked_count, "converted": m.converted_count,
+            "open_rate": m.open_rate, "conversion_rate": m.conversion_rate}
+
+
+# ===========================================================================
+# Governance — usage, cost, policy, compliance (Batch 4: 759, 760, 776, 779, 1389)
+# ===========================================================================
+
+@app.post("/api/tenancy/governance/usage-meter", status_code=201, dependencies=[Depends(management_auth)])
+def record_usage(payload: dict, request: Request, session: Session = Depends(db)):
+    m = GovernanceService.record_usage(session, _tid(None), payload)
+    return {"id": str(m.id), "resource": m.resource, "amount": m.amount, "unit": m.unit}
+
+
+@app.get("/api/tenancy/governance/usage-meter", dependencies=[Depends(management_auth)])
+def list_usage(resource: str | None = None, session: Session = Depends(db)):
+    tid = _tid(None)
+    stmt = select(models.UsageMeter).where(models.UsageMeter.tenant_id == tid)
+    if resource:
+        stmt = stmt.where(models.UsageMeter.resource == resource)
+    return [{"id": str(m.id), "resource": m.resource, "amount": m.amount, "unit": m.unit,
+             "period": m.period, "recorded_at": m.recorded_at} for m in session.scalars(stmt.limit(200))]
+
+
+@app.post("/api/tenancy/governance/costs", status_code=201, dependencies=[Depends(management_auth)])
+def record_cost(payload: dict, request: Request, session: Session = Depends(db)):
+    c = GovernanceService.record_cost(session, _tid(None), payload)
+    return {"id": str(c.id), "category": c.category, "amount": c.amount, "currency": c.currency}
+
+
+@app.post("/api/tenancy/governance/costs/optimize", dependencies=[Depends(management_auth)])
+def optimize_costs(request: Request, session: Session = Depends(db)):
+    return GovernanceService.optimize_costs(session, _tid(None))
+
+
+@app.post("/api/tenancy/governance/policies", status_code=201, dependencies=[Depends(management_auth)])
+def create_policy(payload: dict, request: Request, session: Session = Depends(db)):
+    p = GovernanceService.create_policy(session, _tid(None), payload)
+    return {"id": str(p.id), "name": p.name, "severity": p.severity, "enabled": p.enabled}
+
+
+@app.post("/api/tenancy/governance/policies/{policy_id}/evaluate", dependencies=[Depends(management_auth)])
+def evaluate_policy(policy_id: UUID, payload: dict, request: Request, session: Session = Depends(db)):
+    try:
+        return GovernanceService.evaluate_policy(session, _tid(None), policy_id, payload.get("sample", {}))
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+
+
+@app.post("/api/tenancy/governance/compliance/run", dependencies=[Depends(management_auth)])
+def run_compliance(payload: dict, request: Request, session: Session = Depends(db)):
+    c = GovernanceService.run_compliance(session, _tid(None), payload.get("check_name", "auto-scan"))
+    return {"id": str(c.id), "check_name": c.check_name, "status": c.status, "result": c.result}
+
+
+# ===========================================================================
+# Governance — security, ecosystem, intelligence (Batch 4: 782, 831, 750, 920, 929)
+# ===========================================================================
+
+@app.post("/api/tenancy/governance/threat-hunts", status_code=201, dependencies=[Depends(management_auth)])
+def start_threat_hunt(payload: dict, request: Request, session: Session = Depends(db)):
+    h = GovernanceService.start_threat_hunt(session, _tid(None), payload)
+    return {"id": str(h.id), "name": h.name, "status": h.status}
+
+
+@app.post("/api/tenancy/governance/threat-hunts/{hunt_id}/complete", dependencies=[Depends(management_auth)])
+def complete_threat_hunt(hunt_id: UUID, payload: dict, request: Request, session: Session = Depends(db)):
+    try:
+        h = GovernanceService.complete_threat_hunt(session, _tid(None), hunt_id, payload.get("findings", []))
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"id": str(h.id), "status": h.status, "findings": len(h.findings)}
+
+
+@app.get("/api/tenancy/governance/threat-hunts", dependencies=[Depends(management_auth)])
+def list_threat_hunts(session: Session = Depends(db)):
+    rows = session.scalars(select(models.ThreatHunt).where(
+        models.ThreatHunt.tenant_id == _tid(None)).order_by(models.ThreatHunt.started_at.desc())).all()
+    return [{"id": str(h.id), "name": h.name, "status": h.status, "findings": len(h.findings),
+             "started_at": h.started_at, "completed_at": h.completed_at} for h in rows]
+
+
+@app.post("/api/tenancy/governance/service-chains", status_code=201, dependencies=[Depends(management_auth)])
+def create_service_chain(payload: dict, request: Request, session: Session = Depends(db)):
+    c = GovernanceService.create_chain(session, _tid(None), payload)
+    return {"id": str(c.id), "name": c.name, "steps": len(c.services or []), "status": c.status}
+
+
+@app.get("/api/tenancy/governance/service-chains", dependencies=[Depends(management_auth)])
+def list_service_chains(session: Session = Depends(db)):
+    rows = session.scalars(select(models.ServiceChain).where(
+        models.ServiceChain.tenant_id == _tid(None))).all()
+    return [{"id": str(c.id), "name": c.name, "services": c.services, "status": c.status} for c in rows]
+
+
+@app.post("/api/tenancy/governance/insights", status_code=201, dependencies=[Depends(management_auth)])
+def create_insight(payload: dict, request: Request, session: Session = Depends(db)):
+    i = GovernanceService.create_insight(session, _tid(None), payload)
+    return {"id": str(i.id), "kind": i.kind, "title": i.title, "confidence": i.confidence}
+
+
+@app.get("/api/tenancy/governance/insights", dependencies=[Depends(management_auth)])
+def list_insights(kind: str | None = None, session: Session = Depends(db)):
+    stmt = select(models.Insight).where(models.Insight.tenant_id == _tid(None))
+    if kind:
+        stmt = stmt.where(models.Insight.kind == kind)
+    rows = session.scalars(stmt.order_by(models.Insight.generated_at.desc()).limit(100)).all()
+    return [{"id": str(i.id), "kind": i.kind, "title": i.title, "body": i.body,
+             "confidence": i.confidence} for i in rows]
+
+
+@app.post("/api/tenancy/governance/knowledge-docs", status_code=201, dependencies=[Depends(management_auth)])
+def index_doc(payload: dict, request: Request, session: Session = Depends(db)):
+    d = GovernanceService.index_doc(session, _tid(None), payload)
+    return {"id": str(d.id), "title": d.title, "tags": d.tags}
+
+
+@app.get("/api/tenancy/governance/knowledge-docs/search", dependencies=[Depends(management_auth)])
+def search_docs(q: str, session: Session = Depends(db)):
+    return GovernanceService.search_docs(session, _tid(None), q)
+
+
+# ===========================================================================
+# Governance — enterprise ops, ROI, infra control (Batch 4: 924, 926, 948, 630, 638, 639, 752, 754, 892)
+# ===========================================================================
+
+@app.post("/api/tenancy/governance/procurement", status_code=201, dependencies=[Depends(management_auth)])
+def create_procurement(payload: dict, request: Request, session: Session = Depends(db)):
+    p = GovernanceService.create_procurement(session, _tid(None), payload)
+    return {"id": str(p.id), "item": p.item, "quantity": p.quantity, "status": p.status}
+
+
+@app.post("/api/tenancy/governance/inventory/forecast", status_code=201, dependencies=[Depends(management_auth)])
+def forecast_inventory(payload: dict, request: Request, session: Session = Depends(db)):
+    f = GovernanceService.forecast_inventory(session, _tid(None), payload)
+    return {"id": str(f.id), "item": f.item, "predicted_demand": f.predicted_demand,
+            "confidence": f.confidence}
+
+
+@app.post("/api/tenancy/governance/roi", status_code=201, dependencies=[Depends(management_auth)])
+def record_roi(payload: dict, request: Request, session: Session = Depends(db)):
+    r = GovernanceService.record_roi(session, _tid(None), payload)
+    return {"id": str(r.id), "project": r.project, "roi_pct": r.roi_pct}
+
+
+@app.get("/api/tenancy/governance/roi", dependencies=[Depends(management_auth)])
+def list_roi(session: Session = Depends(db)):
+    rows = session.scalars(select(models.RoiRecord).where(
+        models.RoiRecord.tenant_id == _tid(None)).order_by(models.RoiRecord.roi_pct.desc())).all()
+    return [{"id": str(r.id), "project": r.project, "investment": r.investment,
+             "return_value": r.return_value, "roi_pct": r.roi_pct} for r in rows]
+
+
+@app.post("/api/tenancy/governance/scaling-rules", status_code=201, dependencies=[Depends(management_auth)])
+def create_scaling_rule(payload: dict, request: Request, session: Session = Depends(db)):
+    s = GovernanceService.create_scaling_rule(session, _tid(None), payload)
+    return {"id": str(s.id), "service": s.service, "metric": s.metric, "threshold": s.threshold}
+
+
+@app.get("/api/tenancy/governance/scaling-rules", dependencies=[Depends(management_auth)])
+def list_scaling_rules(session: Session = Depends(db)):
+    rows = session.scalars(select(models.ScalingRule).where(
+        models.ScalingRule.tenant_id == _tid(None))).all()
+    return [{"id": str(r.id), "service": r.service, "metric": r.metric,
+             "threshold": r.threshold, "min": r.min_instances, "max": r.max_instances} for r in rows]
+
+
+@app.post("/api/tenancy/governance/mesh-links", status_code=201, dependencies=[Depends(management_auth)])
+def create_mesh_link(payload: dict, request: Request, session: Session = Depends(db)):
+    m = GovernanceService.create_mesh_link(session, _tid(None), payload)
+    return {"id": str(m.id), "source": m.source, "target": m.target,
+            "mtls_enabled": m.mtls_enabled, "status": m.status}
+
+
+@app.get("/api/tenancy/governance/mesh-links", dependencies=[Depends(management_auth)])
+def list_mesh_links(session: Session = Depends(db)):
+    rows = session.scalars(select(models.MeshLink).where(
+        models.MeshLink.tenant_id == _tid(None))).all()
+    return [{"id": str(m.id), "source": m.source, "target": m.target,
+             "mtls_enabled": m.mtls_enabled, "status": m.status} for m in rows]
+
+
+@app.post("/api/tenancy/governance/cloud-providers", status_code=201, dependencies=[Depends(management_auth)])
+def register_cloud(payload: dict, request: Request, session: Session = Depends(db)):
+    c = GovernanceService.register_cloud(session, _tid(None), payload)
+    return {"id": str(c.id), "provider": c.provider, "region": c.region,
+            "abstraction_status": c.abstraction_status, "portability_status": c.portability_status}
+
+
+@app.post("/api/tenancy/governance/workloads/migrate", dependencies=[Depends(management_auth)])
+def migrate_workload(payload: dict, request: Request, session: Session = Depends(db)):
+    try:
+        c = GovernanceService.migrate_workload(session, _tid(None), payload.get("workload_name"),
+                                               payload.get("target_cloud"))
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"workload": c.workload_name, "from": c.source_cloud, "to": c.target_cloud,
+            "portability_status": c.portability_status}
+
+
+@app.post("/api/tenancy/governance/translations", status_code=201, dependencies=[Depends(management_auth)])
+def translate(payload: dict, request: Request, session: Session = Depends(db)):
+    t = GovernanceService.translate(session, _tid(None), payload.get("text", ""),
+                                    payload.get("target_lang", "es"))
+    return {"id": str(t.id), "source_text": t.source_text, "translated_text": t.translated_text,
+            "target_lang": t.target_lang}

@@ -37,6 +37,22 @@ PUBLISHED_TOPOLOGY = {
     "tenancy.wallet.entry.v1",
     "tenancy.customer.transferred.v1",
     "tenancy.ownership.changed.v1",
+    "tenancy.notification.sent.v1",
+    "tenancy.campaign.scheduled.v1",
+    "tenancy.campaign.executed.v1",
+    "tenancy.usage.metered.v1",
+    "tenancy.cost.recorded.v1",
+    "tenancy.compliance.completed.v1",
+    "tenancy.threat_hunt.completed.v1",
+    "tenancy.service_chain.created.v1",
+    "tenancy.insight.generated.v1",
+    "tenancy.procurement.automated.v1",
+    "tenancy.inventory_forecast.computed.v1",
+    "tenancy.roi.recorded.v1",
+    "tenancy.scaling_rule.applied.v1",
+    "tenancy.mesh_link.established.v1",
+    "tenancy.cloud.abstraction_registered.v1",
+    "tenancy.workload.migrated.v1",
 }
 
 # Commission basis events consumed from other services (idempotent).

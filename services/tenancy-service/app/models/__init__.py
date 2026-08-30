@@ -76,6 +76,27 @@ from .financial import (  # noqa: F401
     WalletEntry,
 )
 from .reporting import AggregateProjection, ExportJob, ReportSnapshot  # noqa: F401
+from .governance import (  # noqa: F401
+    Campaign,
+    CampaignMetric,
+    CampaignRecipient,
+    CloudAbstraction,
+    ComplianceCheck,
+    CostRecord,
+    GovernancePolicy,
+    Insight,
+    InventoryForecast,
+    KnowledgeDoc,
+    MeshLink,
+    Notification,
+    ProcurementOrder,
+    RoiRecord,
+    ScalingRule,
+    ServiceChain,
+    ThreatHunt,
+    Translation,
+    UsageMeter,
+)
 
 from ..routing import tenant_owned
 
@@ -95,6 +116,10 @@ _TENANT_OWNED = (
     SettlementPayout, SettlementReconciliation, PartnerStatement, WalletAccount,
     WalletEntry, JournalEntry, JournalLine, AccountingPeriod, LedgerBalanceProjection,
     ReportSnapshot, ExportJob,
+    Notification, Campaign, CampaignRecipient, CampaignMetric, UsageMeter,
+    CostRecord, GovernancePolicy, ComplianceCheck, ThreatHunt, ServiceChain,
+    Insight, KnowledgeDoc, ProcurementOrder, InventoryForecast, RoiRecord,
+    ScalingRule, MeshLink, CloudAbstraction, Translation,
 )
 for _model in _TENANT_OWNED:
     tenant_owned(_model)

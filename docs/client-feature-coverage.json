@@ -1,10 +1,10 @@
 {
   "total": 1500,
   "status_counts": {
-    "PARTIAL": 1135,
-    "COMPLETE": 29,
-    "MISSING": 149,
+    "PARTIAL": 1169,
+    "COMPLETE": 41,
     "BLOCKED_EXTERNAL": 135,
+    "MISSING": 103,
     "CONDITIONAL_FUTURE": 52
   },
   "rows": [
@@ -442,7 +442,7 @@
           "services\\tenancy-service\\app\\models\\access.py",
           "services\\tenancy-service\\app\\models\\base.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\models\\messaging.py"
+          "services\\tenancy-service\\app\\models\\governance.py"
         ],
         "word_hits": [
           "timezone",
@@ -471,25 +471,29 @@
       "dependencies": "1",
       "source_event": "LocalizationUpdated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\services\\organization_service.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\app\\services\\organization_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "language",
           "region"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -796,10 +800,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\secrets.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
-          "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py"
         ],
         "word_hits": [
           "password",
@@ -807,8 +815,8 @@
           "policies"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -839,7 +847,7 @@
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\messaging\\consumers.py",
           "services\\tenancy-service\\app\\models\\access.py",
-          "services\\tenancy-service\\app\\models\\organizations.py"
+          "services\\tenancy-service\\app\\models\\governance.py"
         ],
         "word_hits": [
           "mfa",
@@ -1035,13 +1043,13 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\cache.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\domain\\commissions.py",
-          "services\\tenancy-service\\app\\domain\\features.py",
-          "services\\tenancy-service\\app\\domain\\identity.py"
+          "services\\tenancy-service\\app\\domain\\features.py"
         ],
         "word_hits": [
           "rate",
@@ -1109,24 +1117,30 @@
       "dependencies": "None",
       "source_event": "ThreatDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
           "services\\tenancy-service\\app\\services\\catalog_service.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\migrations\\env.py"
         ],
         "word_hits": [
+          "threat",
           "configure"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -1145,14 +1159,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\domain\\features.py",
           "services\\tenancy-service\\app\\domain\\secrets.py",
-          "services\\tenancy-service\\app\\messaging\\consumers.py",
-          "services\\tenancy-service\\app\\models\\access.py"
+          "services\\tenancy-service\\app\\messaging\\consumers.py"
         ],
         "word_hits": [
           "audit",
@@ -1188,20 +1202,21 @@
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
           "services\\tenancy-service\\app\\services\\access_service.py",
-          "services\\tenancy-service\\app\\services\\audit_service.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py"
+          "services\\tenancy-service\\app\\services\\audit_service.py"
         ],
         "word_hits": [
           "audit",
+          "search",
           "filter"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -1240,7 +1255,7 @@
           "period"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 4,
         "tenant_evidence": true,
@@ -1442,7 +1457,7 @@
           "notifications"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
@@ -1472,9 +1487,9 @@
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\models\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py"
+          "services\\tenancy-service\\app\\models\\tenants.py"
         ],
         "word_hits": [
           "email",
@@ -1482,7 +1497,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -1507,13 +1522,13 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\models\\access.py",
-          "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\tenants.py"
         ],
         "word_hits": [
           "sms",
@@ -1521,8 +1536,8 @@
           "notification"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -1543,30 +1558,30 @@
       "dependencies": "36",
       "source_event": "NotificationSent",
       "backend_treatment": "FULL BACKEND",
-      "status": "PARTIAL",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\messaging\\consumers.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py",
-          "services\\tenancy-service\\tests\\conftest.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
           "notification",
           "internal"
         ],
-        "event_hit": false,
-        "route_hit": false,
+        "event_hit": true,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
+        "missing_acceptance": null
       }
     },
     {
@@ -1589,10 +1604,10 @@
           "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\worker_runner.py",
           "services\\tenancy-service\\app\\domain\\secrets.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\tenants.py",
           "services\\tenancy-service\\app\\services\\catalog_service.py",
-          "services\\tenancy-service\\app\\services\\commission_service.py",
-          "services\\tenancy-service\\migrations\\env.py"
+          "services\\tenancy-service\\app\\services\\commission_service.py"
         ],
         "word_hits": [
           "environment",
@@ -1672,8 +1687,8 @@
           "services\\tenancy-service\\app\\tasks.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\models\\access.py",
-          "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\models\\__init__.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\tenants.py"
         ],
         "word_hits": [
           "health",
@@ -1786,25 +1801,26 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\domain\\identity.py",
           "services\\tenancy-service\\app\\domain\\__init__.py",
-          "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\models\\organizations.py"
+          "services\\tenancy-service\\app\\models\\financial.py"
         ],
         "word_hits": [
           "policy",
           "enforce",
           "security",
+          "compliance",
           "rules"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -1828,15 +1844,16 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\tasks.py",
-          "services\\tenancy-service\\app\\domain\\access.py",
-          "services\\tenancy-service\\app\\models\\access.py"
+          "services\\tenancy-service\\app\\domain\\access.py"
         ],
         "word_hits": [
+          "compliance",
           "reports",
           "trai",
           "ready"
@@ -1844,7 +1861,7 @@
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -1864,25 +1881,28 @@
       "dependencies": "None",
       "source_event": "BackupCompleted",
       "backend_treatment": "INFRASTRUCTURE + SERVICE CONTROL: code only in owner plus infrastructure manifests",
-      "status": "PARTIAL",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\state_machine.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\app\\services\\tenant_service.py",
           "services\\tenancy-service\\tests\\test_commissions.py"
         ],
         "word_hits": [
+          "automated",
           "manual"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "deployment manifests present; per-feature service control pending"
+        "missing_acceptance": null
       }
     },
     {
@@ -1952,13 +1972,14 @@
         ],
         "word_hits": [
           "auto",
+          "scaling",
           "rules",
           "load"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -1987,8 +2008,8 @@
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\messaging\\consumers.py",
-          "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\organizations.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\messaging.py"
         ],
         "word_hits": [
           "load",
@@ -1996,7 +2017,7 @@
           "policies"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -19718,21 +19739,25 @@
       "status": "BLOCKED_EXTERNAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\domain\\secrets.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py"
+          "services\\tenancy-service\\app\\services\\tenant_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
           "sms",
           "gateway",
-          "integration"
+          "integration",
+          "providers"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 3,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -19760,9 +19785,9 @@
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\domain\\secrets.py",
           "services\\tenancy-service\\app\\models\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\services\\organization_service.py"
+          "services\\tenancy-service\\app\\models\\tenants.py"
         ],
         "word_hits": [
           "email",
@@ -19771,7 +19796,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -19797,6 +19822,7 @@
         "files": [
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\domain\\secrets.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\tenants.py",
           "services\\tenancy-service\\app\\services\\tenant_service.py"
         ],
@@ -19831,18 +19857,23 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
           "services\\tenancy-service\\app\\services\\catalog_service.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\app\\services\\tenant_service.py"
         ],
         "word_hits": [
+          "push",
           "notification",
           "notifications"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -19983,8 +20014,8 @@
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\domain\\exceptions.py",
           "services\\tenancy-service\\app\\models\\access.py",
-          "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\__init__.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\messaging.py"
         ],
         "word_hits": [
           "template",
@@ -19993,7 +20024,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -20020,6 +20051,7 @@
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\models\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\tenants.py",
           "services\\tenancy-service\\app\\services\\catalog_service.py",
           "services\\tenancy-service\\app\\services\\tenant_service.py",
@@ -20031,7 +20063,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -20060,9 +20092,9 @@
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\models\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py"
+          "services\\tenancy-service\\app\\models\\tenants.py"
         ],
         "word_hits": [
           "email",
@@ -20070,7 +20102,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -20150,7 +20182,7 @@
           "events"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -20178,11 +20210,11 @@
           "services\\tenancy-service\\app\\context.py",
           "services\\tenancy-service\\app\\database.py",
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\security.py",
-          "services\\tenancy-service\\app\\domain\\access.py",
-          "services\\tenancy-service\\app\\domain\\identity.py"
+          "services\\tenancy-service\\app\\domain\\access.py"
         ],
         "word_hits": [
           "notification",
@@ -20213,25 +20245,30 @@
       "dependencies": "512",
       "source_event": "RetryAttempted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\state_machine.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\app\\services\\tenant_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "retry",
           "failed"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -20265,7 +20302,7 @@
           "messaging"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -20292,12 +20329,15 @@
         "files": [
           "services\\tenancy-service\\app\\enums.py",
           "services\\tenancy-service\\app\\state_machine.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\tenants.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\app\\services\\settlement_service.py",
           "services\\tenancy-service\\app\\services\\tenant_service.py",
           "services\\tenancy-service\\tests\\test_commissions.py"
         ],
         "word_hits": [
+          "send",
           "manual",
           "sms",
           "direct"
@@ -20305,7 +20345,7 @@
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -20333,11 +20373,12 @@
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\state_machine.py",
           "services\\tenancy-service\\app\\models\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\services\\organization_service.py"
+          "services\\tenancy-service\\app\\models\\tenants.py"
         ],
         "word_hits": [
+          "send",
           "manual",
           "email",
           "direct"
@@ -20345,7 +20386,7 @@
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -20365,27 +20406,30 @@
       "dependencies": "512",
       "source_event": "BroadcastSent",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\exceptions.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py"
         ],
         "word_hits": [
+          "broadcast",
           "message"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -20414,12 +20458,14 @@
           "services\\tenancy-service\\app\\messaging\\consumers.py"
         ],
         "word_hits": [
-          "create"
+          "campaign",
+          "create",
+          "campaigns"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -20439,24 +20485,32 @@
       "dependencies": "519",
       "source_event": "CampaignScheduled",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\features.py",
-          "services\\tenancy-service\\app\\models\\tenants.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\tenants.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
-          "schedule"
+          "campaign",
+          "scheduling",
+          "schedule",
+          "campaigns"
         ],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": null
       }
     },
     {
@@ -20485,13 +20539,14 @@
           "services\\tenancy-service\\app\\domain\\access.py"
         ],
         "word_hits": [
+          "audience",
           "target",
           "user"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -20511,7 +20566,7 @@
       "dependencies": "520",
       "source_event": "CampaignExecuted",
       "backend_treatment": "FULL BACKEND",
-      "status": "PARTIAL",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
@@ -20520,21 +20575,23 @@
           "services\\tenancy-service\\app\\state_machine.py",
           "services\\tenancy-service\\app\\tasks.py",
           "services\\tenancy-service\\app\\worker_runner.py",
-          "services\\tenancy-service\\app\\services\\settlement_service.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
+          "campaign",
           "execution",
-          "run"
+          "run",
+          "campaigns"
         ],
-        "event_hit": false,
-        "route_hit": false,
+        "event_hit": true,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
+        "missing_acceptance": null
       }
     },
     {
@@ -20550,22 +20607,31 @@
       "dependencies": "522",
       "source_event": "CampaignAnalyzed",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\enums.py"
+          "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "campaign",
+          "analytics",
           "performance"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -20581,23 +20647,30 @@
       "dependencies": "519",
       "source_event": "ABTestRun",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
-          "services\\tenancy-service\\app\\security.py"
+          "services\\tenancy-service\\app\\security.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
-          "compare"
+          "compare",
+          "campaign"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -20613,23 +20686,27 @@
       "dependencies": "522",
       "source_event": "ConversionTracked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\cache.py",
-          "services\\tenancy-service\\app\\main.py"
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "conversion",
           "responses"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -20767,7 +20844,10 @@
         "files": [
           "services\\tenancy-service\\app\\cache.py",
           "services\\tenancy-service\\app\\database.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\tests\\conftest.py",
           "services\\tenancy-service\\tests\\test_e2e.py"
         ],
@@ -20807,8 +20887,8 @@
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\services\\commission_service.py",
-          "services\\tenancy-service\\app\\services\\settlement_service.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
           "sla",
@@ -20816,7 +20896,7 @@
           "response"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -20959,16 +21039,17 @@
           "services\\tenancy-service\\app\\state_machine.py",
           "services\\tenancy-service\\app\\tasks.py",
           "services\\tenancy-service\\app\\worker_runner.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py",
-          "services\\tenancy-service\\migrations\\env.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
+          "campaigns",
           "run"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -21045,7 +21126,7 @@
           "not"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 1,
         "tenant_evidence": true,
@@ -21076,8 +21157,8 @@
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\models\\access.py",
-          "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\__init__.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\messaging.py"
         ],
         "word_hits": [
           "template",
@@ -21148,10 +21229,12 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\state_machine.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
           "services\\tenancy-service\\app\\services\\tenant_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py",
           "services\\tenancy-service\\tests\\test_integration.py"
         ],
         "word_hits": [
@@ -21194,12 +21277,13 @@
         ],
         "word_hits": [
           "notifications",
+          "send",
           "events"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -21223,22 +21307,23 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\state_machine.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
           "services\\tenancy-service\\app\\services\\catalog_service.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py",
-          "services\\tenancy-service\\tests\\test_commissions.py",
-          "services\\tenancy-service\\tests\\test_integration.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
+          "high",
           "volume",
           "messaging"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -21264,20 +21349,22 @@
           "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\exceptions.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
           "services\\tenancy-service\\app\\models\\reporting.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
-          "services\\tenancy-service\\app\\services\\report_service.py",
-          "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
           "queue",
+          "scaling",
+          "scale",
           "message"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -21297,27 +21384,30 @@
       "dependencies": "512",
       "source_event": "Delivered",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\exceptions.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
-          "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py"
+          "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "delivery",
           "message"
         ],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": null
       }
     },
     {
@@ -21380,21 +21470,22 @@
           "services\\tenancy-service\\app\\domain\\exceptions.py",
           "services\\tenancy-service\\app\\domain\\secrets.py",
           "services\\tenancy-service\\app\\messaging\\consumers.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
           "services\\tenancy-service\\app\\models\\reporting.py",
-          "services\\tenancy-service\\app\\services\\settlement_service.py",
-          "services\\tenancy-service\\tests\\test_integration.py"
+          "services\\tenancy-service\\app\\services\\settlement_service.py"
         ],
         "word_hits": [
           "failure",
           "handling",
           "handle",
+          "delivery",
           "failures"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -21456,22 +21547,25 @@
       "dependencies": "518",
       "source_event": "SpamDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\main.py"
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
           "content"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -21522,16 +21616,21 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\state_machine.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\tests\\test_api.py"
         ],
         "word_hits": [
+          "automation",
+          "automated",
           "flows"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -21556,19 +21655,23 @@
         "files": [
           "services\\tenancy-service\\app\\enums.py",
           "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\reporting.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\app\\services\\report_service.py",
           "services\\tenancy-service\\tests\\test_e2e.py",
-          "services\\tenancy-service\\tests\\test_reports.py"
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "analytics",
+          "channel",
           "performance",
           "metrics"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -21680,7 +21783,7 @@
           "rate"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -21779,15 +21882,23 @@
       "status": "BLOCKED_EXTERNAL",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\enums.py"
+          "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "analytics",
           "usage"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -21969,8 +22080,11 @@
       "status": "BLOCKED_EXTERNAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\app\\services\\tenant_service.py"
         ],
         "word_hits": [
@@ -22012,13 +22126,15 @@
           "services\\tenancy-service\\app\\messaging\\__init__.py"
         ],
         "word_hits": [
+          "delivery",
+          "deliver",
           "event",
           "notifications"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -22042,17 +22158,22 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\state_machine.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\app\\services\\tenant_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "retry",
           "failed"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -22273,8 +22394,10 @@
       "status": "BLOCKED_EXTERNAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\domain\\secrets.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
           "services\\tenancy-service\\app\\models\\tenants.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
@@ -22326,7 +22449,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -22427,20 +22550,21 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\context.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\models\\__init__.py",
-          "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py"
+          "services\\tenancy-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
           "inventory",
           "sync"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -22581,11 +22705,11 @@
           "services\\tenancy-service\\app\\context.py",
           "services\\tenancy-service\\app\\database.py",
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\security.py",
-          "services\\tenancy-service\\app\\state_machine.py",
-          "services\\tenancy-service\\app\\models\\access.py"
+          "services\\tenancy-service\\app\\state_machine.py"
         ],
         "word_hits": [
           "provisioning",
@@ -23027,8 +23151,8 @@
           "services\\tenancy-service\\tests\\test_api.py",
           "services\\tenancy-service\\tests\\test_commissions.py",
           "services\\tenancy-service\\tests\\test_e2e.py",
-          "services\\tenancy-service\\tests\\test_integration.py",
-          "services\\tenancy-service\\tests\\test_organization.py"
+          "services\\tenancy-service\\tests\\test_governance.py",
+          "services\\tenancy-service\\tests\\test_integration.py"
         ],
         "word_hits": [
           "test"
@@ -23121,8 +23245,8 @@
           "services\\tenancy-service\\app\\models\\access.py",
           "services\\tenancy-service\\app\\models\\base.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\models\\reporting.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\organizations.py"
         ],
         "word_hits": [
           "response",
@@ -23194,19 +23318,23 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\context.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\reporting.py",
-          "services\\tenancy-service\\tests\\test_settlements.py"
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
+          "threat",
           "protect",
           "against"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -23315,18 +23443,19 @@
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\messaging\\consumers.py",
-          "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\reporting.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\messaging.py"
         ],
         "word_hits": [
+          "high",
           "throughput",
           "handle",
           "load"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -23356,7 +23485,7 @@
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\domain\\exceptions.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\models\\organizations.py"
+          "services\\tenancy-service\\app\\models\\governance.py"
         ],
         "word_hits": [
           "multi",
@@ -23364,7 +23493,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -23389,13 +23518,13 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\__init__.py",
-          "services\\tenancy-service\\app\\services\\access_service.py",
-          "services\\tenancy-service\\app\\services\\audit_service.py"
+          "services\\tenancy-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
           "audit",
@@ -23470,11 +23599,11 @@
           "services\\tenancy-service\\app\\context.py",
           "services\\tenancy-service\\app\\database.py",
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\state_machine.py",
-          "services\\tenancy-service\\app\\domain\\exceptions.py",
-          "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py"
+          "services\\tenancy-service\\app\\domain\\exceptions.py"
         ],
         "word_hits": [
           "zero",
@@ -23518,8 +23647,8 @@
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\state_machine.py",
-          "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\tenants.py"
         ],
         "word_hits": [
           "auto",
@@ -23651,7 +23780,7 @@
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -23715,23 +23844,25 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\tasks.py",
           "services\\tenancy-service\\app\\worker_runner.py",
-          "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\models\\tenants.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\messaging.py"
         ],
         "word_hits": [
           "network",
+          "automation",
+          "automate",
           "configs",
           "tasks"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -23754,17 +23885,20 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\app\\services\\tenant_service.py",
-          "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py"
+          "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
           "apply",
           "policies"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -23789,24 +23923,25 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\database.py",
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
-          "services\\tenancy-service\\app\\services\\report_service.py",
-          "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py",
-          "services\\tenancy-service\\tests\\conftest.py",
-          "services\\tenancy-service\\tests\\test_access.py",
-          "services\\tenancy-service\\tests\\test_e2e.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\app\\services\\report_service.py"
         ],
         "word_hits": [
           "policy",
+          "automation",
           "auto",
           "enforce",
           "policies"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -23833,14 +23968,15 @@
           "services\\tenancy-service\\app\\context.py",
           "services\\tenancy-service\\app\\database.py",
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
-          "services\\tenancy-service\\app\\schemas.py",
-          "services\\tenancy-service\\app\\security.py"
+          "services\\tenancy-service\\app\\schemas.py"
         ],
         "word_hits": [
           "closed",
           "loop",
+          "automation",
           "auto",
           "fix",
           "issues"
@@ -23848,7 +23984,7 @@
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 5,
+        "hit_count": 6,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -24029,7 +24165,9 @@
           "services\\tenancy-service\\app\\enums.py",
           "services\\tenancy-service\\app\\state_machine.py",
           "services\\tenancy-service\\app\\models\\financial.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\app\\services\\settlement_service.py"
         ],
         "word_hits": [
@@ -24183,15 +24321,17 @@
         "files": [
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\services\\organization_service.py"
+          "services\\tenancy-service\\app\\services\\organization_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
           "region"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -24600,18 +24740,29 @@
       "dependencies": "Core-49",
       "source_event": "ScaledOut",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "scaling",
+          "scale"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -24631,22 +24782,23 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\database.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\models\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\services\\access_service.py",
-          "services\\tenancy-service\\app\\services\\audit_service.py"
+          "services\\tenancy-service\\app\\models\\organizations.py"
         ],
         "word_hits": [
           "auto",
+          "scaling",
           "resource"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -24674,16 +24826,16 @@
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\messaging\\consumers.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\reporting.py",
-          "services\\tenancy-service\\app\\services\\audit_service.py"
+          "services\\tenancy-service\\app\\models\\reporting.py"
         ],
         "word_hits": [
           "load",
           "drop"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
@@ -24762,7 +24914,7 @@
           "run"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -24803,7 +24955,7 @@
           "users"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 4,
         "tenant_evidence": true,
@@ -24905,22 +25057,30 @@
       "dependencies": "612",
       "source_event": "MeshEnabled",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\security.py"
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\security.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "mesh",
           "secure"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -24936,22 +25096,27 @@
       "dependencies": "638",
       "source_event": "mTLSEstablished",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\models\\tenants.py"
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\tenants.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "mtls",
           "tls"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -25012,15 +25177,18 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
-          "services\\tenancy-service\\app\\routing.py"
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\routing.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
-          "deployment"
+          "deployment",
+          "automate"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -25189,15 +25357,15 @@
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\messaging\\consumers.py",
-          "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\reporting.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\messaging.py"
         ],
         "word_hits": [
           "load",
           "usage"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
@@ -25337,22 +25505,33 @@
       "dependencies": "630",
       "source_event": "CostOptimized",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\enums.py"
+          "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "cost",
+          "optimization",
+          "optimize",
+          "infra",
           "usage"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -29114,17 +29293,18 @@
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\features.py",
-          "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\models\\__init__.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\tenants.py"
         ],
         "word_hits": [
+          "analytics",
           "feature",
           "success"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -29144,23 +29324,27 @@
       "dependencies": "Analytics-468",
       "source_event": "InsightGenerated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
-          "services\\tenancy-service\\app\\domain\\secrets.py"
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\domain\\secrets.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
-          "product"
+          "product",
+          "insights"
         ],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": null
       }
     },
     {
@@ -29180,24 +29364,28 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\__init__.py",
           "services\\tenancy-service\\app\\domain\\commissions.py",
-          "services\\tenancy-service\\app\\domain\\exceptions.py",
-          "services\\tenancy-service\\app\\messaging\\consumers.py"
+          "services\\tenancy-service\\app\\domain\\exceptions.py"
         ],
         "word_hits": [
           "multi",
+          "cloud",
           "deployment",
           "deploy",
-          "across"
+          "across",
+          "aws",
+          "azure",
+          "gcp"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 8,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -29217,26 +29405,33 @@
       "dependencies": "751",
       "source_event": "AbstractionApplied",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\database.py",
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\domain\\access.py",
-          "services\\tenancy-service\\app\\services\\report_service.py",
-          "services\\tenancy-service\\app\\services\\__init__.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
-          "layer"
+          "cloud",
+          "abstraction",
+          "layer",
+          "abstract",
+          "providers"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -29255,22 +29450,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\domain\\identity.py",
           "services\\tenancy-service\\app\\messaging\\consumers.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\reporting.py",
-          "services\\tenancy-service\\app\\services\\access_service.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py",
-          "services\\tenancy-service\\app\\services\\organization_service.py",
-          "services\\tenancy-service\\tests\\conftest.py"
+          "services\\tenancy-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
-          "cross"
+          "cross",
+          "cloud"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -29290,18 +29486,29 @@
       "dependencies": "751",
       "source_event": "WorkloadMigrated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
-        "files": [],
-        "word_hits": [],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "workload",
+          "portability",
+          "migrate",
+          "workloads"
+        ],
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": null
       }
     },
     {
@@ -29320,17 +29527,24 @@
       "status": "BLOCKED_EXTERNAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\domain\\secrets.py",
-          "services\\tenancy-service\\app\\models\\tenants.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\tenants.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
+          "cloud",
+          "prem",
           "integration"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -29359,16 +29573,18 @@
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\state_machine.py",
           "services\\tenancy-service\\app\\domain\\exceptions.py",
-          "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\tenants.py"
         ],
         "word_hits": [
+          "cost",
+          "cloud",
           "spend"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -29401,12 +29617,13 @@
           "services\\tenancy-service\\app\\schemas.py"
         ],
         "word_hits": [
+          "cost",
           "tenant"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -29464,18 +29681,32 @@
       "dependencies": "756",
       "source_event": "CostOptimized",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "cost",
+          "optimization",
+          "optimize",
+          "infra",
+          "costs"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -29491,22 +29722,32 @@
       "dependencies": "756",
       "source_event": "UsageMetered",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\enums.py"
+          "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
-          "usage"
+          "usage",
+          "metering",
+          "meter",
+          "infra"
         ],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": null
       }
     },
     {
@@ -29522,22 +29763,29 @@
       "dependencies": "756",
       "source_event": "EnergyTracked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\enums.py"
+          "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
           "usage"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -29583,17 +29831,21 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py",
           "services\\tenancy-service\\tests\\test_tenant_context.py"
         ],
         "word_hits": [
-          "routing"
+          "routing",
+          "optimize"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -29617,17 +29869,24 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
           "services\\tenancy-service\\app\\services\\catalog_service.py",
-          "services\\tenancy-service\\tests\\test_tenant_lifecycle.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py"
         ],
         "word_hits": [
+          "optimization",
+          "optimize",
           "device",
           "usage"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -29696,7 +29955,7 @@
           "services\\tenancy-service\\app\\domain\\identity.py",
           "services\\tenancy-service\\app\\models\\access.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
-          "services\\tenancy-service\\app\\services\\organization_service.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
           "identity",
@@ -29773,9 +30032,10 @@
           "services\\tenancy-service\\app\\domain\\identity.py",
           "services\\tenancy-service\\app\\models\\access.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\app\\services\\organization_service.py",
           "services\\tenancy-service\\app\\services\\tenant_service.py",
-          "services\\tenancy-service\\tests\\test_tenant_context.py"
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
           "identity",
@@ -29813,8 +30073,8 @@
           "services\\tenancy-service\\app\\models\\access.py",
           "services\\tenancy-service\\app\\models\\tenants.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
-          "services\\tenancy-service\\app\\services\\organization_service.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\app\\services\\organization_service.py"
         ],
         "word_hits": [
           "identity",
@@ -29850,17 +30110,19 @@
           "services\\tenancy-service\\app\\domain\\identity.py",
           "services\\tenancy-service\\app\\models\\access.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\app\\services\\organization_service.py",
           "services\\tenancy-service\\app\\services\\tenant_service.py",
           "services\\tenancy-service\\tests\\test_tenant_context.py"
         ],
         "word_hits": [
-          "identity"
+          "identity",
+          "scoring"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -29922,16 +30184,19 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
           "services\\tenancy-service\\tests\\test_tenant_lifecycle.py"
         ],
         "word_hits": [
           "contracts",
-          "contract"
+          "contract",
+          "automation"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -30034,6 +30299,7 @@
           "services\\tenancy-service\\app\\enums.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
           "services\\tenancy-service\\app\\services\\catalog_service.py",
           "services\\tenancy-service\\app\\services\\organization_service.py"
@@ -30065,23 +30331,28 @@
       "dependencies": "Core-441",
       "source_event": "PolicyUpdated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\models\\__init__.py"
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
           "policy"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -30100,17 +30371,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
-          "services\\tenancy-service\\tests\\test_tenant_lifecycle.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
-          "policy"
+          "policy",
+          "compliance"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -30130,18 +30407,24 @@
       "dependencies": "777",
       "source_event": "RiskDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py"
+        ],
+        "word_hits": [
+          "enterprise",
+          "scoring"
+        ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 0,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -30157,18 +30440,30 @@
       "dependencies": "Compliance-450",
       "source_event": "ComplianceEnforced",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "compliance",
+          "automation",
+          "automate"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -30184,29 +30479,30 @@
       "dependencies": "Analytics-485",
       "source_event": "InsightGenerated",
       "backend_treatment": "FULL BACKEND",
-      "status": "PARTIAL",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
           "services\\tenancy-service\\app\\models\\__init__.py",
           "services\\tenancy-service\\app\\services\\access_service.py",
-          "services\\tenancy-service\\app\\services\\audit_service.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py"
+          "services\\tenancy-service\\app\\services\\audit_service.py"
         ],
         "word_hits": [
-          "audit"
+          "audit",
+          "insights"
         ],
-        "event_hit": false,
+        "event_hit": true,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
+        "missing_acceptance": null
       }
     },
     {
@@ -30263,18 +30559,29 @@
       "dependencies": "SIEM-433",
       "source_event": "ThreatHunted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "threat",
+          "hunting"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -30299,17 +30606,18 @@
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\models\\access.py",
-          "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\organizations.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\messaging.py"
         ],
         "word_hits": [
+          "analytics",
           "user",
           "device"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -30329,18 +30637,28 @@
       "dependencies": "783",
       "source_event": "InsiderDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "threat"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -30600,13 +30918,14 @@
         ],
         "word_hits": [
           "data",
+          "mesh",
           "domain",
           "ownership"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -30673,19 +30992,20 @@
           "services\\tenancy-service\\app\\context.py",
           "services\\tenancy-service\\app\\database.py",
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\state_machine.py",
-          "services\\tenancy-service\\app\\tasks.py",
-          "services\\tenancy-service\\app\\worker_runner.py"
+          "services\\tenancy-service\\app\\tasks.py"
         ],
         "word_hits": [
-          "data"
+          "data",
+          "abstract"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -32054,22 +32374,31 @@
       "dependencies": "830",
       "source_event": "ChainCreated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\domain\\exceptions.py"
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\domain\\exceptions.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "chaining",
+          "chain",
           "multiple"
         ],
-        "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "event_hit": true,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": null
       }
     },
     {
@@ -32129,7 +32458,7 @@
           "control"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
@@ -32570,12 +32899,15 @@
           "services\\tenancy-service\\app\\domain\\access.py"
         ],
         "word_hits": [
-          "partner"
+          "partner",
+          "governance",
+          "govern",
+          "ecosystem"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -32649,12 +32981,15 @@
           "services\\tenancy-service\\app\\domain\\access.py"
         ],
         "word_hits": [
+          "ecosystem",
+          "scaling",
+          "scale",
           "partner"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -32688,13 +33023,14 @@
         ],
         "word_hits": [
           "global",
+          "ecosystem",
           "multi",
           "country"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -32727,12 +33063,13 @@
           "services\\tenancy-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
+          "ecosystem",
           "partners"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -34304,7 +34641,7 @@
       "dependencies": "885",
       "source_event": "LanguageAdapted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
@@ -34314,19 +34651,20 @@
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\domain\\exceptions.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\services\\commission_service.py"
+          "services\\tenancy-service\\app\\models\\governance.py"
         ],
         "word_hits": [
-          "multi"
+          "multi",
+          "language"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -34362,7 +34700,7 @@
           "across"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 5,
         "tenant_evidence": true,
@@ -34389,23 +34727,24 @@
         "files": [
           "services\\tenancy-service\\app\\cache.py",
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\__init__.py",
-          "services\\tenancy-service\\app\\domain\\commissions.py",
-          "services\\tenancy-service\\app\\domain\\exceptions.py"
+          "services\\tenancy-service\\app\\domain\\commissions.py"
         ],
         "word_hits": [
           "global",
+          "compliance",
           "mgmt",
           "multi",
           "country"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 4,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -34909,15 +35248,18 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\tests\\test_tenant_lifecycle.py"
         ],
         "word_hits": [
-          "contract"
+          "contract",
+          "intelligence"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -35010,9 +35352,9 @@
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\identity.py",
           "services\\tenancy-service\\app\\models\\financial.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\reporting.py",
-          "services\\tenancy-service\\app\\services\\report_service.py",
-          "services\\tenancy-service\\app\\services\\settlement_service.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
           "contract",
@@ -35056,6 +35398,7 @@
           "services\\tenancy-service\\app\\security.py"
         ],
         "word_hits": [
+          "compliance",
           "check",
           "validate",
           "legal"
@@ -35063,7 +35406,7 @@
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -35087,18 +35430,23 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py"
+          "services\\tenancy-service\\app\\services\\catalog_service.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
           "workforce",
+          "analytics",
           "performance"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -35118,18 +35466,25 @@
       "dependencies": "913",
       "source_event": "TalentPredicted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "predict"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35145,22 +35500,27 @@
       "dependencies": "913",
       "source_event": "AttritionPredicted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\enums.py"
+          "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
+          "predict",
           "churn"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35180,19 +35540,24 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\state_machine.py",
           "services\\tenancy-service\\app\\domain\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py"
+          "services\\tenancy-service\\app\\services\\catalog_service.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
           "workforce",
+          "automation",
+          "automate",
           "workflows"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -35226,13 +35591,15 @@
         ],
         "word_hits": [
           "role",
+          "optimization",
+          "optimize",
           "job",
           "roles"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -35308,18 +35675,25 @@
       "dependencies": "Analytics-473",
       "source_event": "MarketAnalyzed",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "market",
+          "intelligence"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35335,18 +35709,27 @@
       "dependencies": "920",
       "source_event": "InvestmentOptimized",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "investment",
+          "optimization",
+          "optimize"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35413,12 +35796,13 @@
           "services\\tenancy-service\\app\\messaging\\consumers.py"
         ],
         "word_hits": [
+          "vendor",
           "select"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -35438,18 +35822,30 @@
       "dependencies": "923",
       "source_event": "ProcurementExecuted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "procurement",
+          "automation",
+          "automate"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35496,22 +35892,31 @@
       "dependencies": "OSS-238",
       "source_event": "InventoryPredicted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\models\\organizations.py"
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\organizations.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
-          "inventory"
+          "inventory",
+          "forecasting",
+          "predict"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35527,18 +35932,26 @@
       "dependencies": "924",
       "source_event": "PurchaseOptimized",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "optimization",
+          "optimize"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35554,22 +35967,30 @@
       "dependencies": "Analytics-491",
       "source_event": "GraphBuilt",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\tenancy-service\\app\\domain\\secrets.py"
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\domain\\secrets.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
-          "graph"
+          "knowledge",
+          "graph",
+          "enterprise"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35585,18 +36006,26 @@
       "dependencies": "928",
       "source_event": "SearchExecuted",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "semantic",
+          "search"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35612,18 +36041,28 @@
       "dependencies": "928",
       "source_event": "KnowledgeSuggested",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "knowledge",
+          "suggest"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35639,18 +36078,28 @@
       "dependencies": "928",
       "source_event": "KnowledgeStored",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "enterprise",
+          "knowledge"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35698,23 +36147,29 @@
       "dependencies": "Platform-776",
       "source_event": "PolicySuggested",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\models\\__init__.py"
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
-          "policy"
+          "policy",
+          "intelligence"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -35951,13 +36406,14 @@
           "services\\tenancy-service\\app\\tasks.py"
         ],
         "word_hits": [
+          "enterprise",
           "operations",
           "control"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -36072,13 +36528,15 @@
         "word_hits": [
           "cross",
           "domain",
+          "automation",
+          "automate",
           "across",
           "all"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 6,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -36104,16 +36562,20 @@
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\security.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\tenant_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
         ],
         "word_hits": [
           "operational",
+          "intelligence",
+          "insights",
           "operations"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -36217,8 +36679,10 @@
           "services\\tenancy-service\\app\\enums.py",
           "services\\tenancy-service\\app\\state_machine.py",
           "services\\tenancy-service\\app\\domain\\secrets.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\services\\settlement_service.py",
           "services\\tenancy-service\\tests\\test_api.py",
+          "services\\tenancy-service\\tests\\test_governance.py",
           "services\\tenancy-service\\tests\\test_settlements.py"
         ],
         "word_hits": [
@@ -36248,18 +36712,28 @@
       "dependencies": "947",
       "source_event": "ROICalculated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "roi"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -36275,18 +36749,23 @@
       "dependencies": "920",
       "source_event": "DisruptionDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "market"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -39151,12 +39630,12 @@
         "files": [
           "services\\tenancy-service\\app\\database.py",
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\commissions.py",
-          "services\\tenancy-service\\app\\domain\\ledger.py",
-          "services\\tenancy-service\\app\\models\\financial.py"
+          "services\\tenancy-service\\app\\domain\\ledger.py"
         ],
         "word_hits": [
           "sla",
@@ -39164,7 +39643,7 @@
           "auto"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -40019,11 +40498,11 @@
           "services\\tenancy-service\\app\\enums.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
           "services\\tenancy-service\\app\\services\\catalog_service.py",
           "services\\tenancy-service\\app\\services\\organization_service.py",
-          "services\\tenancy-service\\tests\\test_settlements.py",
-          "services\\tenancy-service\\tests\\test_tenant_lifecycle.py"
+          "services\\tenancy-service\\tests\\test_settlements.py"
         ],
         "word_hits": [
           "network",
@@ -40104,7 +40583,7 @@
           "loads"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
@@ -40175,16 +40654,17 @@
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\messaging\\consumers.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\models\\organizations.py"
+          "services\\tenancy-service\\app\\models\\governance.py"
         ],
         "word_hits": [
           "billing",
-          "cycles"
+          "cycles",
+          "scale"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -40260,7 +40740,7 @@
           "database"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
@@ -40331,8 +40811,8 @@
           "services\\tenancy-service\\tests\\test_api.py",
           "services\\tenancy-service\\tests\\test_commissions.py",
           "services\\tenancy-service\\tests\\test_e2e.py",
-          "services\\tenancy-service\\tests\\test_integration.py",
-          "services\\tenancy-service\\tests\\test_organization.py"
+          "services\\tenancy-service\\tests\\test_governance.py",
+          "services\\tenancy-service\\tests\\test_integration.py"
         ],
         "word_hits": [
           "test"
@@ -40417,12 +40897,13 @@
           "provisioning",
           "flow",
           "test",
-          "validate"
+          "validate",
+          "chain"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -40490,15 +40971,15 @@
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\services\\commission_service.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py",
-          "services\\tenancy-service\\tests\\test_commissions.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\commission_service.py"
         ],
         "word_hits": [
           "sla"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 1,
         "tenant_evidence": true,
@@ -42008,13 +42489,13 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\database.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\exceptions.py",
           "services\\tenancy-service\\app\\messaging\\consumers.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\reporting.py",
-          "services\\tenancy-service\\app\\services\\settlement_service.py",
-          "services\\tenancy-service\\tests\\conftest.py"
+          "services\\tenancy-service\\app\\models\\reporting.py"
         ],
         "word_hits": [
           "auto",
@@ -42059,12 +42540,13 @@
         "word_hits": [
           "release",
           "health",
+          "score",
           "evaluate"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -42170,7 +42652,7 @@
           "load"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -42199,10 +42681,10 @@
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\domain\\exceptions.py",
           "services\\tenancy-service\\app\\domain\\identity.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
           "services\\tenancy-service\\app\\models\\organizations.py",
-          "services\\tenancy-service\\app\\models\\reporting.py",
-          "services\\tenancy-service\\app\\services\\organization_service.py"
+          "services\\tenancy-service\\app\\models\\reporting.py"
         ],
         "word_hits": [
           "node",
@@ -42349,7 +42831,7 @@
           "case"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -42426,12 +42908,13 @@
         ],
         "word_hits": [
           "firmware",
+          "compliance",
           "validate"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -45245,18 +45728,28 @@
       "dependencies": "None",
       "source_event": "UIValidated",
       "backend_treatment": "BACKEND API/READ MODEL ONLY: frontend is outside this task",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "compliance"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": null
+        "missing_acceptance": "read-model API present but acceptance criteria incomplete"
       }
     },
     {
@@ -45282,7 +45775,7 @@
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\domain\\exceptions.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py"
+          "services\\tenancy-service\\app\\models\\governance.py"
         ],
         "word_hits": [
           "multi",
@@ -45390,18 +45883,25 @@
       "dependencies": "1186",
       "source_event": "ClickTracked",
       "backend_treatment": "BACKEND API/READ MODEL ONLY: frontend is outside this task",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "analytics"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": null
+        "missing_acceptance": "read-model API present but acceptance criteria incomplete"
       }
     },
     {
@@ -45417,18 +45917,24 @@
       "dependencies": "1187",
       "source_event": "UXImproved",
       "backend_treatment": "BACKEND API/READ MODEL ONLY: frontend is outside this task",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "optimization"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": null
+        "missing_acceptance": "read-model API present but acceptance criteria incomplete"
       }
     },
     {
@@ -45787,18 +46293,30 @@
       "dependencies": "445",
       "source_event": "ScoreCalculated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\security.py",
+          "services\\tenancy-service\\app\\domain\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "governance",
+          "score"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -45869,12 +46387,13 @@
         ],
         "word_hits": [
           "system",
+          "score",
           "feature"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -47053,6 +47572,8 @@
           "services\\tenancy-service\\app\\state_machine.py",
           "services\\tenancy-service\\app\\services\\settlement_service.py",
           "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py",
+          "services\\tenancy-service\\tests\\test_governance.py",
           "services\\tenancy-service\\tests\\test_settlements.py"
         ],
         "word_hits": [
@@ -48568,7 +49089,7 @@
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\models\\access.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\models\\organizations.py"
+          "services\\tenancy-service\\app\\models\\governance.py"
         ],
         "word_hits": [
           "workflow",
@@ -48646,7 +49167,7 @@
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\domain\\secrets.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\models\\tenants.py"
+          "services\\tenancy-service\\app\\models\\governance.py"
         ],
         "word_hits": [
           "integration",
@@ -48654,7 +49175,7 @@
           "mgmt"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -49602,17 +50123,19 @@
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\domain\\ledger.py",
           "services\\tenancy-service\\app\\models\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\services\\access_service.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py",
-          "services\\tenancy-service\\app\\services\\commission_service.py"
+          "services\\tenancy-service\\app\\services\\catalog_service.py"
         ],
         "word_hits": [
+          "optimization",
+          "score",
           "system"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -49636,15 +50159,16 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\cache.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\domain\\access.py",
           "services\\tenancy-service\\app\\domain\\identity.py",
           "services\\tenancy-service\\app\\domain\\ledger.py",
           "services\\tenancy-service\\app\\models\\access.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\organizations.py"
+          "services\\tenancy-service\\app\\models\\governance.py"
         ],
         "word_hits": [
+          "enterprise",
           "index",
           "full",
           "level"
@@ -49652,7 +50176,7 @@
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -50566,15 +51090,21 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
-          "services\\tenancy-service\\app\\models\\access.py"
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\access.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\migrations\\versions\\0002_tenancy_governance.py"
         ],
         "word_hits": [
           "changes",
           "usage"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
@@ -50595,7 +51125,7 @@
       "dependencies": "Communication-512",
       "source_event": "NotificationSent",
       "backend_treatment": "BACKEND API/READ MODEL ONLY: frontend is outside this task",
-      "status": "PARTIAL",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\context.py",
@@ -50611,14 +51141,14 @@
           "notifications",
           "context"
         ],
-        "event_hit": false,
-        "route_hit": false,
+        "event_hit": true,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "read-model API present but acceptance criteria incomplete"
+        "missing_acceptance": null
       }
     },
     {
@@ -50675,12 +51205,19 @@
       "backend_treatment": "EXTERNAL ADAPTER: implement contract, secure adapter, mock and failure handling",
       "status": "BLOCKED_EXTERNAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\services\\governance_service.py",
+          "services\\tenancy-service\\tests\\test_governance.py"
+        ],
+        "word_hits": [
+          "retry"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -50708,15 +51245,15 @@
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\services\\commission_service.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py",
-          "services\\tenancy-service\\tests\\test_commissions.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
+          "services\\tenancy-service\\app\\services\\commission_service.py"
         ],
         "word_hits": [
           "sla"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 1,
         "tenant_evidence": true,
@@ -52815,14 +53352,15 @@
         "files": [
           "services\\tenancy-service\\app\\database.py",
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
           "services\\tenancy-service\\app\\models\\tenants.py",
           "services\\tenancy-service\\app\\services\\catalog_service.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py",
-          "services\\tenancy-service\\migrations\\versions\\0001_tenancy_milestone8.py",
-          "services\\tenancy-service\\tests\\conftest.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
+          "automation",
           "auto",
           "disable",
           "features"
@@ -52830,7 +53368,7 @@
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -52983,7 +53521,9 @@
           "services\\tenancy-service\\app\\tasks.py"
         ],
         "word_hits": [
+          "cold",
           "storage",
+          "tiering",
           "archive",
           "used",
           "data"
@@ -52991,7 +53531,7 @@
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 6,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -53090,25 +53630,33 @@
       "dependencies": "759",
       "source_event": "CostOptimized",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
+          "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\state_machine.py",
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\__init__.py",
           "services\\tenancy-service\\app\\services\\catalog_service.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py"
+          "services\\tenancy-service\\app\\services\\governance_service.py"
         ],
         "word_hits": [
-          "storage"
+          "storage",
+          "cost",
+          "optimization",
+          "optimize",
+          "costs"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -53219,12 +53767,14 @@
           "services\\tenancy-service\\app\\domain\\access.py"
         ],
         "word_hits": [
-          "partner"
+          "partner",
+          "forecast",
+          "predict"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -53400,16 +53950,17 @@
           "services\\tenancy-service\\app\\worker_runner.py",
           "services\\tenancy-service\\app\\__init__.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\models\\tenants.py"
+          "services\\tenancy-service\\app\\models\\governance.py"
         ],
         "word_hits": [
+          "optimization",
           "loop",
           "cycle"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -53434,12 +53985,12 @@
         "files": [
           "services\\tenancy-service\\app\\context.py",
           "services\\tenancy-service\\app\\database.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\domain\\access.py",
-          "services\\tenancy-service\\app\\domain\\exceptions.py",
-          "services\\tenancy-service\\app\\domain\\identity.py"
+          "services\\tenancy-service\\app\\domain\\exceptions.py"
         ],
         "word_hits": [
           "self",
@@ -53484,13 +54035,14 @@
         ],
         "word_hits": [
           "system",
+          "intelligence",
           "index",
           "metric"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -53524,13 +54076,15 @@
         ],
         "word_hits": [
           "global",
+          "optimization",
+          "score",
           "system",
           "wide"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -54911,12 +55465,14 @@
         ],
         "word_hits": [
           "tenant",
-          "usage"
+          "usage",
+          "infra",
+          "cost"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -54941,22 +55497,23 @@
         "files": [
           "services\\tenancy-service\\app\\database.py",
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\services\\commission_service.py",
-          "services\\tenancy-service\\app\\services\\tenant_service.py"
+          "services\\tenancy-service\\app\\models\\governance.py"
         ],
         "word_hits": [
           "sla",
+          "automation",
           "auto",
           "apply"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -55064,13 +55621,13 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\state_machine.py",
           "services\\tenancy-service\\app\\__init__.py",
-          "services\\tenancy-service\\app\\domain\\access.py",
-          "services\\tenancy-service\\app\\domain\\commissions.py"
+          "services\\tenancy-service\\app\\domain\\access.py"
         ],
         "word_hits": [
           "cross",
@@ -55080,7 +55637,7 @@
           "workflows"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 5,
         "tenant_evidence": true,
@@ -55418,12 +55975,13 @@
         ],
         "word_hits": [
           "business",
-          "revenue"
+          "revenue",
+          "infra"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -55457,6 +56015,7 @@
         ],
         "word_hits": [
           "operational",
+          "intelligence",
           "multi",
           "layer",
           "system"
@@ -55464,7 +56023,7 @@
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -56458,7 +57017,7 @@
       "dependencies": "756",
       "source_event": "UsageMetered",
       "backend_treatment": "FULL BACKEND",
-      "status": "PARTIAL",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\cache.py",
@@ -56472,16 +57031,19 @@
         ],
         "word_hits": [
           "tenant",
-          "usage"
+          "usage",
+          "cost",
+          "meter",
+          "infra"
         ],
-        "event_hit": false,
+        "event_hit": true,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
-        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
+        "missing_acceptance": null
       }
     },
     {
@@ -56506,8 +57068,8 @@
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\domain\\features.py",
-          "services\\tenancy-service\\app\\models\\tenants.py",
-          "services\\tenancy-service\\app\\models\\__init__.py"
+          "services\\tenancy-service\\app\\models\\governance.py",
+          "services\\tenancy-service\\app\\models\\tenants.py"
         ],
         "word_hits": [
           "feature",
@@ -56540,13 +57102,13 @@
       "evidence": {
         "files": [
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\routing.py",
           "services\\tenancy-service\\app\\schemas.py",
           "services\\tenancy-service\\app\\domain\\commissions.py",
           "services\\tenancy-service\\app\\domain\\identity.py",
-          "services\\tenancy-service\\app\\models\\financial.py",
-          "services\\tenancy-service\\app\\services\\commission_service.py"
+          "services\\tenancy-service\\app\\models\\financial.py"
         ],
         "word_hits": [
           "sla",
@@ -56999,21 +57561,22 @@
         "files": [
           "services\\tenancy-service\\app\\context.py",
           "services\\tenancy-service\\app\\enums.py",
+          "services\\tenancy-service\\app\\events.py",
           "services\\tenancy-service\\app\\main.py",
           "services\\tenancy-service\\app\\security.py",
           "services\\tenancy-service\\app\\__init__.py",
           "services\\tenancy-service\\app\\models\\messaging.py",
-          "services\\tenancy-service\\app\\models\\__init__.py",
-          "services\\tenancy-service\\app\\services\\catalog_service.py"
+          "services\\tenancy-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
           "sync",
+          "automate",
           "reporting"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -57089,12 +57652,13 @@
         "word_hits": [
           "payment",
           "failure",
+          "analytics",
           "failures"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -57128,12 +57692,14 @@
         ],
         "word_hits": [
           "settlement",
+          "optimization",
+          "optimize",
           "payouts"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,
@@ -57348,13 +57914,15 @@
         "word_hits": [
           "full",
           "system",
+          "intelligence",
           "graph",
+          "knowledge",
           "platform"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 6,
         "tenant_evidence": true,
         "audit_evidence": true,
         "permission_evidence": true,

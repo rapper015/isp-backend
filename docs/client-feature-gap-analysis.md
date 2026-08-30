@@ -4,11 +4,11 @@
 
 | Status | Count |
 |---|---|
-| PARTIAL | 1135 |
-| MISSING | 149 |
+| PARTIAL | 1169 |
 | BLOCKED_EXTERNAL | 135 |
+| MISSING | 103 |
 | CONDITIONAL_FUTURE | 52 |
-| COMPLETE | 29 |
+| COMPLETE | 41 |
 
 ## By owner
 | Owner | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
@@ -16,7 +16,7 @@
 | aaa-service | 15 | 3 | 0 | 0 | 62 |
 | aiops-service | 1 | 2 | 51 | 16 | 113 |
 | bss-service | 5 | 0 | 0 | 34 | 153 |
-| core-platform-service | 83 | 13 | 1 | 57 | 250 |
+| core-platform-service | 83 | 25 | 1 | 11 | 284 |
 | crm-service | 4 | 0 | 0 | 14 | 123 |
 | data-warehouse-service | 2 | 2 | 0 | 7 | 55 |
 | ipam-service | 2 | 0 | 0 | 0 | 6 |
@@ -28,8 +28,8 @@
 ## By priority
 | Priority | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
 |---|---|---|---|---|---|
-| P0 | 93 | 25 | 1 | 73 | 818 |
-| P1 | 42 | 4 | 8 | 74 | 310 |
+| P0 | 93 | 36 | 1 | 48 | 832 |
+| P1 | 42 | 5 | 8 | 53 | 330 |
 | P2 | 0 | 0 | 41 | 2 | 7 |
 | P3 | 0 | 0 | 2 | 0 | 0 |
 
@@ -45,7 +45,7 @@
 - **9** [P0] core-platform-service: Billing Config (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **10** [P0] core-platform-service: Currency Setup (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **11** [P0] core-platform-service: Timezone Settings (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **12** [P1] core-platform-service: Localization (MISSING) — no implementation evidence found in owning service
+- **12** [P1] core-platform-service: Localization (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **13** [P0] core-platform-service: Role Definition (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **14** [P0] core-platform-service: Permission Matrix (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **15** [P1] core-platform-service: Access Templates (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -60,7 +60,7 @@
 - **25** [P0] core-platform-service: API Keys Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **26** [P0] core-platform-service: Rate Limiting (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **27** [P0] core-platform-service: IP Whitelisting (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **28** [P1] core-platform-service: Threat Detection Hooks (MISSING) — no implementation evidence found in owning service
+- **28** [P1] core-platform-service: Threat Detection Hooks (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **29** [P0] core-platform-service: Audit Trail (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **30** [P0] core-platform-service: Audit Viewer (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **31** [P0] core-platform-service: Retention Policy (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -69,13 +69,11 @@
 - **34** [P0] core-platform-service: Cache Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **35** [P0] core-platform-service: Event Bus (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **36** [P0] core-platform-service: Webhook Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **39** [P0] core-platform-service: Notification Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **42** [P0] core-platform-service: Service Health Check (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **43** [P0] core-platform-service: Dependency Health (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **44** [P0] core-platform-service: Central Logging (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **45** [P0] core-platform-service: Policy Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **46** [P0] core-platform-service: Compliance Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **47** [P0] core-platform-service: Backup Scheduler (PARTIAL) — deployment manifests present; per-feature service control pending
 - **51** [P0] crm-service: Create Lead (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **52** [P0] crm-service: Lead Ingestion API (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **53** [P0] crm-service: Update Lead (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -483,16 +481,14 @@
 - **508** [P0] core-platform-service: Template Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **512** [P0] core-platform-service: Event Notifications (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **513** [P0] core-platform-service: Notification Routing (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **514** [P0] core-platform-service: Retry Mechanism (MISSING) — no implementation evidence found in owning service
+- **514** [P0] core-platform-service: Retry Mechanism (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **515** [P0] core-platform-service: Throttling (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **518** [P0] core-platform-service: Broadcast Message (MISSING) — no implementation evidence found in owning service
+- **518** [P0] core-platform-service: Broadcast Message (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **519** [P0] core-platform-service: Campaign Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **520** [P0] core-platform-service: Campaign Scheduling (MISSING) — no implementation evidence found in owning service
 - **521** [P0] core-platform-service: Audience Segmentation (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **522** [P0] core-platform-service: Campaign Execution (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **523** [P0] core-platform-service: Campaign Analytics (MISSING) — no implementation evidence found in owning service
-- **524** [P1] core-platform-service: A/B Testing (MISSING) — no implementation evidence found in owning service
-- **525** [P0] core-platform-service: Conversion Tracking (MISSING) — no implementation evidence found in owning service
+- **523** [P0] core-platform-service: Campaign Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **524** [P1] core-platform-service: A/B Testing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **525** [P0] core-platform-service: Conversion Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **526** [P0] core-platform-service: Omnichannel Inbox (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **527** [P0] core-platform-service: Chat Support (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **528** [P0] core-platform-service: Conversation History (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -508,11 +504,10 @@
 - **538** [P0] core-platform-service: Communication Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **541** [P0] core-platform-service: High Volume Messaging (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **542** [P0] core-platform-service: Queue Scaling (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **543** [P0] core-platform-service: Delivery Tracking (MISSING) — no implementation evidence found in owning service
 - **544** [P1] core-platform-service: Read Receipts (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **545** [P0] core-platform-service: Failure Handling (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **546** [P0] core-platform-service: Message Encryption (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **547** [P1] core-platform-service: Spam Detection (MISSING) — no implementation evidence found in owning service
+- **547** [P1] core-platform-service: Spam Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **548** [P1] core-platform-service: Smart Reply Suggestions (MISSING) — no implementation evidence found in owning service
 - **549** [P1] core-platform-service: Chatbot Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **550** [P0] core-platform-service: Communication Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -543,15 +538,15 @@
 - **627** [P0] nms-service: Retry Patterns (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **628** [P0] nms-service: Rate Limiting (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **629** [P1] nms-service: Bulkhead Pattern (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **630** [P0] core-platform-service: Horizontal Scaling (MISSING) — no implementation evidence found in owning service
+- **630** [P0] core-platform-service: Horizontal Scaling (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **632** [P1] core-platform-service: Load Shedding (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **633** [P0] core-platform-service: Queue Backpressure (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **634** [P1] core-platform-service: Edge Node Support (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **635** [P1] core-platform-service: Edge Caching (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **636** [P1] core-platform-service: Local Breakout (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **637** [P0] core-platform-service: Zero Trust Architecture (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **638** [P0] core-platform-service: Service Mesh (MISSING) — no implementation evidence found in owning service
-- **639** [P0] core-platform-service: mTLS (MISSING) — no implementation evidence found in owning service
+- **638** [P0] core-platform-service: Service Mesh (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **639** [P0] core-platform-service: mTLS (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **640** [P0] core-platform-service: Secrets Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **641** [P0] core-platform-service: Deployment Pipeline (PARTIAL) — deployment manifests present; per-feature service control pending
 - **642** [P0] core-platform-service: Blue-Green Deployments (PARTIAL) — deployment manifests present; per-feature service control pending
@@ -562,7 +557,7 @@
 - **647** [P0] core-platform-service: Failover Testing (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **648** [P0] core-platform-service: Platform Policies (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **649** [P0] core-platform-service: Resource Quotas (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **650** [P1] core-platform-service: Cost Optimization (MISSING) — no implementation evidence found in owning service
+- **650** [P1] core-platform-service: Cost Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **651** [P1] oss-service: IPTV Service Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **652** [P1] oss-service: Channel Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **653** [P1] oss-service: Channel Bouquet (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -651,16 +646,13 @@
 - **747** [P1] core-platform-service: Beta Rollouts (MISSING) — no implementation evidence found in owning service
 - **748** [P0] core-platform-service: User Feedback Loop (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **749** [P1] core-platform-service: Innovation Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **750** [P0] core-platform-service: Product Insights (MISSING) — no implementation evidence found in owning service
-- **752** [P0] core-platform-service: Cloud Abstraction Layer (MISSING) — no implementation evidence found in owning service
+- **752** [P0] core-platform-service: Cloud Abstraction Layer (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **753** [P0] core-platform-service: Cross-Cloud Failover (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **754** [P0] core-platform-service: Workload Portability (MISSING) — no implementation evidence found in owning service
 - **756** [P0] core-platform-service: Cost Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **757** [P0] core-platform-service: Cost Allocation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **758** [P0] core-platform-service: Budget Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **759** [P0] core-platform-service: Cost Optimization (MISSING) — no implementation evidence found in owning service
-- **760** [P0] core-platform-service: Usage Metering (MISSING) — no implementation evidence found in owning service
-- **761** [P1] core-platform-service: Energy Monitoring (MISSING) — no implementation evidence found in owning service
+- **759** [P0] core-platform-service: Cost Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **761** [P1] core-platform-service: Energy Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **762** [P1] core-platform-service: Carbon Footprint (MISSING) — no implementation evidence found in owning service
 - **763** [P1] core-platform-service: Green Routing (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **764** [P1] core-platform-service: Power Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -674,14 +666,13 @@
 - **772** [P1] core-platform-service: Smart Contracts (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **773** [P1] core-platform-service: Billing Settlement (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **774** [P1] core-platform-service: Fraud Prevention (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **776** [P0] core-platform-service: Policy Engine v2 (MISSING) — no implementation evidence found in owning service
+- **776** [P0] core-platform-service: Policy Engine v2 (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **777** [P1] core-platform-service: AI Policy Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **778** [P1] core-platform-service: Risk Engine (MISSING) — no implementation evidence found in owning service
-- **779** [P0] core-platform-service: Compliance Automation (MISSING) — no implementation evidence found in owning service
-- **780** [P1] core-platform-service: Audit AI Insights (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **782** [P0] core-platform-service: Threat Hunting (MISSING) — no implementation evidence found in owning service
+- **778** [P1] core-platform-service: Risk Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **779** [P0] core-platform-service: Compliance Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **782** [P0] core-platform-service: Threat Hunting (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **783** [P0] core-platform-service: Behavior Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **784** [P1] core-platform-service: Insider Threat Detection (MISSING) — no implementation evidence found in owning service
+- **784** [P1] core-platform-service: Insider Threat Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **785** [P1] core-platform-service: Zero-Day Protection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **786** [P0] core-platform-service: Digital Experience Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **787** [P0] core-platform-service: Journey Orchestration (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -726,7 +717,6 @@
 - **828** [P0] crm-service: Identity Federation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **829** [P0] crm-service: Billing Federation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **830** [P0] core-platform-service: Multi-Domain Orchestration (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **831** [P0] core-platform-service: Service Chaining (MISSING) — no implementation evidence found in owning service
 - **832** [P1] core-platform-service: Intent Orchestration (MISSING) — no implementation evidence found in owning service
 - **833** [P0] core-platform-service: Orchestration Policies (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **834** [P1] core-platform-service: Cross-Domain SLA (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -785,7 +775,7 @@
 - **888** [P1] aiops-service: Sentiment Response (MISSING) — no implementation evidence found in owning service
 - **889** [P0] aiops-service: Personalization Engine v2 (MISSING) — no implementation evidence found in owning service
 - **891** [P0] core-platform-service: Follow-the-Sun Support (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **892** [P0] core-platform-service: Multi-Language AI (MISSING) — no implementation evidence found in owning service
+- **892** [P0] core-platform-service: Multi-Language AI (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **893** [P0] core-platform-service: Cross-Region SLA Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **894** [P0] core-platform-service: Global Compliance Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **901** [P1] bss-service: Autonomous Accounting (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -801,26 +791,26 @@
 - **911** [P1] core-platform-service: Contract Auto Drafting (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **912** [P0] core-platform-service: Compliance Check AI (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **913** [P1] core-platform-service: Workforce Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **914** [P1] core-platform-service: Talent Prediction (MISSING) — no implementation evidence found in owning service
-- **915** [P1] core-platform-service: Attrition Prediction (MISSING) — no implementation evidence found in owning service
+- **914** [P1] core-platform-service: Talent Prediction (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **915** [P1] core-platform-service: Attrition Prediction (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **916** [P0] core-platform-service: Workforce Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **917** [P1] core-platform-service: Role Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **918** [P1] core-platform-service: Strategic Planning AI (MISSING) — no implementation evidence found in owning service
 - **919** [P1] core-platform-service: Scenario Planning (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **920** [P0] core-platform-service: Market Intelligence (MISSING) — no implementation evidence found in owning service
-- **921** [P1] core-platform-service: Investment Optimization (MISSING) — no implementation evidence found in owning service
+- **920** [P0] core-platform-service: Market Intelligence (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **921** [P1] core-platform-service: Investment Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **922** [P0] core-platform-service: Portfolio Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **923** [P1] core-platform-service: Vendor Selection AI (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **924** [P0] core-platform-service: Procurement Automation (MISSING) — no implementation evidence found in owning service
+- **924** [P0] core-platform-service: Procurement Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **925** [P1] core-platform-service: Supplier Risk Mgmt (MISSING) — no implementation evidence found in owning service
-- **926** [P0] core-platform-service: Inventory Forecasting (MISSING) — no implementation evidence found in owning service
-- **927** [P1] core-platform-service: Purchase Optimization (MISSING) — no implementation evidence found in owning service
-- **928** [P1] core-platform-service: Knowledge Graph (MISSING) — no implementation evidence found in owning service
-- **929** [P0] core-platform-service: Semantic Search (MISSING) — no implementation evidence found in owning service
-- **930** [P1] core-platform-service: Knowledge Recommendations (MISSING) — no implementation evidence found in owning service
-- **931** [P1] core-platform-service: Organizational Memory (MISSING) — no implementation evidence found in owning service
+- **926** [P0] core-platform-service: Inventory Forecasting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **927** [P1] core-platform-service: Purchase Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **928** [P1] core-platform-service: Knowledge Graph (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **929** [P0] core-platform-service: Semantic Search (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **930** [P1] core-platform-service: Knowledge Recommendations (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **931** [P1] core-platform-service: Organizational Memory (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **932** [P0] core-platform-service: Executive Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
-- **933** [P1] core-platform-service: Policy Intelligence (MISSING) — no implementation evidence found in owning service
+- **933** [P1] core-platform-service: Policy Intelligence (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **934** [P0] core-platform-service: Decision Audit Trail (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **935** [P1] core-platform-service: Ethics Engine (MISSING) — no implementation evidence found in owning service
 - **936** [P0] siem-service: Enterprise Risk Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -834,8 +824,8 @@
 - **945** [P1] core-platform-service: Innovation Lab (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **946** [P1] core-platform-service: Idea Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **947** [P1] core-platform-service: Innovation Pipeline (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **948** [P0] core-platform-service: ROI Tracking (MISSING) — no implementation evidence found in owning service
-- **949** [P1] core-platform-service: Disruption Detection (MISSING) — no implementation evidence found in owning service
+- **948** [P0] core-platform-service: ROI Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **949** [P1] core-platform-service: Disruption Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **950** [P1] core-platform-service: Future Readiness Index (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1001** [P0] oss-service: Order Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1002** [P0] oss-service: Order Decomposition (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1015,12 +1005,12 @@
 - **1180** [P0] data-warehouse-service: Cross-Region Restore (PARTIAL) — deployment manifests present; per-feature service control pending
 - **1181** [P0] core-platform-service: Role-Based UI Engine (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1182** [P0] core-platform-service: Custom Dashboards per Role (PARTIAL) — read-model API present but acceptance criteria incomplete
-- **1183** [P1] core-platform-service: Accessibility Compliance (MISSING) — 
+- **1183** [P1] core-platform-service: Accessibility Compliance (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1184** [P0] core-platform-service: Responsive Design (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1185** [P0] core-platform-service: Theme Engine (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1186** [P0] core-platform-service: User Journey Tracking (PARTIAL) — read-model API present but acceptance criteria incomplete
-- **1187** [P1] core-platform-service: Clickstream Analytics (MISSING) — 
-- **1188** [P1] core-platform-service: UX Optimization (MISSING) — 
+- **1187** [P1] core-platform-service: Clickstream Analytics (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1188** [P1] core-platform-service: UX Optimization (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1189** [P1] crm-service: KB Auto Generation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1190** [P1] crm-service: KB Feedback Loop (MISSING) — no implementation evidence found in owning service
 - **1191** [P0] crm-service: Suggested Resolutions (MISSING) — no implementation evidence found in owning service
@@ -1030,7 +1020,7 @@
 - **1195** [P0] aiops-service: Operational Forecasting (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1196** [P0] core-platform-service: Global Policy Sync (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1197** [P0] core-platform-service: Audit Consolidation (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1198** [P1] core-platform-service: Governance Score (MISSING) — no implementation evidence found in owning service
+- **1198** [P1] core-platform-service: Governance Score (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1199** [P0] core-platform-service: Platform Health Index (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1200** [P1] core-platform-service: System Completeness Score (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1201** [P0] oss-service: BGP Configuration Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1147,7 +1137,6 @@
 - **1322** [P1] aiops-service: Resolution Time Prediction (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1323** [P1] crm-service: Customer Effort Score (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1324** [P1] core-platform-service: Adaptive UI (PARTIAL) — read-model API present but acceptance criteria incomplete
-- **1325** [P0] core-platform-service: Smart Notifications (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1329** [P1] siem-service: Adaptive Threat Response (MISSING) — no implementation evidence found in owning service
 - **1330** [P1] siem-service: Continuous Authentication (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1331** [P1] siem-service: Session Risk Scoring (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1207,7 +1196,7 @@
 - **1386** [P0] core-platform-service: Cold Storage Tiering (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1387** [P0] core-platform-service: Hot Data Prioritization (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1388** [P1] core-platform-service: Data Access Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1389** [P0] core-platform-service: Storage Cost Optimization (MISSING) — no implementation evidence found in owning service
+- **1389** [P0] core-platform-service: Storage Cost Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1390** [P1] core-platform-service: Partner Dependency Map (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1391** [P0] core-platform-service: Cross-Partner SLA Sync (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1392** [P1] core-platform-service: Partner Risk Forecast (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1291,7 +1280,6 @@
 - **1473** [P0] siem-service: Breach Impact Analyzer (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1474** [P0] siem-service: Customer Notification Tracker (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1475** [P0] siem-service: Regulator Reporting Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1476** [P0] core-platform-service: Tenant Usage Cost Meter (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1477** [P0] core-platform-service: Feature Adoption Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **1478** [P0] core-platform-service: SLA Breach Root Cause (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1479** [P0] core-platform-service: Tenant Isolation Validator (PARTIAL) — partial evidence; acceptance criteria incomplete
