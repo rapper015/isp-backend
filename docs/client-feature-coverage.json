@@ -1,9 +1,9 @@
 {
   "total": 1500,
   "status_counts": {
-    "PARTIAL": 1106,
-    "COMPLETE": 28,
-    "MISSING": 179,
+    "PARTIAL": 1135,
+    "COMPLETE": 29,
+    "MISSING": 149,
     "BLOCKED_EXTERNAL": 135,
     "CONDITIONAL_FUTURE": 52
   },
@@ -8033,22 +8033,23 @@
           "services\\oss-service\\app\\enums.py",
           "services\\oss-service\\app\\events.py",
           "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\base.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
-          "services\\oss-service\\app\\integrations\\ipam_client.py",
-          "services\\oss-service\\app\\integrations\\network_client.py"
+          "services\\oss-service\\app\\integrations\\ipam_client.py"
         ],
         "word_hits": [
           "network",
+          "asset",
           "add",
           "olt",
           "ont"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -8072,24 +8073,25 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\tasks.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
-          "services\\oss-service\\app\\integrations\\bss_client.py",
-          "services\\oss-service\\app\\integrations\\crm_client.py",
-          "services\\oss-service\\app\\models\\base.py",
-          "services\\oss-service\\app\\services\\provisioning.py"
+          "services\\oss-service\\app\\integrations\\bss_client.py"
         ],
         "word_hits": [
+          "asset",
           "update",
           "modify",
           "device",
           "attributes"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -8112,17 +8114,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\nas_client.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\tests\\conftest.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\app\\services\\provisioning.py"
         ],
         "word_hits": [
+          "asset",
           "remove"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -8145,21 +8153,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\subscriber.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\subscribers\\tests.py",
-          "services\\oss-service\\tests\\test_saga.py"
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
+          "asset",
           "core",
           "access"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -8179,22 +8190,30 @@
       "dependencies": "201",
       "source_event": "VendorLinked",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\oss-service\\app\\integrations\\crm_client.py"
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\integrations\\crm_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py"
         ],
         "word_hits": [
+          "vendor",
           "specific"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -8213,14 +8232,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\network_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\app\\services\\provisioning.py",
           "services\\oss-service\\legacy\\orders\\serializers.py",
           "services\\oss-service\\legacy\\orders\\views.py",
-          "services\\oss-service\\legacy\\orders\\migrations\\0001_initial.py",
-          "services\\oss-service\\legacy\\subscribers\\import_serializers.py",
-          "services\\oss-service\\legacy\\subscribers\\import_views.py",
-          "services\\oss-service\\legacy\\subscribers\\serializers.py"
+          "services\\oss-service\\legacy\\orders\\migrations\\0001_initial.py"
         ],
         "word_hits": [
           "serial"
@@ -8284,18 +8303,29 @@
       "dependencies": "201",
       "source_event": "FirmwareLogged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "firmware"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -8311,26 +8341,29 @@
       "dependencies": "201",
       "source_event": "TemplateCreated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\legacy\\subscribers\\models.py",
           "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0004_subscriber_uq_subscriber_mac_tenant_and_more.py"
+          "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py"
         ],
         "word_hits": [
           "device"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
+        "test_hit": true,
         "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -8350,21 +8383,22 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\database.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\legacy\\orders\\activation.py",
           "services\\oss-service\\legacy\\orders\\models.py",
           "services\\oss-service\\legacy\\orders\\migrations\\0001_initial.py",
           "services\\oss-service\\legacy\\subscribers\\admin.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py",
-          "services\\oss-service\\legacy\\subscribers\\tests.py",
-          "services\\oss-service\\legacy\\subscribers\\importing\\parser.py"
+          "services\\oss-service\\legacy\\subscribers\\models.py"
         ],
         "word_hits": [
-          "auto"
+          "auto",
+          "discover"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -8388,13 +8422,13 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\network_client.py",
           "services\\oss-service\\app\\integrations\\__init__.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py",
-          "services\\oss-service\\legacy\\subscribers\\importing\\services.py"
+          "services\\oss-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
           "network",
@@ -8458,14 +8492,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\nms_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\base.py",
           "services\\oss-service\\app\\models\\messaging.py",
           "services\\oss-service\\app\\models\\order.py",
           "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\models\\saga.py",
-          "services\\oss-service\\app\\models\\subscriber.py",
-          "services\\oss-service\\app\\services\\provisioning.py"
+          "services\\oss-service\\app\\models\\saga.py"
         ],
         "word_hits": [
           "link",
@@ -8473,8 +8507,8 @@
           "map"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
@@ -8498,18 +8532,20 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\legacy\\subscribers\\models.py",
           "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
           "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py",
           "services\\oss-service\\tests\\test_activation_e2e.py"
         ],
         "word_hits": [
-          "mapping"
+          "mapping",
+          "upstream"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -8546,7 +8582,7 @@
           "end"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 2,
         "tenant_evidence": true,
@@ -8898,24 +8934,25 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\events.py",
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\base.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
-          "services\\oss-service\\app\\integrations\\crm_client.py",
-          "services\\oss-service\\app\\integrations\\fakes.py",
-          "services\\oss-service\\app\\integrations\\ipam_client.py"
+          "services\\oss-service\\app\\integrations\\crm_client.py"
         ],
         "word_hits": [
           "gis",
           "mapping",
-          "map"
+          "map",
+          "assets"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -8950,12 +8987,13 @@
         "word_hits": [
           "assign",
           "lat",
-          "long"
+          "long",
+          "assets"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -8975,24 +9013,26 @@
       "dependencies": "224",
       "source_event": "CoverageRendered",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\legacy\\subscribers\\models.py",
           "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
           "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py"
         ],
         "word_hits": [
+          "coverage",
           "mapping"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -9011,15 +9051,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\oss-service\\legacy\\subscribers\\importing\\services.py"
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
-          "maps"
+          "heat",
+          "maps",
+          "traffic"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -9046,7 +9095,8 @@
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\tests\\conftest.py",
-          "services\\oss-service\\tests\\test_api.py"
+          "services\\oss-service\\tests\\test_api.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
           "olt",
@@ -9084,8 +9134,8 @@
           "services\\oss-service\\app\\integrations\\base.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\network_client.py",
-          "services\\oss-service\\app\\models\\order.py",
-          "services\\oss-service\\app\\models\\resource.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\order.py"
         ],
         "word_hits": [
           "ont",
@@ -9135,7 +9185,7 @@
           "ports"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 6,
         "tenant_evidence": true,
@@ -9157,18 +9207,30 @@
       "dependencies": "230",
       "source_event": "SplitterMapped",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "splitter",
+          "splitters",
+          "hierarchy"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -9192,9 +9254,9 @@
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
           "services\\oss-service\\app\\integrations\\nas_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\order.py",
-          "services\\oss-service\\app\\models\\subscriber.py",
-          "services\\oss-service\\app\\services\\order_service.py"
+          "services\\oss-service\\app\\models\\subscriber.py"
         ],
         "word_hits": [
           "fiber",
@@ -9229,12 +9291,12 @@
         "files": [
           "services\\oss-service\\app\\integrations\\bss_client.py",
           "services\\oss-service\\app\\integrations\\nms_client.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\app\\services\\provisioning.py",
           "services\\oss-service\\legacy\\subscribers\\models.py",
           "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
           "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py",
-          "services\\oss-service\\tests\\conftest.py",
-          "services\\oss-service\\tests\\test_activation_e2e.py"
+          "services\\oss-service\\tests\\conftest.py"
         ],
         "word_hits": [
           "fiber",
@@ -9271,19 +9333,20 @@
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\app\\services\\resource_service.py",
-          "services\\oss-service\\tests\\conftest.py",
-          "services\\oss-service\\tests\\test_activation_e2e.py",
-          "services\\oss-service\\tests\\test_api.py"
+          "services\\oss-service\\tests\\conftest.py"
         ],
         "word_hits": [
           "fiber",
-          "capacity"
+          "capacity",
+          "mgmt"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -9307,9 +9370,11 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\integrations\\bss_client.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\tests\\conftest.py",
           "services\\oss-service\\tests\\test_activation_e2e.py",
           "services\\oss-service\\tests\\test_api.py",
+          "services\\oss-service\\tests\\test_assets.py",
           "services\\oss-service\\tests\\test_order_events.py",
           "services\\oss-service\\tests\\test_saga.py"
         ],
@@ -9349,7 +9414,7 @@
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\ipam_client.py",
           "services\\oss-service\\app\\integrations\\__init__.py",
-          "services\\oss-service\\app\\models\\base.py"
+          "services\\oss-service\\app\\models\\assets.py"
         ],
         "word_hits": [
           "fault"
@@ -9419,19 +9484,20 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\network_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\resource.py",
           "services\\oss-service\\app\\models\\__init__.py",
-          "services\\oss-service\\app\\services\\resource_service.py",
-          "services\\oss-service\\migrations\\versions\\0001_oss_milestone2.py",
-          "services\\oss-service\\tests\\test_resources.py",
-          "services\\oss-service\\tests\\test_saga.py"
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
           "inventory"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 1,
         "tenant_evidence": true,
@@ -9458,21 +9524,22 @@
         "files": [
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\legacy\\subscribers\\import_serializers.py",
           "services\\oss-service\\legacy\\subscribers\\import_views.py",
           "services\\oss-service\\legacy\\subscribers\\tests.py",
           "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
-          "services\\oss-service\\tests\\conftest.py",
-          "services\\oss-service\\tests\\test_api.py"
+          "services\\oss-service\\tests\\conftest.py"
         ],
         "word_hits": [
+          "mgmt",
           "manage",
           "locations"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -9496,15 +9563,16 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\events.py",
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\state_machine.py",
           "services\\oss-service\\app\\integrations\\base.py",
-          "services\\oss-service\\app\\integrations\\bss_client.py",
-          "services\\oss-service\\app\\integrations\\crm_client.py"
+          "services\\oss-service\\app\\integrations\\bss_client.py"
         ],
         "word_hits": [
+          "asset",
           "allocation",
           "assign",
           "field",
@@ -9512,9 +9580,9 @@
           "customer"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 5,
+        "hit_count": 6,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -9547,13 +9615,14 @@
           "services\\oss-service\\app\\tasks.py"
         ],
         "word_hits": [
+          "asset",
           "return",
           "replace"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -9623,8 +9692,8 @@
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\network_client.py",
           "services\\oss-service\\app\\integrations\\__init__.py",
-          "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\services\\provisioning.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\resource.py"
         ],
         "word_hits": [
           "network",
@@ -9656,14 +9725,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\network_client.py",
           "services\\oss-service\\app\\integrations\\__init__.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py",
-          "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py"
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
           "network",
@@ -9728,22 +9797,30 @@
       "dependencies": "209",
       "source_event": "ConfigPushed",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\oss-service\\legacy\\orders\\orchestration.py"
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\legacy\\orders\\orchestration.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
-          "push"
+          "push",
+          "configs"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -9759,26 +9836,30 @@
       "dependencies": "246",
       "source_event": "ConfigBackedUp",
       "backend_treatment": "INFRASTRUCTURE + SERVICE CONTROL: code only in owner plus infrastructure manifests",
-      "status": "PARTIAL",
+      "status": "COMPLETE",
       "evidence": {
         "files": [
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\legacy\\subscribers\\models.py",
           "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0004_subscriber_uq_subscriber_mac_tenant_and_more.py"
+          "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py"
         ],
         "word_hits": [
+          "configs",
           "device"
         ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "deployment manifests present; per-feature service control pending"
+        "missing_acceptance": null
       }
     },
     {
@@ -9794,22 +9875,29 @@
       "dependencies": "247",
       "source_event": "DriftDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\oss-service\\legacy\\orders\\transitions.py"
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\legacy\\orders\\transitions.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
+          "drift",
+          "detect",
           "changes"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -9867,13 +9955,13 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\base.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\__init__.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py",
-          "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
           "adapters",
@@ -25328,8 +25416,8 @@
           "services\\oss-service\\app\\tasks.py",
           "services\\oss-service\\app\\integrations\\base.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
-          "services\\oss-service\\app\\models\\order.py",
-          "services\\oss-service\\app\\services\\order_repository.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\order.py"
         ],
         "word_hits": [
           "channel",
@@ -25412,7 +25500,7 @@
           "top"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
@@ -25516,14 +25604,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\nas_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\base.py",
           "services\\oss-service\\app\\models\\messaging.py",
-          "services\\oss-service\\app\\models\\order.py",
-          "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\models\\saga.py"
+          "services\\oss-service\\app\\models\\order.py"
         ],
         "word_hits": [
           "subscriber",
@@ -25532,7 +25620,7 @@
           "subscribers"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
         "hit_count": 4,
         "tenant_evidence": true,
@@ -25629,9 +25717,9 @@
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\nas_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\subscriber.py",
-          "services\\oss-service\\app\\models\\__init__.py",
-          "services\\oss-service\\app\\services\\provisioning.py"
+          "services\\oss-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
           "access",
@@ -25675,13 +25763,14 @@
         ],
         "word_hits": [
           "account",
+          "mgmt",
           "create",
           "accounts"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -25869,7 +25958,8 @@
           "services\\oss-service\\legacy\\subscribers\\tests.py",
           "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
           "services\\oss-service\\tests\\conftest.py",
-          "services\\oss-service\\tests\\test_api.py"
+          "services\\oss-service\\tests\\test_api.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
           "did",
@@ -25899,18 +25989,28 @@
       "dependencies": "NMS-255",
       "source_event": "QoSUpdated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "mos",
+          "score"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -25971,7 +26071,8 @@
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\tests\\conftest.py",
-          "services\\oss-service\\tests\\test_api.py"
+          "services\\oss-service\\tests\\test_api.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
           "cache",
@@ -26000,18 +26101,28 @@
       "dependencies": "668",
       "source_event": "TrafficOffloaded",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "traffic"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -26033,19 +26144,21 @@
           "services\\oss-service\\app\\enums.py",
           "services\\oss-service\\app\\events.py",
           "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\state_machine.py",
           "services\\oss-service\\app\\tasks.py",
-          "services\\oss-service\\app\\services\\activation.py",
-          "services\\oss-service\\app\\services\\order_service.py",
-          "services\\oss-service\\app\\services\\provisioning.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
-          "provisioning"
+          "mpls",
+          "provisioning",
+          "enterprise"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -26080,12 +26193,13 @@
         "word_hits": [
           "leased",
           "line",
-          "provisioning"
+          "provisioning",
+          "bandwidth"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -26105,18 +26219,30 @@
       "dependencies": "671",
       "source_event": "VPNProvisioned",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "vpn",
+          "ipsec",
+          "mpls"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -26170,18 +26296,29 @@
       "dependencies": "BSS-112",
       "source_event": "BandwidthScaled",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "bandwidth",
+          "demand"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -26197,22 +26334,31 @@
       "dependencies": "SLA-309",
       "source_event": "ContractSigned",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\oss-service\\app\\integrations\\base.py"
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\integrations\\base.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py"
         ],
         "word_hits": [
-          "contracts"
+          "sla",
+          "contracts",
+          "enterprise"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -27099,22 +27245,23 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\events.py",
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\base.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
-          "services\\oss-service\\app\\integrations\\crm_client.py",
-          "services\\oss-service\\app\\integrations\\fakes.py"
+          "services\\oss-service\\app\\integrations\\crm_client.py"
         ],
         "word_hits": [
+          "iot",
           "device",
           "register"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27143,18 +27290,19 @@
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\state_machine.py",
           "services\\oss-service\\app\\tasks.py",
-          "services\\oss-service\\app\\services\\activation.py",
-          "services\\oss-service\\app\\services\\order_service.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
+          "iot",
           "provisioning",
           "auto",
           "provision"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27178,22 +27326,24 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\state_machine.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\crm_client.py",
-          "services\\oss-service\\app\\services\\saga_engine.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py",
-          "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
           "device",
-          "lifecycle"
+          "lifecycle",
+          "mgmt",
+          "iot"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27218,19 +27368,23 @@
         "files": [
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\legacy\\subscribers\\tests.py",
-          "services\\oss-service\\tests\\conftest.py",
-          "services\\oss-service\\tests\\test_api.py",
-          "services\\oss-service\\tests\\test_saga.py"
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\conftest.py"
         ],
         "word_hits": [
+          "iot",
           "sim",
+          "mgmt",
           "manage"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27253,22 +27407,23 @@
       "status": "BLOCKED_EXTERNAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\base.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
           "services\\oss-service\\app\\integrations\\crm_client.py",
           "services\\oss-service\\app\\integrations\\ipam_client.py",
           "services\\oss-service\\app\\integrations\\nas_client.py",
-          "services\\oss-service\\app\\integrations\\network_client.py",
-          "services\\oss-service\\app\\integrations\\nms_client.py"
+          "services\\oss-service\\app\\integrations\\network_client.py"
         ],
         "word_hits": [
-          "integration"
+          "integration",
+          "iot"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27297,17 +27452,18 @@
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\worker_runner.py",
           "services\\oss-service\\app\\integrations\\base.py",
-          "services\\oss-service\\app\\models\\messaging.py",
-          "services\\oss-service\\app\\models\\order.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\messaging.py"
         ],
         "word_hits": [
+          "iot",
           "data",
           "collect"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27327,26 +27483,31 @@
       "dependencies": "706",
       "source_event": "TelemetryReceived",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\legacy\\subscribers\\models.py",
-          "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0004_subscriber_uq_subscriber_mac_tenant_and_more.py"
+          "services\\oss-service\\legacy\\subscribers\\importing\\services.py"
         ],
         "word_hits": [
-          "device"
+          "device",
+          "telemetry",
+          "iot"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -27365,19 +27526,25 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\legacy\\orders\\orchestration.py",
           "services\\oss-service\\legacy\\orders\\transitions.py",
           "services\\oss-service\\legacy\\orders\\views.py"
         ],
         "word_hits": [
+          "iot",
+          "mgmt",
           "apply",
           "usage"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27402,22 +27569,23 @@
         "files": [
           "services\\oss-service\\app\\cache.py",
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\events.py",
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py",
-          "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0004_subscriber_uq_subscriber_mac_tenant_and_more.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
+          "iot",
           "security",
           "device",
           "authentication"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27440,23 +27608,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\subscriber.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\orders\\models.py",
-          "services\\oss-service\\legacy\\orders\\sequences.py",
-          "services\\oss-service\\legacy\\orders\\services.py"
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
+          "iot",
           "billing",
           "usage"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27596,21 +27765,23 @@
         "files": [
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\base.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
           "services\\oss-service\\app\\integrations\\crm_client.py",
-          "services\\oss-service\\app\\integrations\\ipam_client.py",
-          "services\\oss-service\\app\\integrations\\nas_client.py"
+          "services\\oss-service\\app\\integrations\\ipam_client.py"
         ],
         "word_hits": [
+          "traffic",
+          "mgmt",
           "integration",
           "system"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27636,21 +27807,22 @@
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\services\\order_service.py",
           "services\\oss-service\\app\\services\\resource_service.py",
           "services\\oss-service\\legacy\\orders\\migrations\\0001_initial.py",
-          "services\\oss-service\\legacy\\subscribers\\import_serializers.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py"
+          "services\\oss-service\\legacy\\subscribers\\import_serializers.py"
         ],
         "word_hits": [
           "public",
+          "mgmt",
           "city",
           "hotspot"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27670,29 +27842,30 @@
       "dependencies": "706",
       "source_event": "SensorManaged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\network_client.py",
           "services\\oss-service\\app\\integrations\\__init__.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py",
-          "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py"
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
-          "network"
+          "network",
+          "mgmt"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": false,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -27708,18 +27881,29 @@
       "dependencies": "CRM-71",
       "source_event": "PMSIntegrated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "property",
+          "mgmt",
+          "pms"
+        ],
         "event_hit": false,
         "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -27778,24 +27962,25 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\subscriber.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\orders\\models.py",
-          "services\\oss-service\\legacy\\orders\\sequences.py",
-          "services\\oss-service\\legacy\\orders\\services.py"
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
+          "room",
           "billing",
           "charge",
           "usage"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27828,13 +28013,14 @@
           "services\\oss-service\\app\\integrations\\aaa_client.py"
         ],
         "word_hits": [
+          "mgmt",
           "time",
           "access"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27885,18 +28071,29 @@
       "dependencies": "AAA-155",
       "source_event": "BandwidthApplied",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "bandwidth",
+          "room"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -27920,18 +28117,19 @@
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\network_client.py",
           "services\\oss-service\\app\\integrations\\__init__.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py"
+          "services\\oss-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
           "network",
+          "mgmt",
           "manage"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -27959,7 +28157,8 @@
           "services\\oss-service\\app\\models\\resource.py",
           "services\\oss-service\\app\\services\\provisioning.py",
           "services\\oss-service\\legacy\\orders\\orchestration.py",
-          "services\\oss-service\\tests\\conftest.py"
+          "services\\oss-service\\tests\\conftest.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
           "vlan"
@@ -27990,19 +28189,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\subscriber.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\tests\\test_saga.py"
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
-          "access"
+          "access",
+          "mgmt",
+          "enterprise"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -28026,23 +28230,24 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\cache.py",
+          "services\\oss-service\\app\\events.py",
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\base.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
-          "services\\oss-service\\app\\integrations\\crm_client.py",
-          "services\\oss-service\\app\\integrations\\ipam_client.py"
+          "services\\oss-service\\app\\integrations\\crm_client.py"
         ],
         "word_hits": [
           "nac",
           "integration",
+          "enterprise",
           "security"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -28100,22 +28305,30 @@
       "dependencies": "NMS-255",
       "source_event": "MOSCalculated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\oss-service\\app\\cache.py"
+          "services\\oss-service\\app\\cache.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
-          "mean"
+          "mos",
+          "mean",
+          "score"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -28139,18 +28352,19 @@
           "services\\oss-service\\app\\tasks.py",
           "services\\oss-service\\app\\integrations\\crm_client.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\base.py",
-          "services\\oss-service\\app\\models\\messaging.py",
-          "services\\oss-service\\app\\models\\order.py"
+          "services\\oss-service\\app\\models\\messaging.py"
         ],
         "word_hits": [
           "app",
-          "level"
+          "level",
+          "performance"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -28173,23 +28387,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\nas_client.py",
-          "services\\oss-service\\app\\services\\order_service.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\orders\\admin.py",
-          "services\\oss-service\\legacy\\orders\\models.py",
-          "services\\oss-service\\legacy\\orders\\orchestration.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
+          "sla",
           "mapping",
           "user"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -38132,6 +38347,7 @@
         ],
         "word_hits": [
           "order",
+          "mgmt",
           "handle",
           "failed",
           "orders"
@@ -38139,7 +38355,7 @@
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -38254,12 +38470,13 @@
           "services\\oss-service\\app\\tasks.py"
         ],
         "word_hits": [
-          "order"
+          "order",
+          "sla"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -38403,13 +38620,14 @@
         "word_hits": [
           "inventory",
           "sync",
+          "actual",
           "system",
           "state"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -38429,18 +38647,28 @@
       "dependencies": "1012",
       "source_event": "DriftDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "drift",
+          "detect",
+          "mismatches"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -38498,23 +38726,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\state_machine.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\network_client.py",
           "services\\oss-service\\app\\integrations\\__init__.py",
-          "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\models\\saga.py",
-          "services\\oss-service\\app\\services\\provisioning.py"
+          "services\\oss-service\\app\\models\\assets.py"
         ],
         "word_hits": [
           "network",
-          "audit"
+          "audit",
+          "assets"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 2,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -38589,12 +38818,13 @@
         "word_hits": [
           "nat",
           "pool",
+          "mgmt",
           "manage"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -38619,12 +38849,12 @@
         "files": [
           "services\\oss-service\\app\\enums.py",
           "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\integrations\\crm_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\models\\subscriber.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\orders\\activation.py"
+          "services\\oss-service\\app\\models\\subscriber.py"
         ],
         "word_hits": [
           "nat",
@@ -38654,18 +38884,28 @@
       "dependencies": "AAA-192",
       "source_event": "TrafficClassified",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "traffic"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -39075,8 +39315,8 @@
           "services\\oss-service\\app\\integrations\\crm_client.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\workforce_client.py",
-          "services\\oss-service\\legacy\\subscribers\\tests.py",
-          "services\\oss-service\\tests\\conftest.py"
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\legacy\\subscribers\\tests.py"
         ],
         "word_hits": [
           "test"
@@ -41194,14 +41434,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\network_client.py",
           "services\\oss-service\\app\\integrations\\__init__.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py",
-          "services\\oss-service\\legacy\\subscribers\\importing\\services.py",
-          "services\\oss-service\\legacy\\subscribers\\migrations\\0003_subscriberimportbatch_subscriberimportrow_and_more.py"
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py"
         ],
         "word_hits": [
           "network",
@@ -41237,10 +41477,10 @@
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\nas_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\subscriber.py",
           "services\\oss-service\\app\\models\\__init__.py",
-          "services\\oss-service\\app\\services\\order_service.py",
-          "services\\oss-service\\app\\services\\provisioning.py"
+          "services\\oss-service\\app\\services\\order_service.py"
         ],
         "word_hits": [
           "subscriber",
@@ -43141,7 +43381,8 @@
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\worker_runner.py",
           "services\\oss-service\\tests\\conftest.py",
-          "services\\oss-service\\tests\\test_api.py"
+          "services\\oss-service\\tests\\test_api.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
           "duct",
@@ -43175,17 +43416,19 @@
         "files": [
           "services\\oss-service\\app\\integrations\\base.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\legacy\\orders\\activation.py",
           "services\\oss-service\\tests\\test_saga.py"
         ],
         "word_hits": [
           "right",
-          "way"
+          "way",
+          "mgmt"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -43211,20 +43454,21 @@
           "services\\oss-service\\app\\cache.py",
           "services\\oss-service\\app\\enums.py",
           "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\ipam_client.py",
-          "services\\oss-service\\app\\integrations\\network_client.py",
-          "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\services\\provisioning.py"
+          "services\\oss-service\\app\\integrations\\network_client.py"
         ],
         "word_hits": [
           "lease",
+          "infra",
           "leasing"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -43244,22 +43488,31 @@
       "dependencies": "OSS-201",
       "source_event": "OwnershipUpdated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\oss-service\\app\\models\\resource.py"
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\resource.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py"
         ],
         "word_hits": [
-          "ownership"
+          "site",
+          "ownership",
+          "infra"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43278,14 +43531,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\models\\base.py",
           "services\\oss-service\\app\\models\\messaging.py",
           "services\\oss-service\\app\\models\\order.py",
           "services\\oss-service\\app\\models\\resource.py",
           "services\\oss-service\\app\\models\\saga.py",
-          "services\\oss-service\\app\\models\\subscriber.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py",
-          "services\\oss-service\\legacy\\subscribers\\importing\\parser.py"
+          "services\\oss-service\\app\\models\\subscriber.py"
         ],
         "word_hits": [
           "mapping",
@@ -43293,8 +43546,8 @@
           "shared"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
+        "route_hit": true,
+        "test_hit": true,
         "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
@@ -43318,20 +43571,23 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\tests\\conftest.py",
           "services\\oss-service\\tests\\test_activation_e2e.py",
           "services\\oss-service\\tests\\test_api.py",
-          "services\\oss-service\\tests\\test_order_events.py",
-          "services\\oss-service\\tests\\test_saga.py"
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
-          "fiber"
+          "fiber",
+          "heatmap"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -43357,17 +43613,19 @@
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\app\\services\\resource_service.py",
           "services\\oss-service\\tests\\test_api.py",
           "services\\oss-service\\tests\\test_resources.py"
         ],
         "word_hits": [
-          "capacity"
+          "capacity",
+          "mgmt"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -43390,23 +43648,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\events.py",
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
-          "services\\oss-service\\app\\integrations\\nas_client.py",
-          "services\\oss-service\\app\\integrations\\network_client.py",
-          "services\\oss-service\\app\\integrations\\__init__.py"
+          "services\\oss-service\\app\\integrations\\nas_client.py"
         ],
         "word_hits": [
           "network",
-          "plan"
+          "plan",
+          "infra"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -43426,18 +43685,30 @@
       "dependencies": "1142",
       "source_event": "CapExLogged",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "capex",
+          "infra"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43457,19 +43728,22 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
           "services\\oss-service\\app\\services\\activation.py",
-          "services\\oss-service\\app\\services\\order_service.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\app\\services\\saga_engine.py",
-          "services\\oss-service\\tests\\test_resources.py"
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\app\\services\\order_service.py"
         ],
         "word_hits": [
+          "infra",
           "returns"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -43489,18 +43763,31 @@
       "dependencies": "804",
       "source_event": "SLAEvaluated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "vendor",
+          "sla",
+          "slas"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43516,18 +43803,30 @@
       "dependencies": "823",
       "source_event": "PerformanceMeasured",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "vendor",
+          "performance"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43543,18 +43842,31 @@
       "dependencies": "812",
       "source_event": "PenaltyApplied",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "vendor",
+          "penalties",
+          "sla"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -43573,20 +43885,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\events.py",
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\base.py",
-          "services\\oss-service\\tests\\conftest.py",
-          "services\\oss-service\\tests\\test_api.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py"
         ],
         "word_hits": [
+          "vendor",
           "contracts",
           "manage"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -43613,19 +43929,20 @@
           "services\\oss-service\\app\\events.py",
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\state_machine.py",
           "services\\oss-service\\app\\tasks.py",
-          "services\\oss-service\\app\\integrations\\bss_client.py",
-          "services\\oss-service\\app\\models\\subscriber.py"
+          "services\\oss-service\\app\\integrations\\bss_client.py"
         ],
         "word_hits": [
+          "vendor",
           "billing",
           "payment"
         ],
         "event_hit": false,
         "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -43645,18 +43962,31 @@
       "dependencies": "925",
       "source_event": "RiskEvaluated",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "vendor",
+          "risk",
+          "vendors"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -45569,17 +45899,20 @@
         "files": [
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\tests\\conftest.py",
           "services\\oss-service\\tests\\test_api.py",
+          "services\\oss-service\\tests\\test_assets.py",
           "services\\oss-service\\tests\\test_saga.py"
         ],
         "word_hits": [
+          "mgmt",
           "manage"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -45613,6 +45946,7 @@
         ],
         "word_hits": [
           "route",
+          "mgmt",
           "define",
           "routing",
           "import",
@@ -45621,7 +45955,7 @@
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 5,
+        "hit_count": 6,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -45644,7 +45978,11 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\nas_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\tests\\test_assets.py",
           "services\\oss-service\\tests\\test_saga.py"
         ],
         "word_hits": [
@@ -45678,6 +46016,7 @@
         "files": [
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
           "services\\oss-service\\legacy\\orders\\admin.py",
           "services\\oss-service\\legacy\\subscribers\\admin.py",
           "services\\oss-service\\legacy\\subscribers\\import_views.py",
@@ -45685,13 +46024,14 @@
           "services\\oss-service\\tests\\test_api.py"
         ],
         "word_hits": [
+          "mgmt",
           "manage",
           "isp"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -45726,12 +46066,13 @@
         "word_hits": [
           "integration",
           "exchange",
-          "connection"
+          "connection",
+          "mgmt"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 3,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -45756,15 +46097,21 @@
         "files": [
           "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
-          "services\\oss-service\\app\\services\\provisioning.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\app\\services\\provisioning.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
+          "traffic",
           "flows"
         ],
         "event_hit": false,
         "route_hit": true,
-        "test_hit": false,
-        "hit_count": 1,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -45787,22 +46134,24 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\legacy\\orders\\urls.py",
           "services\\oss-service\\legacy\\subscribers\\import_serializers.py",
-          "services\\oss-service\\legacy\\subscribers\\import_urls.py",
-          "services\\oss-service\\legacy\\subscribers\\urls.py",
-          "services\\oss-service\\tests\\conftest.py",
-          "services\\oss-service\\tests\\test_order_states.py",
-          "services\\oss-service\\tests\\test_saga.py"
+          "services\\oss-service\\legacy\\subscribers\\import_urls.py"
         ],
         "word_hits": [
-          "path"
+          "path",
+          "optimize",
+          "traffic"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -45822,18 +46171,30 @@
       "dependencies": "NMS-251",
       "source_event": "AttackDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "ddos",
+          "detect"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -45852,22 +46213,23 @@
       "status": "BLOCKED_EXTERNAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\base.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
           "services\\oss-service\\app\\integrations\\crm_client.py",
-          "services\\oss-service\\app\\integrations\\ipam_client.py",
-          "services\\oss-service\\app\\integrations\\nas_client.py",
-          "services\\oss-service\\app\\integrations\\network_client.py",
-          "services\\oss-service\\app\\integrations\\nms_client.py"
+          "services\\oss-service\\app\\integrations\\ipam_client.py"
         ],
         "word_hits": [
-          "integration"
+          "integration",
+          "ddos"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -47446,16 +47808,22 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\integrations\\nas_client.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\tests\\test_assets.py",
           "services\\oss-service\\tests\\test_saga.py"
         ],
         "word_hits": [
-          "route"
+          "route",
+          "detect"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 1,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -47515,18 +47883,24 @@
       "dependencies": "1204",
       "source_event": "PeerOptimized",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "optimize"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 1,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -47542,22 +47916,33 @@
       "dependencies": "1206",
       "source_event": "CostOptimized",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\oss-service\\app\\tasks.py"
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\tasks.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
-          "routing"
+          "traffic",
+          "cost",
+          "optimize",
+          "routing",
+          "performance"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -47577,22 +47962,24 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\database.py",
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\integrations\\bss_client.py",
           "services\\oss-service\\app\\integrations\\crm_client.py",
-          "services\\oss-service\\legacy\\orders\\activation.py",
-          "services\\oss-service\\legacy\\orders\\models.py",
-          "services\\oss-service\\legacy\\orders\\migrations\\0001_initial.py",
-          "services\\oss-service\\legacy\\subscribers\\admin.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py"
         ],
         "word_hits": [
+          "ddos",
           "auto",
-          "block"
+          "block",
+          "attack"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -47612,22 +47999,30 @@
       "dependencies": "1019",
       "source_event": "BotnetDetected",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
         "files": [
-          "services\\oss-service\\legacy\\orders\\transitions.py"
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\legacy\\orders\\transitions.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
         ],
         "word_hits": [
-          "bot"
+          "bot",
+          "traffic"
         ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 1,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 2,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -53433,12 +53828,12 @@
         "files": [
           "services\\oss-service\\app\\cache.py",
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\state_machine.py",
           "services\\oss-service\\app\\tasks.py",
           "services\\oss-service\\app\\worker_runner.py",
-          "services\\oss-service\\app\\integrations\\base.py",
-          "services\\oss-service\\app\\integrations\\bss_client.py"
+          "services\\oss-service\\app\\integrations\\base.py"
         ],
         "word_hits": [
           "fiber",
@@ -53471,14 +53866,14 @@
       "status": "PARTIAL",
       "evidence": {
         "files": [
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\tasks.py",
           "services\\oss-service\\app\\integrations\\fakes.py",
           "services\\oss-service\\app\\integrations\\network_client.py",
           "services\\oss-service\\app\\integrations\\workforce_client.py",
           "services\\oss-service\\app\\integrations\\__init__.py",
-          "services\\oss-service\\app\\models\\resource.py",
-          "services\\oss-service\\app\\services\\provisioning.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py"
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\resource.py"
         ],
         "word_hits": [
           "network",
@@ -55475,23 +55870,24 @@
         "files": [
           "services\\oss-service\\app\\cache.py",
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
           "services\\oss-service\\app\\schemas.py",
           "services\\oss-service\\app\\state_machine.py",
           "services\\oss-service\\app\\tasks.py",
-          "services\\oss-service\\app\\worker_runner.py",
-          "services\\oss-service\\app\\integrations\\base.py",
-          "services\\oss-service\\app\\integrations\\bss_client.py"
+          "services\\oss-service\\app\\worker_runner.py"
         ],
         "word_hits": [
           "fiber",
           "aging",
+          "detect",
           "over",
           "time"
         ],
         "event_hit": false,
         "route_hit": false,
         "test_hit": true,
-        "hit_count": 4,
+        "hit_count": 5,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
@@ -55511,18 +55907,31 @@
       "dependencies": "236",
       "source_event": "HeatmapRendered",
       "backend_treatment": "FULL BACKEND",
-      "status": "MISSING",
+      "status": "PARTIAL",
       "evidence": {
-        "files": [],
-        "word_hits": [],
+        "files": [
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
+          "services\\oss-service\\app\\models\\assets.py",
+          "services\\oss-service\\app\\models\\__init__.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
+          "services\\oss-service\\migrations\\versions\\0002_oss_batch3.py",
+          "services\\oss-service\\tests\\test_assets.py"
+        ],
+        "word_hits": [
+          "risk",
+          "heatmap",
+          "infra"
+        ],
         "event_hit": false,
-        "route_hit": false,
-        "test_hit": false,
-        "hit_count": 0,
+        "route_hit": true,
+        "test_hit": true,
+        "hit_count": 3,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,
-        "missing_acceptance": "no implementation evidence found in owning service"
+        "missing_acceptance": "partial evidence; acceptance criteria incomplete"
       }
     },
     {
@@ -55543,12 +55952,12 @@
         "files": [
           "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\models\\resource.py",
+          "services\\oss-service\\app\\services\\assets_service.py",
           "services\\oss-service\\app\\services\\resource_service.py",
           "services\\oss-service\\app\\services\\saga_engine.py",
           "services\\oss-service\\legacy\\orders\\urls.py",
           "services\\oss-service\\legacy\\subscribers\\import_urls.py",
-          "services\\oss-service\\legacy\\subscribers\\models.py",
-          "services\\oss-service\\legacy\\subscribers\\tests.py"
+          "services\\oss-service\\legacy\\subscribers\\models.py"
         ],
         "word_hits": [
           "outage",
@@ -55619,20 +56028,24 @@
       "evidence": {
         "files": [
           "services\\oss-service\\app\\enums.py",
+          "services\\oss-service\\app\\events.py",
+          "services\\oss-service\\app\\main.py",
+          "services\\oss-service\\app\\security.py",
           "services\\oss-service\\app\\state_machine.py",
           "services\\oss-service\\app\\integrations\\aaa_client.py",
           "services\\oss-service\\app\\integrations\\crm_client.py",
-          "services\\oss-service\\app\\services\\saga_engine.py",
-          "services\\oss-service\\tests\\test_activation_e2e.py"
+          "services\\oss-service\\app\\models\\assets.py"
         ],
         "word_hits": [
+          "asset",
           "lifecycle",
+          "optimize",
           "replacement"
         ],
         "event_hit": false,
-        "route_hit": false,
+        "route_hit": true,
         "test_hit": true,
-        "hit_count": 2,
+        "hit_count": 4,
         "tenant_evidence": true,
         "audit_evidence": false,
         "permission_evidence": true,

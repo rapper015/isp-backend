@@ -10,6 +10,25 @@ from .saga import (
     ManualIntervention,
 )
 from .subscriber import ServiceSubscription
+from .assets import (
+    Vendor,
+    NetworkAsset,
+    FirmwareLog,
+    SplitterNode,
+    ConfigSnapshot,
+    ConfigPushRequest,
+    EnterpriseSLA,
+    VPNService,
+    BandwidthOnDemand,
+    CapExRecord,
+    InfraRisk,
+    DDoSAttack,
+    TrafficCost,
+    IoTDeviceTelemetry,
+    MOSScore,
+    RoomBandwidth,
+    PMSProperty,
+)
 
 __all__ = [
     "Timestamped",
@@ -28,4 +47,21 @@ __all__ = [
     "WorkflowEvent",
     "ManualIntervention",
     "ServiceSubscription",
+    "Vendor",
+    "NetworkAsset",
+    "FirmwareLog",
+    "SplitterNode",
+    "ConfigSnapshot",
+    "ConfigPushRequest",
+    "EnterpriseSLA",
+    "VPNService",
+    "BandwidthOnDemand",
+    "CapExRecord",
+    "InfraRisk",
+    "DDoSAttack",
+    "TrafficCost",
+    "IoTDeviceTelemetry",
+    "MOSScore",
+    "RoomBandwidth",
+    "PMSProperty",
 ]

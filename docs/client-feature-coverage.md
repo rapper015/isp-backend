@@ -1,6 +1,6 @@
 # Client Feature Coverage — 1,500 reconciled rows
 
-Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=52, MISSING=179, PARTIAL=1106
+Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=29, CONDITIONAL_FUTURE=52, MISSING=149, PARTIAL=1135
 
 | ID | Owner | Access | Priority | Module / Submodule | Feature | Status |
 |---|---|---|---|---|---|---|
@@ -208,11 +208,11 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=5
 | 202 | oss-service | NOC | P0 | OSS / Inventory | Asset Update | PARTIAL |
 | 203 | oss-service | NOC | P1 | OSS / Inventory | Asset Decommission | PARTIAL |
 | 204 | oss-service | NOC | P0 | OSS / Inventory | Asset Categorization | PARTIAL |
-| 205 | oss-service | NOC | P0 | OSS / Inventory | Vendor Management | MISSING |
+| 205 | oss-service | NOC | P0 | OSS / Inventory | Vendor Management | PARTIAL |
 | 206 | oss-service | NOC | P0 | OSS / Inventory | Serial Tracking | PARTIAL |
 | 207 | oss-service | NOC | P1 | OSS / Inventory | Warranty Tracking | PARTIAL |
-| 208 | oss-service | NOC | P0 | OSS / Inventory | Firmware Tracking | MISSING |
-| 209 | oss-service | NOC | P1 | OSS / Inventory | Device Templates | MISSING |
+| 208 | oss-service | NOC | P0 | OSS / Inventory | Firmware Tracking | PARTIAL |
+| 209 | oss-service | NOC | P1 | OSS / Inventory | Device Templates | PARTIAL |
 | 210 | oss-service | NOC | P0 | OSS / Inventory | Auto Discovery | PARTIAL |
 | 211 | oss-service | NOC | P0 | OSS / Topology | Network Topology View | PARTIAL |
 | 212 | oss-service | NOC | P0 | OSS / Topology | Layered Topology | PARTIAL |
@@ -229,12 +229,12 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=5
 | 223 | ipam-service | NOC | P1 | OSS / IPAM | DNS Integration | BLOCKED_EXTERNAL |
 | 224 | oss-service | NOC | P0 | OSS / GIS | GIS Mapping | PARTIAL |
 | 225 | oss-service | NOC | P0 | OSS / GIS | Geo Tagging | PARTIAL |
-| 226 | oss-service | NOC | P1 | OSS / GIS | Coverage Mapping | MISSING |
+| 226 | oss-service | NOC | P1 | OSS / GIS | Coverage Mapping | PARTIAL |
 | 227 | oss-service | NOC | P1 | OSS / GIS | Heat Maps | PARTIAL |
 | 228 | oss-service | NOC | P0 | OSS / Fiber (FTTx) | OLT Management | PARTIAL |
 | 229 | oss-service | NOC | P0 | OSS / Fiber (FTTx) | ONT Management | PARTIAL |
 | 230 | oss-service | NOC | P0 | OSS / Fiber (FTTx) | PON Port Mapping | PARTIAL |
-| 231 | oss-service | NOC | P0 | OSS / Fiber (FTTx) | Splitter Management | MISSING |
+| 231 | oss-service | NOC | P0 | OSS / Fiber (FTTx) | Splitter Management | PARTIAL |
 | 232 | oss-service | NOC | P0 | OSS / Fiber (FTTx) | Fiber Route Planning | PARTIAL |
 | 233 | oss-service | NOC | P0 | OSS / Fiber (FTTx) | Fiber Link Mapping | PARTIAL |
 | 234 | oss-service | NOC | P0 | OSS / Fiber (FTTx) | Fiber Capacity Mgmt | PARTIAL |
@@ -249,9 +249,9 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=5
 | 243 | oss-service | NOC | P0 | OSS / Capacity | Network Capacity Planning | PARTIAL |
 | 244 | oss-service | NOC | P0 | OSS / Capacity | Utilization Tracking | PARTIAL |
 | 245 | oss-service | NOC | P0 | OSS / Capacity | Threshold Alerts | PARTIAL |
-| 246 | oss-service | NOC | P0 | OSS / Automation | Config Push | MISSING |
-| 247 | oss-service | NOC | P0 | OSS / Automation | Backup Configs | PARTIAL |
-| 248 | oss-service | NOC | P0 | OSS / Automation | Config Drift Detection | MISSING |
+| 246 | oss-service | NOC | P0 | OSS / Automation | Config Push | PARTIAL |
+| 247 | oss-service | NOC | P0 | OSS / Automation | Backup Configs | COMPLETE |
+| 248 | oss-service | NOC | P0 | OSS / Automation | Config Drift Detection | PARTIAL |
 | 249 | oss-service | SYS | P0 | OSS / Integration | Northbound APIs | BLOCKED_EXTERNAL |
 | 250 | oss-service | SYS | P0 | OSS / Integration | Southbound Adapters | BLOCKED_EXTERNAL |
 | 251 | nms-service | NOC | P0 | NMS / Monitoring | Device Monitoring | PARTIAL |
@@ -670,16 +670,16 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=5
 | 664 | bss-service | SYS | P1 | Telco Services / VoIP | VoIP Billing | PARTIAL |
 | 665 | oss-service | SYS | P1 | Telco Services / VoIP | Call Routing | PARTIAL |
 | 666 | oss-service | TA | P1 | Telco Services / VoIP | DID Management | PARTIAL |
-| 667 | oss-service | SYS | P1 | Telco Services / VoIP | Quality Monitoring | MISSING |
+| 667 | oss-service | SYS | P1 | Telco Services / VoIP | Quality Monitoring | PARTIAL |
 | 668 | oss-service | TA | P1 | Telco Services / CDN | CDN Integration | BLOCKED_EXTERNAL |
 | 669 | oss-service | SYS | P1 | Telco Services / CDN | Cache Management | PARTIAL |
-| 670 | oss-service | SYS | P1 | Telco Services / CDN | Traffic Offloading | MISSING |
+| 670 | oss-service | SYS | P1 | Telco Services / CDN | Traffic Offloading | PARTIAL |
 | 671 | oss-service | SYS | P0 | Telco Services / Enterprise | MPLS Provisioning | PARTIAL |
 | 672 | oss-service | SYS | P0 | Telco Services / Enterprise | Leased Line Provisioning | PARTIAL |
-| 673 | oss-service | SYS | P0 | Telco Services / Enterprise | VPN Services | MISSING |
+| 673 | oss-service | SYS | P0 | Telco Services / Enterprise | VPN Services | PARTIAL |
 | 674 | oss-service | SYS | P1 | Telco Services / Enterprise | SD-WAN Integration | BLOCKED_EXTERNAL |
-| 675 | oss-service | SYS | P0 | Telco Services / Enterprise | Bandwidth on Demand | MISSING |
-| 676 | oss-service | SYS | P0 | Telco Services / Enterprise | SLA Contracts | MISSING |
+| 675 | oss-service | SYS | P0 | Telco Services / Enterprise | Bandwidth on Demand | PARTIAL |
+| 676 | oss-service | SYS | P0 | Telco Services / Enterprise | SLA Contracts | PARTIAL |
 | 677 | bss-service | FIN | P1 | Monetization / API Monetization | API Billing | PARTIAL |
 | 678 | bss-service | FIN | P1 | Monetization / Marketplace | App Billing | BLOCKED_EXTERNAL |
 | 679 | bss-service | FIN | P0 | Monetization / Partner | Partner Revenue Share | PARTIAL |
@@ -710,7 +710,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=5
 | 704 | oss-service | SYS | P0 | Vertical / IoT | IoT SIM/eSIM Mgmt | PARTIAL |
 | 705 | oss-service | SYS | P1 | Vertical / IoT | LPWAN Integration | BLOCKED_EXTERNAL |
 | 706 | oss-service | SYS | P0 | Vertical / IoT | IoT Data Ingestion | PARTIAL |
-| 707 | oss-service | SYS | P0 | Vertical / IoT | Device Telemetry | MISSING |
+| 707 | oss-service | SYS | P0 | Vertical / IoT | Device Telemetry | PARTIAL |
 | 708 | oss-service | SYS | P1 | Vertical / IoT | IoT Policy Mgmt | PARTIAL |
 | 709 | oss-service | SYS | P0 | Vertical / IoT | IoT Security | PARTIAL |
 | 710 | oss-service | SYS | P0 | Vertical / IoT | IoT Billing | PARTIAL |
@@ -719,19 +719,19 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=5
 | 713 | oss-service | SYS | P1 | Vertical / Smart City | Surveillance Integration | BLOCKED_EXTERNAL |
 | 714 | oss-service | SYS | P1 | Vertical / Smart City | Traffic Mgmt Integration | BLOCKED_EXTERNAL |
 | 715 | oss-service | SYS | P0 | Vertical / Smart City | Public WiFi Mgmt | PARTIAL |
-| 716 | oss-service | SYS | P1 | Vertical / Smart City | Sensor Network Mgmt | MISSING |
-| 717 | oss-service | TA | P0 | Vertical / Hospitality | Hotel Property Mgmt | MISSING |
+| 716 | oss-service | SYS | P1 | Vertical / Smart City | Sensor Network Mgmt | PARTIAL |
+| 717 | oss-service | TA | P0 | Vertical / Hospitality | Hotel Property Mgmt | PARTIAL |
 | 718 | oss-service | SYS | P0 | Vertical / Hospitality | Guest WiFi Provisioning | PARTIAL |
 | 719 | oss-service | SYS | P0 | Vertical / Hospitality | Room-based Billing | PARTIAL |
 | 720 | oss-service | SYS | P0 | Vertical / Hospitality | Voucher Mgmt | PARTIAL |
 | 721 | oss-service | SYS | P0 | Vertical / Hospitality | Captive Portal | PARTIAL |
-| 722 | oss-service | SYS | P0 | Vertical / Hospitality | Bandwidth Control | MISSING |
+| 722 | oss-service | SYS | P0 | Vertical / Hospitality | Bandwidth Control | PARTIAL |
 | 723 | oss-service | TA | P0 | Vertical / Enterprise | Campus Network Mgmt | PARTIAL |
 | 724 | oss-service | SYS | P0 | Vertical / Enterprise | VLAN Segmentation | PARTIAL |
 | 725 | oss-service | SYS | P0 | Vertical / Enterprise | Guest Access Mgmt | PARTIAL |
 | 726 | oss-service | SYS | P0 | Vertical / Enterprise | NAC Integration | BLOCKED_EXTERNAL |
 | 727 | oss-service | SYS | P0 | Vertical / QoE | QoE Monitoring | PARTIAL |
-| 728 | oss-service | SYS | P0 | Vertical / QoE | MOS Scoring | MISSING |
+| 728 | oss-service | SYS | P0 | Vertical / QoE | MOS Scoring | PARTIAL |
 | 729 | oss-service | SYS | P1 | Vertical / QoE | App Experience Tracking | PARTIAL |
 | 730 | oss-service | SYS | P0 | Vertical / QoE | SLA Experience Mapping | PARTIAL |
 | 731 | aiops-service | SYS | P1 | Platform / Digital Twin | Network Digital Twin | MISSING |
@@ -1016,13 +1016,13 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=5
 | 1010 | oss-service | TA | P0 | Catalog / Resource | Resource Catalog | PARTIAL |
 | 1011 | oss-service | SYS | P0 | Catalog / Mapping | Service-Resource Mapping | PARTIAL |
 | 1012 | oss-service | SYS | P0 | Inventory / Reconciliation | Inventory Sync | PARTIAL |
-| 1013 | oss-service | SYS | P0 | Inventory / Reconciliation | Drift Detection | MISSING |
+| 1013 | oss-service | SYS | P0 | Inventory / Reconciliation | Drift Detection | PARTIAL |
 | 1014 | oss-service | SYS | P1 | Inventory / Reconciliation | Auto Correction | PARTIAL |
 | 1015 | oss-service | SYS | P0 | Inventory / Assurance | Network Audit | PARTIAL |
 | 1016 | oss-service | NOC | P0 | Core Network / BNG/BRAS | Subscriber Session Control | PARTIAL |
 | 1017 | oss-service | NOC | P0 | Core Network / CGNAT | NAT Pool Mgmt | PARTIAL |
 | 1018 | oss-service | NOC | P0 | Core Network / CGNAT | NAT Logging | PARTIAL |
-| 1019 | oss-service | SYS | P1 | Core Network / DPI | Traffic Classification | MISSING |
+| 1019 | oss-service | SYS | P1 | Core Network / DPI | Traffic Classification | PARTIAL |
 | 1020 | oss-service | SYS | P1 | Core Network / DPI | URL Filtering | PARTIAL |
 | 1021 | oss-service | SYS | P0 | Core Network / PCRF/PCF | Policy Control Engine | PARTIAL |
 | 1022 | bss-service | SYS | P0 | Wholesale / Billing | Interconnect Billing | PARTIAL |
@@ -1141,19 +1141,19 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=5
 | 1135 | oss-service | SYS | P0 | Infra / Physical | Duct Management | PARTIAL |
 | 1136 | oss-service | SYS | P0 | Infra / Physical | Right of Way Mgmt | PARTIAL |
 | 1137 | oss-service | SYS | P0 | Infra / Physical | Lease Management | PARTIAL |
-| 1138 | oss-service | SYS | P0 | Infra / Physical | Site Ownership | MISSING |
+| 1138 | oss-service | SYS | P0 | Infra / Physical | Site Ownership | PARTIAL |
 | 1139 | oss-service | SYS | P1 | Infra / Physical | Utility Mapping | PARTIAL |
 | 1140 | oss-service | SYS | P0 | Infra / Capacity | Fiber Utilization Heatmap | PARTIAL |
 | 1141 | oss-service | SYS | P0 | Infra / Capacity | Spare Capacity Mgmt | PARTIAL |
 | 1142 | oss-service | SYS | P0 | Infra / Expansion | Network Expansion Planner | PARTIAL |
-| 1143 | oss-service | SYS | P0 | Infra / Expansion | CapEx Tracking | MISSING |
+| 1143 | oss-service | SYS | P0 | Infra / Expansion | CapEx Tracking | PARTIAL |
 | 1144 | oss-service | SYS | P0 | Infra / Expansion | ROI Analysis | PARTIAL |
-| 1145 | oss-service | SYS | P0 | Vendor / Mgmt | Vendor SLA Tracking | MISSING |
-| 1146 | oss-service | SYS | P0 | Vendor / Mgmt | Vendor Performance | MISSING |
-| 1147 | oss-service | SYS | P0 | Vendor / Mgmt | Vendor Penalties | MISSING |
+| 1145 | oss-service | SYS | P0 | Vendor / Mgmt | Vendor SLA Tracking | PARTIAL |
+| 1146 | oss-service | SYS | P0 | Vendor / Mgmt | Vendor Performance | PARTIAL |
+| 1147 | oss-service | SYS | P0 | Vendor / Mgmt | Vendor Penalties | PARTIAL |
 | 1148 | oss-service | SYS | P0 | Vendor / Mgmt | Vendor Contracts | PARTIAL |
 | 1149 | oss-service | SYS | P0 | Vendor / Mgmt | Vendor Billing | PARTIAL |
-| 1150 | oss-service | SYS | P1 | Vendor / Mgmt | Vendor Risk Monitor | MISSING |
+| 1150 | oss-service | SYS | P1 | Vendor / Mgmt | Vendor Risk Monitor | PARTIAL |
 | 1151 | nms-service | SYS | P0 | SRE / Reliability | Error Budget Enforcement | PARTIAL |
 | 1152 | nms-service | SYS | P0 | SRE / Reliability | SLA Burn Rate | PARTIAL |
 | 1153 | nms-service | SYS | P0 | SRE / Reliability | Incident Trend Analysis | PARTIAL |
@@ -1211,7 +1211,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=5
 | 1205 | oss-service | NOC | P0 | Core Network / Peering | IX Integration | BLOCKED_EXTERNAL |
 | 1206 | oss-service | NOC | P0 | Core Network / Traffic Engg | Traffic Engineering Policies | PARTIAL |
 | 1207 | oss-service | NOC | P1 | Core Network / Traffic Engg | Path Optimization | PARTIAL |
-| 1208 | oss-service | SYS | P0 | Core Network / Security | DDoS Detection | MISSING |
+| 1208 | oss-service | SYS | P0 | Core Network / Security | DDoS Detection | PARTIAL |
 | 1209 | oss-service | SYS | P0 | Core Network / Security | Scrubbing Integration | BLOCKED_EXTERNAL |
 | 1210 | bss-service | FIN | P0 | Core Network / Billing | IP Transit Billing Awareness | PARTIAL |
 | 1211 | data-warehouse-service | NOC | P0 | Core Network / IP Analytics | IPv4 Exhaustion Tracker | PARTIAL |
@@ -1256,10 +1256,10 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=5
 | 1250 | aiops-service | SYS | P1 | Platform / Intelligence | Business Impact Predictor | PARTIAL |
 | 1251 | oss-service | NOC | P0 | Core Network / Routing | BGP Route Leak Detection | PARTIAL |
 | 1252 | oss-service | NOC | P0 | Core Network / Routing | RPKI Validation | PARTIAL |
-| 1253 | oss-service | NOC | P1 | Core Network / Peering | Automated Peering Optimization | MISSING |
-| 1254 | oss-service | NOC | P0 | Core Network / Traffic Engg | Traffic Cost Optimization | MISSING |
+| 1253 | oss-service | NOC | P1 | Core Network / Peering | Automated Peering Optimization | PARTIAL |
+| 1254 | oss-service | NOC | P0 | Core Network / Traffic Engg | Traffic Cost Optimization | PARTIAL |
 | 1255 | oss-service | SYS | P0 | Core Network / Security | DDoS Auto Mitigation | PARTIAL |
-| 1256 | oss-service | SYS | P1 | Core Network / Security | Botnet Detection | MISSING |
+| 1256 | oss-service | SYS | P1 | Core Network / Security | Botnet Detection | PARTIAL |
 | 1257 | data-warehouse-service | SYS | P0 | Core Network / Analytics | Traffic Behavior Analysis | PARTIAL |
 | 1258 | data-warehouse-service | SYS | P1 | Core Network / Analytics | Subscriber Network Profiling | PARTIAL |
 | 1259 | aaa-service | NOC | P1 | Access / WISP | Terrain-Aware Planning | PARTIAL |
@@ -1465,7 +1465,7 @@ Total: 1500 · Statuses: BLOCKED_EXTERNAL=135, COMPLETE=28, CONDITIONAL_FUTURE=5
 | 1459 | crm-service | SYS | P1 | CX / Advanced | Experience Recovery Engine | MISSING |
 | 1460 | crm-service | SYS | P1 | CX / Loyalty | Behavioral Loyalty Scoring | MISSING |
 | 1461 | oss-service | SYS | P1 | OSS / Advanced | Fiber Aging Analytics | PARTIAL |
-| 1462 | oss-service | SYS | P0 | OSS / Advanced | Infrastructure Risk Heatmap | MISSING |
+| 1462 | oss-service | SYS | P0 | OSS / Advanced | Infrastructure Risk Heatmap | PARTIAL |
 | 1463 | oss-service | SYS | P0 | OSS / Advanced | Planned vs Unplanned Outage Analytics | PARTIAL |
 | 1464 | oss-service | SYS | P1 | OSS / Advanced | Maintenance Impact Predictor | PARTIAL |
 | 1465 | oss-service | SYS | P1 | OSS / Advanced | Asset Lifecycle Optimization | PARTIAL |

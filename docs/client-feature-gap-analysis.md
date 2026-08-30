@@ -4,11 +4,11 @@
 
 | Status | Count |
 |---|---|
-| PARTIAL | 1106 |
-| MISSING | 179 |
+| PARTIAL | 1135 |
+| MISSING | 149 |
 | BLOCKED_EXTERNAL | 135 |
 | CONDITIONAL_FUTURE | 52 |
-| COMPLETE | 28 |
+| COMPLETE | 29 |
 
 ## By owner
 | Owner | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
@@ -21,15 +21,15 @@
 | data-warehouse-service | 2 | 2 | 0 | 7 | 55 |
 | ipam-service | 2 | 0 | 0 | 0 | 6 |
 | nms-service | 5 | 1 | 0 | 8 | 100 |
-| oss-service | 15 | 0 | 0 | 32 | 117 |
+| oss-service | 15 | 1 | 0 | 2 | 146 |
 | siem-service | 2 | 1 | 0 | 8 | 98 |
 | workforce-service | 1 | 6 | 0 | 3 | 29 |
 
 ## By priority
 | Priority | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
 |---|---|---|---|---|---|
-| P0 | 93 | 24 | 1 | 94 | 798 |
-| P1 | 42 | 4 | 8 | 83 | 301 |
+| P0 | 93 | 25 | 1 | 73 | 818 |
+| P1 | 42 | 4 | 8 | 74 | 310 |
 | P2 | 0 | 0 | 41 | 2 | 7 |
 | P3 | 0 | 0 | 2 | 0 | 0 |
 
@@ -207,11 +207,11 @@
 - **202** [P0] oss-service: Asset Update (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **203** [P1] oss-service: Asset Decommission (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **204** [P0] oss-service: Asset Categorization (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **205** [P0] oss-service: Vendor Management (MISSING) — no implementation evidence found in owning service
+- **205** [P0] oss-service: Vendor Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **206** [P0] oss-service: Serial Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **207** [P1] oss-service: Warranty Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **208** [P0] oss-service: Firmware Tracking (MISSING) — no implementation evidence found in owning service
-- **209** [P1] oss-service: Device Templates (MISSING) — no implementation evidence found in owning service
+- **208** [P0] oss-service: Firmware Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **209** [P1] oss-service: Device Templates (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **210** [P0] oss-service: Auto Discovery (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **211** [P0] oss-service: Network Topology View (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **212** [P0] oss-service: Layered Topology (PARTIAL) — read-model API present but acceptance criteria incomplete
@@ -226,12 +226,12 @@
 - **221** [P0] ipam-service: IPv6 Support (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **224** [P0] oss-service: GIS Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **225** [P0] oss-service: Geo Tagging (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **226** [P1] oss-service: Coverage Mapping (MISSING) — no implementation evidence found in owning service
+- **226** [P1] oss-service: Coverage Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **227** [P1] oss-service: Heat Maps (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **228** [P0] oss-service: OLT Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **229** [P0] oss-service: ONT Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **230** [P0] oss-service: PON Port Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **231** [P0] oss-service: Splitter Management (MISSING) — no implementation evidence found in owning service
+- **231** [P0] oss-service: Splitter Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **232** [P0] oss-service: Fiber Route Planning (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **233** [P0] oss-service: Fiber Link Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **234** [P0] oss-service: Fiber Capacity Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -245,9 +245,8 @@
 - **243** [P0] oss-service: Network Capacity Planning (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **244** [P0] oss-service: Utilization Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **245** [P0] oss-service: Threshold Alerts (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **246** [P0] oss-service: Config Push (MISSING) — no implementation evidence found in owning service
-- **247** [P0] oss-service: Backup Configs (PARTIAL) — deployment manifests present; per-feature service control pending
-- **248** [P0] oss-service: Config Drift Detection (MISSING) — no implementation evidence found in owning service
+- **246** [P0] oss-service: Config Push (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **248** [P0] oss-service: Config Drift Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **251** [P0] nms-service: Device Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **252** [P0] nms-service: Interface Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **253** [P0] nms-service: Bandwidth Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -577,14 +576,14 @@
 - **664** [P1] bss-service: VoIP Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **665** [P1] oss-service: Call Routing (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **666** [P1] oss-service: DID Management (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **667** [P1] oss-service: Quality Monitoring (MISSING) — no implementation evidence found in owning service
+- **667** [P1] oss-service: Quality Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **669** [P1] oss-service: Cache Management (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **670** [P1] oss-service: Traffic Offloading (MISSING) — no implementation evidence found in owning service
+- **670** [P1] oss-service: Traffic Offloading (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **671** [P0] oss-service: MPLS Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **672** [P0] oss-service: Leased Line Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **673** [P0] oss-service: VPN Services (MISSING) — no implementation evidence found in owning service
-- **675** [P0] oss-service: Bandwidth on Demand (MISSING) — no implementation evidence found in owning service
-- **676** [P0] oss-service: SLA Contracts (MISSING) — no implementation evidence found in owning service
+- **673** [P0] oss-service: VPN Services (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **675** [P0] oss-service: Bandwidth on Demand (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **676** [P0] oss-service: SLA Contracts (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **677** [P1] bss-service: API Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **679** [P0] bss-service: Partner Revenue Share (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **680** [P0] bss-service: Service Catalog (MISSING) — no implementation evidence found in owning service
@@ -613,24 +612,24 @@
 - **703** [P0] oss-service: Device Lifecycle Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **704** [P0] oss-service: IoT SIM/eSIM Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **706** [P0] oss-service: IoT Data Ingestion (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **707** [P0] oss-service: Device Telemetry (MISSING) — no implementation evidence found in owning service
+- **707** [P0] oss-service: Device Telemetry (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **708** [P1] oss-service: IoT Policy Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **709** [P0] oss-service: IoT Security (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **710** [P0] oss-service: IoT Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **711** [P1] oss-service: Smart City Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
 - **715** [P0] oss-service: Public WiFi Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **716** [P1] oss-service: Sensor Network Mgmt (MISSING) — no implementation evidence found in owning service
-- **717** [P0] oss-service: Hotel Property Mgmt (MISSING) — no implementation evidence found in owning service
+- **716** [P1] oss-service: Sensor Network Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **717** [P0] oss-service: Hotel Property Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **718** [P0] oss-service: Guest WiFi Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **719** [P0] oss-service: Room-based Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **720** [P0] oss-service: Voucher Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **721** [P0] oss-service: Captive Portal (PARTIAL) — read-model API present but acceptance criteria incomplete
-- **722** [P0] oss-service: Bandwidth Control (MISSING) — no implementation evidence found in owning service
+- **722** [P0] oss-service: Bandwidth Control (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **723** [P0] oss-service: Campus Network Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **724** [P0] oss-service: VLAN Segmentation (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **725** [P0] oss-service: Guest Access Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **727** [P0] oss-service: QoE Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **728** [P0] oss-service: MOS Scoring (MISSING) — no implementation evidence found in owning service
+- **728** [P0] oss-service: MOS Scoring (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **729** [P1] oss-service: App Experience Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **730** [P0] oss-service: SLA Experience Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **731** [P1] aiops-service: Network Digital Twin (MISSING) — no implementation evidence found in owning service
@@ -850,13 +849,13 @@
 - **1010** [P0] oss-service: Resource Catalog (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1011** [P0] oss-service: Service-Resource Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1012** [P0] oss-service: Inventory Sync (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1013** [P0] oss-service: Drift Detection (MISSING) — no implementation evidence found in owning service
+- **1013** [P0] oss-service: Drift Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1014** [P1] oss-service: Auto Correction (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1015** [P0] oss-service: Network Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1016** [P0] oss-service: Subscriber Session Control (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1017** [P0] oss-service: NAT Pool Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1018** [P0] oss-service: NAT Logging (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1019** [P1] oss-service: Traffic Classification (MISSING) — no implementation evidence found in owning service
+- **1019** [P1] oss-service: Traffic Classification (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1020** [P1] oss-service: URL Filtering (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1021** [P0] oss-service: Policy Control Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1022** [P0] bss-service: Interconnect Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -973,19 +972,19 @@
 - **1135** [P0] oss-service: Duct Management (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1136** [P0] oss-service: Right of Way Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1137** [P0] oss-service: Lease Management (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1138** [P0] oss-service: Site Ownership (MISSING) — no implementation evidence found in owning service
+- **1138** [P0] oss-service: Site Ownership (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1139** [P1] oss-service: Utility Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1140** [P0] oss-service: Fiber Utilization Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1141** [P0] oss-service: Spare Capacity Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1142** [P0] oss-service: Network Expansion Planner (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1143** [P0] oss-service: CapEx Tracking (MISSING) — no implementation evidence found in owning service
+- **1143** [P0] oss-service: CapEx Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1144** [P0] oss-service: ROI Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1145** [P0] oss-service: Vendor SLA Tracking (MISSING) — no implementation evidence found in owning service
-- **1146** [P0] oss-service: Vendor Performance (MISSING) — no implementation evidence found in owning service
-- **1147** [P0] oss-service: Vendor Penalties (MISSING) — no implementation evidence found in owning service
+- **1145** [P0] oss-service: Vendor SLA Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1146** [P0] oss-service: Vendor Performance (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1147** [P0] oss-service: Vendor Penalties (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1148** [P0] oss-service: Vendor Contracts (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1149** [P0] oss-service: Vendor Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1150** [P1] oss-service: Vendor Risk Monitor (MISSING) — no implementation evidence found in owning service
+- **1150** [P1] oss-service: Vendor Risk Monitor (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1151** [P0] nms-service: Error Budget Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1152** [P0] nms-service: SLA Burn Rate (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1153** [P0] nms-service: Incident Trend Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1040,7 +1039,7 @@
 - **1204** [P0] oss-service: Peering Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1206** [P0] oss-service: Traffic Engineering Policies (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1207** [P1] oss-service: Path Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1208** [P0] oss-service: DDoS Detection (MISSING) — no implementation evidence found in owning service
+- **1208** [P0] oss-service: DDoS Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1210** [P0] bss-service: IP Transit Billing Awareness (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1211** [P0] data-warehouse-service: IPv4 Exhaustion Tracker (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1212** [P0] data-warehouse-service: CGNAT Analytics Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
@@ -1079,10 +1078,10 @@
 - **1250** [P1] aiops-service: Business Impact Predictor (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1251** [P0] oss-service: BGP Route Leak Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1252** [P0] oss-service: RPKI Validation (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1253** [P1] oss-service: Automated Peering Optimization (MISSING) — no implementation evidence found in owning service
-- **1254** [P0] oss-service: Traffic Cost Optimization (MISSING) — no implementation evidence found in owning service
+- **1253** [P1] oss-service: Automated Peering Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1254** [P0] oss-service: Traffic Cost Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1255** [P0] oss-service: DDoS Auto Mitigation (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1256** [P1] oss-service: Botnet Detection (MISSING) — no implementation evidence found in owning service
+- **1256** [P1] oss-service: Botnet Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1257** [P0] data-warehouse-service: Traffic Behavior Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1258** [P1] data-warehouse-service: Subscriber Network Profiling (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1259** [P1] aaa-service: Terrain-Aware Planning (PARTIAL) — partial evidence; acceptance criteria incomplete
@@ -1278,7 +1277,7 @@
 - **1459** [P1] crm-service: Experience Recovery Engine (MISSING) — no implementation evidence found in owning service
 - **1460** [P1] crm-service: Behavioral Loyalty Scoring (MISSING) — no implementation evidence found in owning service
 - **1461** [P1] oss-service: Fiber Aging Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
-- **1462** [P0] oss-service: Infrastructure Risk Heatmap (MISSING) — no implementation evidence found in owning service
+- **1462** [P0] oss-service: Infrastructure Risk Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1463** [P0] oss-service: Planned vs Unplanned Outage Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1464** [P1] oss-service: Maintenance Impact Predictor (PARTIAL) — partial evidence; acceptance criteria incomplete
 - **1465** [P1] oss-service: Asset Lifecycle Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete

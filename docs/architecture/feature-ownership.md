@@ -43,10 +43,10 @@ Total features: 192
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 15 |
-| COMPLETE | 0 |
+| COMPLETE | 1 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 32 |
-| PARTIAL | 117 |
+| MISSING | 2 |
+| PARTIAL | 146 |
 
 Total features: 164
 
