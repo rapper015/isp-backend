@@ -10,6 +10,48 @@ Service: `aaa-service`. Base docs: `/internal/docs`. Auth: `X-AAA-Service-Key`
 | GET | `/health` | Liveness probe |
 | GET | `/status` | Service phase/status |
 
+## Application users & login (operator auth)
+
+This is the **application/user authentication** for the people who use the
+system (admins, NOC, sales, KYC, etc.) — **not** RADIUS subscriber auth (see
+the Internal RADIUS section below). Login returns a JWT that the management
+surfaces of every service verify, so one login token can call the whole
+platform when all services share the same `<SVC>_JWT_SECRET`.
+
+| Method | Path | Description |
+| --- | --- | --- |
+| POST | `/api/aaa/users` | Create an application user (`X-AAA-Service-Key` required) |
+| GET | `/api/aaa/users` | List application users (`X-AAA-Service-Key` required) |
+| POST | `/api/aaa/login` | Login with username + password → `{access_token, ...}` |
+| POST | `/admin-login` | Alias for login (the gateway maps `/api/v1/auth/login` here) |
+| GET | `/api/aaa/auth/me` | Current user from the Bearer token |
+
+**Create user** — `POST /api/aaa/users` (internal service key):
+```json
+{ "username": "alice", "password": "Str0ng!Passw0rd", "full_name": "Alice",
+  "email": "alice@isp.example", "role": "PLATFORM_ADMIN", "tenant_id": null }
+```
+Roles are free-form strings; `PLATFORM_ADMIN`/`ISP_OWNER`/`ISP_ADMIN` map to `*`
+permission on every service, `READ_ONLY` is the safe default.
+
+**Login** — `POST /api/aaa/login`:
+```json
+{ "username": "alice", "password": "Str0ng!Passw0rd" }
+```
+Returns `access_token` (HS256 JWT, default 12h TTL via `AAA_TOKEN_TTL_SECONDS`),
+`token_type`, `expires_in`, and the `user` object. Use the token as
+`Authorization: Bearer <token>` on any `/api/*` management route.
+
+**Bootstrap first admin** — if no users exist, the service creates one at
+startup from env:
+```
+AAA_BOOTSTRAP_ADMIN_USERNAME=admin
+AAA_BOOTSTRAP_ADMIN_PASSWORD=<strong-password>
+```
+Signing secret: `PLATFORM_JWT_SECRET` if set, else `AAA_JWT_SECRET` (must be
+≥ 32 chars). To let one token hit every service, set all `*_JWT_SECRET` envs to
+the same value.
+
 ## Internal RADIUS (used by the RADIUS server / FreeRADIUS integration)
 
 | Method | Path | Description |

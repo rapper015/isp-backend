@@ -16,6 +16,23 @@ class Tenant(Base, Timestamped):
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     policy: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
+
+class User(Base, Timestamped):
+    """Platform operator/user (Milestone 0 auth). Login issues a JWT that the
+    management surfaces of all services verify via the shared JWT secret."""
+    __tablename__ = "aaa_users"
+    __table_args__ = (UniqueConstraint("username_normalized", name="uq_aaa_user_username"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("aaa_tenants.id"), index=True, nullable=True)
+    username: Mapped[str] = mapped_column(String(128), nullable=False)
+    username_normalized: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    role: Mapped[str] = mapped_column(String(64), default="READ_ONLY", nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), default="ACTIVE", nullable=False)  # ACTIVE | DISABLED
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
 class Credential(Base, Timestamped):
     __tablename__ = "aaa_credentials"
     __table_args__ = (UniqueConstraint("tenant_id", "username_normalized", name="uq_credential_tenant_username"),)
