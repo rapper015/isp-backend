@@ -32,6 +32,19 @@ from .security import management_auth
 from .services.activation import ProvisioningService
 from .services.order_service import OrderService, valid_actions as order_valid_actions
 from .services.resource_service import ResourceService
+from .services.assets_service import (
+    AssetsService,
+    ConfigService,
+    EnterpriseService,
+    InfraService,
+    InventoryDriftService,
+    OttService,
+    PoleService,
+    SecurityService,
+    TelemetryService,
+    TrafficService,
+    VendorService,
+)
 
 
 @asynccontextmanager
@@ -360,4 +373,266 @@ def resolve_intervention(intervention_id: UUID, payload: InterventionResolveRequ
     if saga is None:
         raise HTTPException(404, "workflow not found")
     return saga
+
+
+# ===========================================================================
+# Assets, vendors, splitters (Batch 3: 205, 208, 231, 1138)
+# ===========================================================================
+
+@app.post("/api/oss/assets/register", status_code=201, dependencies=[Depends(management_auth)])
+def register_asset(payload: dict, session: Session = Depends(db)):
+    tenant_id = UUID(str(payload.get("tenant_id")))
+    asset = AssetsService.register_asset(session, tenant_id, payload, by="operator")
+    return {"id": str(asset.id), "asset_type": asset.asset_type, "name": asset.name,
+            "firmware_version": asset.firmware_version, "site_owner": asset.site_owner,
+            "status": asset.status}
+
+
+@app.get("/api/oss/assets", dependencies=[Depends(management_auth)])
+def list_assets(tenant_id: UUID = Query(...), asset_type: str | None = None, session: Session = Depends(db)):
+    stmt = select(models.NetworkAsset).where(models.NetworkAsset.tenant_id == tenant_id)
+    if asset_type:
+        stmt = stmt.where(models.NetworkAsset.asset_type == asset_type)
+    return [{"id": str(a.id), "asset_type": a.asset_type, "name": a.name, "vendor_id": str(a.vendor_id) if a.vendor_id else None,
+             "model": a.model, "serial_number": a.serial_number, "firmware_version": a.firmware_version,
+             "site_owner": a.site_owner, "status": a.status} for a in session.scalars(stmt)]
+
+
+@app.post("/api/oss/assets/{asset_id}/firmware", dependencies=[Depends(management_auth)])
+def update_firmware(asset_id: UUID, payload: dict, session: Session = Depends(db)):
+    try:
+        log = AssetsService.update_firmware(session, UUID(str(payload.get("tenant_id"))),
+                                            asset_id, payload.get("to_version"), by="operator")
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"asset_id": str(asset_id), "from": log.from_version, "to": log.to_version,
+            "applied_at": log.applied_at}
+
+
+@app.post("/api/oss/vendors", status_code=201, dependencies=[Depends(management_auth)])
+def register_vendor(payload: dict, session: Session = Depends(db)):
+    v = VendorService.register(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(v.id), "name": v.name, "sla_minutes": v.sla_minutes,
+            "penalty_amount": v.penalty_amount, "status": v.status}
+
+
+@app.get("/api/oss/vendors", dependencies=[Depends(management_auth)])
+def list_vendors(tenant_id: UUID = Query(...), session: Session = Depends(db)):
+    return [{"id": str(v.id), "name": v.name, "sla_minutes": v.sla_minutes,
+             "penalty_amount": v.penalty_amount, "breaches": v.breaches,
+             "performance_score": v.performance_score} for v in session.scalars(
+        select(models.Vendor).where(models.Vendor.tenant_id == tenant_id))]
+
+
+@app.post("/api/oss/vendors/{vendor_id}/evaluate", dependencies=[Depends(management_auth)])
+def evaluate_vendor(vendor_id: UUID, payload: dict, session: Session = Depends(db)):
+    try:
+        v = VendorService.evaluate(session, UUID(str(payload.get("tenant_id"))), vendor_id)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"id": str(v.id), "performance_score": v.performance_score,
+            "breaches": v.breaches, "penalty_amount": v.penalty_amount}
+
+
+@app.post("/api/oss/splitters", status_code=201, dependencies=[Depends(management_auth)])
+def add_splitter(payload: dict, session: Session = Depends(db)):
+    try:
+        s = AssetsService.add_splitter(session, UUID(str(payload.get("tenant_id"))), payload)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"id": str(s.id), "name": s.name, "level": s.level, "parent_id": str(s.parent_id) if s.parent_id else None}
+
+
+@app.get("/api/oss/splitters/tree", dependencies=[Depends(management_auth)])
+def splitter_tree(tenant_id: UUID = Query(...), session: Session = Depends(db)):
+    return AssetsService.splitter_tree(session, tenant_id)
+
+
+# ===========================================================================
+# Config push + drift + inventory reconcile (Batch 3: 246, 248, 1013)
+# ===========================================================================
+
+@app.post("/api/oss/config/push", dependencies=[Depends(management_auth)])
+def push_config(payload: dict, session: Session = Depends(db)):
+    try:
+        req = ConfigService.push(session, UUID(str(payload.get("tenant_id"))),
+                                 UUID(str(payload.get("asset_id"))), payload.get("config"), by="operator")
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"request_id": str(req.id), "status": req.status, "asset_id": str(req.asset_id)}
+
+
+@app.post("/api/oss/config/snapshot", dependencies=[Depends(management_auth)])
+def config_snapshot(payload: dict, session: Session = Depends(db)):
+    try:
+        snap = ConfigService.snapshot(session, UUID(str(payload.get("tenant_id"))),
+                                      UUID(str(payload.get("asset_id"))), payload.get("config"),
+                                      baseline=bool(payload.get("baseline", False)))
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"snapshot_id": str(snap.id), "config_hash": snap.config_hash, "baseline": snap.is_baseline}
+
+
+@app.post("/api/oss/config/drift-check", dependencies=[Depends(management_auth)])
+def drift_check(payload: dict, session: Session = Depends(db)):
+    return {"drifted": ConfigService.detect_drift(session, UUID(str(payload.get("tenant_id"))))}
+
+
+@app.post("/api/oss/inventory/reconcile", dependencies=[Depends(management_auth)])
+def reconcile_inventory(payload: dict, session: Session = Depends(db)):
+    return InventoryDriftService.reconcile(session, UUID(str(payload.get("tenant_id"))),
+                                           payload.get("discovered", []))
+
+
+# ===========================================================================
+# Enterprise: SLA, VPN, bandwidth-on-demand (Batch 3: 673, 675, 676)
+# ===========================================================================
+
+@app.post("/api/oss/enterprise/slas", status_code=201, dependencies=[Depends(management_auth)])
+def create_enterprise_sla(payload: dict, session: Session = Depends(db)):
+    sla = EnterpriseService.create_sla(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(sla.id), "customer_id": sla.customer_id, "terms": sla.terms, "status": sla.status}
+
+
+@app.post("/api/oss/enterprise/vpns", status_code=201, dependencies=[Depends(management_auth)])
+def create_vpn(payload: dict, session: Session = Depends(db)):
+    vpn = EnterpriseService.create_vpn(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(vpn.id), "name": vpn.name, "vpn_type": vpn.vpn_type, "status": vpn.status}
+
+
+@app.post("/api/oss/enterprise/bandwidth", status_code=201, dependencies=[Depends(management_auth)])
+def request_bandwidth(payload: dict, session: Session = Depends(db)):
+    bod = EnterpriseService.request_bandwidth(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(bod.id), "subscription_id": bod.subscription_id, "boost_mbps": bod.boost_mbps,
+            "expires_at": bod.expires_at}
+
+
+# ===========================================================================
+# Infra: CapEx, risk heatmap (Batch 3: 1143, 1462)
+# ===========================================================================
+
+@app.post("/api/oss/infra/capex", status_code=201, dependencies=[Depends(management_auth)])
+def add_capex(payload: dict, session: Session = Depends(db)):
+    rec = InfraService.add_capex(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(rec.id), "category": rec.category, "amount": rec.amount, "currency": rec.currency}
+
+
+@app.post("/api/oss/infra/risk", status_code=201, dependencies=[Depends(management_auth)])
+def assess_risk(payload: dict, session: Session = Depends(db)):
+    risk = InfraService.assess_risk(session, UUID(str(payload.get("tenant_id"))),
+                                    payload.get("scope"), payload.get("factors", {}))
+    return {"id": str(risk.id), "scope": risk.scope, "risk_score": risk.risk_score, "level": risk.level}
+
+
+@app.get("/api/oss/infra/risk-heatmap", dependencies=[Depends(management_auth)])
+def risk_heatmap(tenant_id: UUID = Query(...), session: Session = Depends(db)):
+    return InfraService.risk_heatmap(session, tenant_id)
+
+
+# ===========================================================================
+# Security + traffic (Batch 3: 1208, 1254)
+# ===========================================================================
+
+@app.post("/api/oss/security/ddos/check", dependencies=[Depends(management_auth)])
+def ddos_check(payload: dict, session: Session = Depends(db)):
+    attack = SecurityService.check_ddos(session, UUID(str(payload.get("tenant_id"))),
+                                        payload.get("target"), payload.get("vector"),
+                                        float(payload.get("volume_mbps", 0)),
+                                        float(payload.get("baseline_mbps", 0)))
+    if attack is None:
+        return {"detected": False, "target": payload.get("target")}
+    return {"detected": True, "attack_id": str(attack.id), "volume_mbps": attack.volume_mbps,
+            "status": attack.status}
+
+
+@app.get("/api/oss/security/ddos", dependencies=[Depends(management_auth)])
+def list_ddos(tenant_id: UUID = Query(...), session: Session = Depends(db)):
+    return [{"id": str(a.id), "target": a.target, "vector": a.vector,
+             "volume_mbps": a.volume_mbps, "status": a.status, "started_at": a.started_at}
+            for a in session.scalars(select(models.DDoSAttack)
+                                     .where(models.DDoSAttack.tenant_id == tenant_id)
+                                     .order_by(models.DDoSAttack.started_at.desc()))]
+
+
+@app.post("/api/oss/security/ddos/{attack_id}/mitigate", dependencies=[Depends(management_auth)])
+def mitigate_ddos(attack_id: UUID, payload: dict, session: Session = Depends(db)):
+    try:
+        a = SecurityService.mitigate(session, UUID(str(payload.get("tenant_id"))), attack_id)
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    return {"id": str(a.id), "status": a.status, "ended_at": a.ended_at}
+
+
+@app.post("/api/oss/traffic/cost", status_code=201, dependencies=[Depends(management_auth)])
+def record_traffic_cost(payload: dict, session: Session = Depends(db)):
+    t = TrafficService.record_cost(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(t.id), "route": t.route, "volume_gb": t.volume_gb, "cost": t.cost}
+
+
+@app.get("/api/oss/traffic/optimize", dependencies=[Depends(management_auth)])
+def optimize_traffic(tenant_id: UUID = Query(...), session: Session = Depends(db)):
+    return TrafficService.optimize(session, tenant_id)
+
+
+# ===========================================================================
+# Telemetry: IoT, MOS, room bandwidth, PMS (Batch 3: 707, 717, 722, 728)
+# ===========================================================================
+
+@app.post("/api/oss/telemetry/iot", status_code=201, dependencies=[Depends(management_auth)])
+def ingest_iot(payload: dict, session: Session = Depends(db)):
+    t = TelemetryService.ingest_iot(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(t.id), "device_id": t.device_id, "metric": t.metric, "value": t.value}
+
+
+@app.post("/api/oss/telemetry/mos", status_code=201, dependencies=[Depends(management_auth)])
+def record_mos(payload: dict, session: Session = Depends(db)):
+    m = TelemetryService.record_mos(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(m.id), "session_id": m.session_id, "score": m.score}
+
+
+@app.post("/api/oss/telemetry/rooms", dependencies=[Depends(management_auth)])
+def set_room_bandwidth(payload: dict, session: Session = Depends(db)):
+    r = TelemetryService.set_room_bandwidth(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(r.id), "room_number": r.room_number, "applied_mbps": r.applied_mbps}
+
+
+@app.post("/api/oss/telemetry/properties", status_code=201, dependencies=[Depends(management_auth)])
+def sync_property(payload: dict, session: Session = Depends(db)):
+    p = TelemetryService.sync_property(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(p.id), "property_name": p.property_name, "pms_system": p.pms_system,
+            "status": p.status}
+
+
+# ===========================================================================
+# OTT partner APIs + pole management (Batch 8: 659, 1134)
+# ===========================================================================
+
+@app.post("/api/oss/ott/partners", status_code=201, dependencies=[Depends(management_auth)])
+def integrate_ott_partner(payload: dict, session: Session = Depends(db)):
+    p = OttService.integrate(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(p.id), "partner_name": p.partner_name,
+            "provider_type": p.provider_type, "status": p.status}
+
+
+@app.get("/api/oss/ott/partners", dependencies=[Depends(management_auth)])
+def list_ott_partners(tenant_id: UUID = Query(...), session: Session = Depends(db)):
+    return [{"id": str(p.id), "partner_name": p.partner_name,
+             "provider_type": p.provider_type, "api_endpoint": p.api_endpoint,
+             "status": p.status} for p in session.scalars(
+        select(models.OttPartner).where(models.OttPartner.tenant_id == tenant_id))]
+
+
+@app.post("/api/oss/poles", status_code=201, dependencies=[Depends(management_auth)])
+def track_pole(payload: dict, session: Session = Depends(db)):
+    pole = PoleService.track(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(pole.id), "pole_code": pole.pole_code, "location": pole.location,
+            "pole_type": pole.pole_type, "status": pole.status}
+
+
+@app.get("/api/oss/poles", dependencies=[Depends(management_auth)])
+def list_poles(tenant_id: UUID = Query(...), session: Session = Depends(db)):
+    return [{"id": str(p.id), "pole_code": p.pole_code, "location": p.location,
+             "pole_type": p.pole_type, "height_m": p.height_m,
+             "status": p.status} for p in session.scalars(
+        select(models.TelecomPole).where(models.TelecomPole.tenant_id == tenant_id))]
 

@@ -61,6 +61,23 @@ TOPOLOGY = {
         "oss.workflow.failed.v1",
         "oss.workflow.manual_intervention.v1",
     ],
+    "assets": [
+        "oss.asset.registered.v1",
+        "oss.asset.firmware_updated.v1",
+        "oss.vendor.evaluated.v1",
+        "oss.config.pushed.v1",
+        "oss.config.snapshot_captured.v1",
+        "oss.config.drift_detected.v1",
+        "oss.inventory.drift_detected.v1",
+        "oss.enterprise.sla_created.v1",
+        "oss.enterprise.vpn_created.v1",
+        "oss.enterprise.bandwidth_requested.v1",
+        "oss.infra.risk_assessed.v1",
+        "oss.security.ddos_detected.v1",
+        "oss.security.ddos_mitigated.v1",
+        "oss.ott.integrated.v1",
+        "oss.pole.tracked.v1",
+    ],
 }
 
 

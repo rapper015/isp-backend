@@ -18,11 +18,16 @@ ROLE_PERMISSIONS = {
         "oss.order.manual_resolve", "oss.resource.view", "oss.resource.manage",
         "oss.subscription.view", "oss.subscription.manage", "oss.workflow.view",
         "oss.audit.view", "oss.export",
+        "oss.asset.view", "oss.asset.manage", "oss.config.manage", "oss.vendor.manage",
+        "oss.enterprise.manage", "oss.infra.view", "oss.infra.manage",
+        "oss.security.manage", "oss.telemetry.ingest",
     },
     "OSS_OPERATOR": {
         "oss.order.view", "oss.order.create", "oss.order.submit", "oss.order.transition",
         "oss.order.cancel", "oss.order.retry", "oss.order.resume", "oss.resource.view",
         "oss.subscription.view", "oss.workflow.view", "oss.audit.view",
+        "oss.asset.view", "oss.asset.manage", "oss.config.manage", "oss.telemetry.ingest",
+        "oss.enterprise.manage",
     },
     "FULFILMENT_TEAM": {
         "oss.order.view", "oss.order.transition", "oss.order.retry", "oss.order.resume",
@@ -68,6 +73,22 @@ def management_permission(method: str, path: str) -> str | None:
         return "oss.subscription.manage" if method in ("POST", "PUT", "DELETE") else "oss.subscription.view"
     if "/workflows" in path:
         return "oss.workflow.view"
+    if "/assets" in path or "/splitters" in path or "/firmware" in path:
+        return "oss.asset.manage" if method in ("POST", "PUT", "DELETE") else "oss.asset.view"
+    if "/vendors" in path:
+        return "oss.vendor.manage" if method == "POST" else "oss.asset.view"
+    if "/config" in path or "/inventory/reconcile" in path:
+        return "oss.config.manage"
+    if "/enterprise" in path:
+        return "oss.enterprise.manage"
+    if "/infra" in path:
+        return "oss.infra.manage" if method in ("POST", "PUT") else "oss.infra.view"
+    if "/security/ddos" in path:
+        return "oss.security.manage"
+    if "/traffic" in path:
+        return "oss.infra.manage" if method == "POST" else "oss.infra.view"
+    if "/telemetry" in path:
+        return "oss.telemetry.ingest"
     return "oss.order.view"
 
 
