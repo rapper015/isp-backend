@@ -214,12 +214,30 @@ services:
   intelligence-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: intelligence-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: intelligence-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/intelligence}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: intelligence-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/intelligence
+      REDIS_URL: redis://valkey:6379/0
+      INTELLIGENCE_JWT_SECRET: ${INTELLIGENCE_JWT_SECRET:-change-me-intelligence-jwt-secret-0123456789abcdef}
+      INTELLIGENCE_INTERNAL_API_KEY: ${INTELLIGENCE_INTERNAL_API_KEY:-change-me-intelligence-internal-key}
+      INTELLIGENCE_RATE_LIMIT: ${INTELLIGENCE_RATE_LIMIT:-120}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_JSON: ${LOG_JSON:-true}
 
   intelligence-worker:
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: intelligence-service}}
     command: ["python", "-m", "app.worker_runner"]
-    environment: {<<: *domain-environment, SERVICE_NAME: intelligence-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/intelligence}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: intelligence-worker
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/intelligence
+      REDIS_URL: redis://valkey:6379/0
+      INTELLIGENCE_JWT_SECRET: ${INTELLIGENCE_JWT_SECRET:-change-me-intelligence-jwt-secret-0123456789abcdef}
+      INTELLIGENCE_INTERNAL_API_KEY: ${INTELLIGENCE_INTERNAL_API_KEY:-change-me-intelligence-internal-key}
+      INTELLIGENCE_RATE_LIMIT: ${INTELLIGENCE_RATE_LIMIT:-120}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_JSON: ${LOG_JSON:-true}
     depends_on:
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
