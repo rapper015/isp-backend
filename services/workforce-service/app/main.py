@@ -14,7 +14,8 @@ from .context import TenantContext
 from .database import SessionLocal
 from .routing import enforce_scope, record_audit, require_tenant_id
 from .security import _required_permission, get_auth_context, require_permission
-from .services import (ChecklistService, DispatchService, EscalationService,
+from .services import (ChecklistService, DispatchService, EquipmentOverlayService,
+                       EscalationService, ExpertService, FailureVisualizationService,
                        FeedbackService, FieldOpsService, InventoryService,
                        KpiService, ShiftService, SlaService, TechnicianService,
                        VisitService, WorkOrderService)
@@ -418,3 +419,75 @@ def list_audit(request: Request, action: str | None = None, limit: int = Query(2
     return [{"id": str(r.id), "actor": r.actor, "action": r.action, "resource": r.resource,
              "resource_id": r.resource_id, "outcome": r.outcome, "detail": r.detail,
              "created_at": r.created_at} for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# Remote expert assistance + failure visualization + AR overlay (Batch 8)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/workforce/v1/expert/sessions", status_code=201)
+def start_expert_session(body: dict, request: Request,
+                         db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    s = ExpertService.start(db, ctx, body)
+    return {"id": str(s.id), "work_order_id": s.work_order_id, "expert_id": s.expert_id,
+            "channel": s.channel, "status": s.status}
+
+
+@app.get("/api/workforce/v1/expert/sessions")
+def list_expert_sessions(request: Request, db: Session = Depends(_db),
+                         ctx: TenantContext = Depends(_auth("workorders.view"))):
+    q = enforce_scope(db.query(models.ExpertSession), models.ExpertSession, ctx)
+    return [{"id": str(r.id), "work_order_id": r.work_order_id, "expert_id": r.expert_id,
+             "channel": r.channel, "status": r.status} for r in q.all()]
+
+
+@app.post("/api/workforce/v1/expert/sessions/{session_id}/end")
+def end_expert_session(session_id: uuid.UUID, request: Request,
+                       db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    try:
+        s = ExpertService.end(db, ctx, session_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"id": str(s.id), "status": s.status}
+
+
+@app.post("/api/workforce/v1/failure/visualizations", status_code=201)
+def render_failure_visualization(body: dict, request: Request,
+                                 db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    v = FailureVisualizationService.render(db, ctx, body)
+    return {"id": str(v.id), "work_order_id": v.work_order_id, "fault_type": v.fault_type,
+            "rendered": v.rendered}
+
+
+@app.get("/api/workforce/v1/failure/visualizations")
+def list_failure_visualizations(request: Request, db: Session = Depends(_db),
+                                ctx: TenantContext = Depends(_auth("workorders.view"))):
+    q = enforce_scope(db.query(models.FailureVisualization), models.FailureVisualization, ctx)
+    return [{"id": str(r.id), "work_order_id": r.work_order_id, "fault_type": r.fault_type,
+             "rendered": r.rendered} for r in q.all()]
+
+
+@app.post("/api/workforce/v1/failure/visualizations/{vis_id}/rendered")
+def mark_visualization_rendered(vis_id: uuid.UUID, request: Request,
+                                db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    try:
+        v = FailureVisualizationService.mark_rendered(db, ctx, vis_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"id": str(v.id), "rendered": v.rendered}
+
+
+@app.post("/api/workforce/v1/equipment/overlays", status_code=201)
+def recognize_equipment(body: dict, request: Request,
+                        db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("workorders.manage"))):
+    o = EquipmentOverlayService.recognize(db, ctx, body)
+    return {"id": str(o.id), "work_order_id": o.work_order_id, "device_id": o.device_id,
+            "recognized_model": o.recognized_model}
+
+
+@app.get("/api/workforce/v1/equipment/overlays")
+def list_equipment_overlays(request: Request, db: Session = Depends(_db),
+                            ctx: TenantContext = Depends(_auth("workorders.view"))):
+    q = enforce_scope(db.query(models.EquipmentOverlay), models.EquipmentOverlay, ctx)
+    return [{"id": str(r.id), "work_order_id": r.work_order_id, "device_id": r.device_id,
+             "recognized_model": r.recognized_model} for r in q.all()]

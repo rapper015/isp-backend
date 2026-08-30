@@ -20,6 +20,10 @@ from .operations import (  # noqa: F401
     AutomationCoverage, Bottleneck, NodeProfit, PersonalizationProfile,
     RegionProfitability,
 )
+from .aiops_advanced import (  # noqa: F401
+    BusinessTwin, NetworkTwin, PricingChange, ScalingAction, SentimentResponse,
+    UpsellSuggestion, VoiceInteraction, WorkforceTask,
+)
 
 from ..routing import tenant_owned
 
@@ -32,6 +36,8 @@ _TENANT_OWNED = (
     Recommendation, RemediationIntent, RemediationApproval, RemediationStep, RemediationOutcome,
     KillSwitch,
     PersonalizationProfile, Bottleneck, AutomationCoverage, NodeProfit, RegionProfitability,
+    NetworkTwin, ScalingAction, PricingChange, BusinessTwin, UpsellSuggestion,
+    VoiceInteraction, SentimentResponse, WorkforceTask,
 )
 for _model in _TENANT_OWNED:
     tenant_owned(_model)

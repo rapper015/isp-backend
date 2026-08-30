@@ -7,7 +7,10 @@ from .caf import CafRecord
 from .lifecycle import CustomerLifecycleEvent, CustomerRisk, TimelineEntry
 from .audit import AuditLog, ConsumerInbox, OutboxEvent
 from .ecosystem import (
+    ExperienceRecovery,
     FederationLink,
+    KbFeedback,
+    LoyaltyScore,
     Partner,
     PartnerHierarchyNode,
     PartnerPerformanceRecord,
@@ -25,4 +28,5 @@ __all__ = [
     "OutboxEvent", "ConsumerInbox",
     "Partner", "PartnerPerformanceRecord", "PartnerHierarchyNode", "FederationLink",
     "TicketSlaTimer", "TicketEscalation", "TicketSuggestion", "ResellerRegulatoryRecord",
+    "KbFeedback", "ExperienceRecovery", "LoyaltyScore",
 ]

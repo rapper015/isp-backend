@@ -25,6 +25,8 @@ PUBLISHED_TOPOLOGY = {
     "siem.geo.blocked.v1": "A service access attempt was blocked by geo rule.",
     "siem.playbook.executed.v1": "A threat-hunting playbook was executed.",
     "siem.mfa.triggered.v1": "Adaptive MFA challenged a session.",
+    "siem.notice.processed.v1": "A legal notice workflow was processed/served.",
+    "siem.investigation.done.v1": "A digital forensics investigation completed.",
 }
 
 CONSUMED_TOPOLOGY = {

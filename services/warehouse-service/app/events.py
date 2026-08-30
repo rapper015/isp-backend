@@ -21,6 +21,7 @@ PUBLISHED_TOPOLOGY = {
     "warehouse.cluster.scaled.v1",
     "warehouse.ecosystem.recorded.v1",
     "warehouse.ecosystem.analyzed.v1",
+    "warehouse.scenario.comparison.generated.v1",
 }
 
 

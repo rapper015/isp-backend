@@ -232,3 +232,30 @@ class PMSProperty(Base, Timestamped):
     pms_system: Mapped[str | None] = mapped_column(String(80))
     status: Mapped[str] = mapped_column(String(20), default="CONNECTED")
     synced_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class OttPartner(Base, Timestamped):
+    """OTT provider integration (feature 659)."""
+    __tablename__ = "oss_ott_partner"
+    __table_args__ = (Index("ix_oss_ott_tenant", "tenant_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("oss_tenants.id"), index=True, nullable=False)
+    partner_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    provider_type: Mapped[str] = mapped_column(String(60), default="VIDEO")  # VIDEO, MUSIC, GAMING, NEWS
+    api_endpoint: Mapped[str | None] = mapped_column(String(300))
+    credentials_ref: Mapped[str | None] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(20), default="ACTIVE")  # ACTIVE, DISABLED
+
+
+class TelecomPole(Base, Timestamped):
+    """Telecom pole management (feature 1134)."""
+    __tablename__ = "oss_telecom_pole"
+    __table_args__ = (Index("ix_oss_pole_tenant_loc", "tenant_id", "pole_code"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("oss_tenants.id"), index=True, nullable=False)
+    pole_code: Mapped[str] = mapped_column(String(80), nullable=False)
+    location: Mapped[str | None] = mapped_column(String(300))
+    pole_type: Mapped[str] = mapped_column(String(40), default="WOODEN")  # WOODEN, CONCRETE, STEEL
+    height_m: Mapped[float | None] = mapped_column(Float)
+    status: Mapped[str] = mapped_column(String(20), default="ACTIVE")  # ACTIVE, DAMAGED, RETIRED
+    installed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

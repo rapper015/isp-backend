@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI, Request
 from sqlalchemy.orm import Session
 
 from .database import Base, SessionLocal, engine
-from .models import AnalyticsCluster, EcosystemMetric, Kpi, Profitability, RevenueTrend
+from .models import AnalyticsCluster, EcosystemMetric, Kpi, Profitability, RevenueTrend, ScenarioComparison
 from .security import management_auth
 from .services import AnalyticsService
 
@@ -99,6 +99,21 @@ def list_ecosystem(req: Request, s: Session = Depends(db)):
     t = _tid(req)
     return [{"partner": r.partner, "period": r.period, "metric": r.metric, "value": r.value}
             for r in s.query(EcosystemMetric).filter_by(tenant_id=t).all()]
+
+
+# 1340 Scenario Comparison Engine
+@app.post("/api/warehouse/scenarios/compare", dependencies=[Depends(management_auth)])
+def compare_scenarios(req: Request, body: dict, s: Session = Depends(db)):
+    row = svc.compare_scenarios(s, _tid(req), body)
+    return {"id": str(row.id), "comparison_name": row.comparison_name, "winner": row.winner,
+            "alternatives": len(row.alternatives or [])}
+
+
+@app.get("/api/warehouse/scenarios", dependencies=[Depends(management_auth)])
+def list_scenarios(req: Request, s: Session = Depends(db)):
+    t = _tid(req)
+    return [{"id": str(r.id), "comparison_name": r.comparison_name, "winner": r.winner}
+            for r in s.query(ScenarioComparison).filter_by(tenant_id=t).all()]
 
 
 @app.get("/status")

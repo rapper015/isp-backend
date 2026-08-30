@@ -253,8 +253,41 @@ class Inbox(UUIDMixin, Base):
     consumed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class ExpertSession(UUIDMixin, Base):
+    """Remote expert assistance (feature 1487): live troubleshooting sessions."""
+    __tablename__ = "workforce_expert_session"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    work_order_id: Mapped[str] = mapped_column(String(80), index=True)
+    expert_id: Mapped[str] = mapped_column(String(80))
+    technician_id: Mapped[str] = mapped_column(String(80))
+    channel: Mapped[str] = mapped_column(String(40), default="VIDEO")
+    status: Mapped[str] = mapped_column(String(20), default="ACTIVE")
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class FailureVisualization(UUIDMixin, Base):
+    """Failure visualization (feature 1488): read-model of onsite fault overlays."""
+    __tablename__ = "workforce_failure_visualization"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    work_order_id: Mapped[str] = mapped_column(String(80), index=True)
+    fault_type: Mapped[str] = mapped_column(String(80))
+    overlay: Mapped[dict] = mapped_column(JSON, default=dict)  # AR/marker coordinates, hotspots
+    rendered: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class EquipmentOverlay(UUIDMixin, Base):
+    """Smart equipment overlay (feature 1489): identify devices via AR."""
+    __tablename__ = "workforce_equipment_overlay"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    work_order_id: Mapped[str] = mapped_column(String(80), index=True)
+    device_id: Mapped[str] = mapped_column(String(120))
+    recognized_model: Mapped[str] = mapped_column(String(200))
+    overlay_data: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
 for _t in (Technician, WorkOrder, Assignment, Appointment, Visit, ProofOfWork,
            InventoryItem, Consumable, Consumption, Shift, Feedback, Escalation,
            FieldSLA, TechnicianKPI, ChecklistTemplate, SiteCheck, Handover,
-           WorkforceAuditLog):
+           WorkforceAuditLog, ExpertSession, FailureVisualization, EquipmentOverlay):
     _register(_t.__tablename__)

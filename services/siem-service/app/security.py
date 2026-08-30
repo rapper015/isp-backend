@@ -108,6 +108,10 @@ def _required_permission(method: str, path: str) -> str | None:
         return "cases.manage"
     if "/mfa" in p:
         return "events.ingest"
+    if "/notices" in p:
+        return "cases.manage" if method in ("POST", "PUT", "PATCH") else "cases.view"
+    if "/forensics" in p:
+        return "cases.manage" if method in ("POST", "PUT", "PATCH") else "cases.view"
     if "/dashboard" in p:
         return "dashboard.view"
     if "/regulatory" in p or "/reports" in p:

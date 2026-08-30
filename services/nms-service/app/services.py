@@ -156,3 +156,51 @@ class OpsService:
         else:
             session.commit()
         return row
+
+    @staticmethod
+    def create_runbook(session: Session, tenant_id, data: dict) -> models.Runbook:
+        """Runbook Automation (284): predefined incident workflows."""
+        row = models.Runbook(tenant_id=tenant_id, executions=0, status="ACTIVE",
+                             **_no_tenant(data))
+        session.add(row)
+        session.commit()
+        return row
+
+    @staticmethod
+    def trigger_runbook(session: Session, tenant_id, runbook_id: uuid.UUID) -> models.Runbook:
+        row = session.query(models.Runbook).filter(
+            models.Runbook.id == runbook_id,
+            models.Runbook.tenant_id == tenant_id).first()
+        if not row:
+            raise KeyError("Runbook not found")
+        row.executions += 1
+        session.flush()
+        outbox(session, "nms.runbook.triggered.v1", tenant_id,
+               {"runbook_id": str(row.id), "name": row.name, "trigger": row.trigger,
+                "executions": row.executions})
+        session.commit()
+        return row
+
+    @staticmethod
+    def generate_heatmap(session: Session, tenant_id, data: dict) -> models.AnomalyHeatmap:
+        """Anomaly Heatmaps (743): aggregate anomaly cells by scope."""
+        period = data.get("period", "DAY")
+        scope = data["scope"]
+        row = session.query(models.AnomalyHeatmap).filter(
+            models.AnomalyHeatmap.tenant_id == tenant_id,
+            models.AnomalyHeatmap.period == period,
+            models.AnomalyHeatmap.scope == scope).first()
+        cells = data.get("cells") or []
+        if row:
+            row.cells = cells
+            row.anomaly_count = data.get("anomaly_count", sum(int(c.get("count", 0)) for c in cells))
+        else:
+            row = models.AnomalyHeatmap(tenant_id=tenant_id, period=period, scope=scope,
+                                        cells=cells,
+                                        anomaly_count=data.get("anomaly_count", sum(int(c.get("count", 0)) for c in cells)))
+            session.add(row)
+        session.flush()
+        outbox(session, "nms.anomaly.heatmap.generated.v1", tenant_id,
+               {"scope": scope, "period": period, "cells": len(cells)})
+        session.commit()
+        return row

@@ -112,6 +112,8 @@ def _required_permission(method: str, path: str) -> str | None:
         return "sla.view"
     if "/location" in p:
         return "location.ingest"
+    if "/expert" in p or "/visualization" in p or "/overlay" in p:
+        return "workorders.manage" if method in ("POST", "PUT", "PATCH") else "workorders.view"
     return None
 
 

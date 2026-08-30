@@ -390,3 +390,159 @@ class GovernanceService:
         session.add(t)
         session.commit()
         return t
+
+
+class CoreAiService:
+    """Core-platform AI/governance (Batch 8g: 532, 548, 615, 747, 762, 832,
+    909, 910, 918, 925, 935)."""
+
+    @staticmethod
+    def analyze_sentiment(session: Session, tenant_id, data: dict) -> models.SentimentAnalysis:
+        """Sentiment Analysis (532)."""
+        text = data.get("text", "")
+        lowered = text.lower()
+        pos = sum(1 for w in ("great", "love", "excellent", "good", "fast", "happy") if w in lowered)
+        neg = sum(1 for w in ("bad", "terrible", "slow", "hate", "poor", "angry") if w in lowered)
+        sentiment = "POSITIVE" if pos > neg else ("NEGATIVE" if neg > pos else "NEUTRAL")
+        score = round((pos - neg) / max(1, pos + neg), 3)
+        row = models.SentimentAnalysis(tenant_id=tenant_id, text=text,
+                                       sentiment=sentiment, score=score)
+        session.add(row)
+        session.flush()
+        publish_outbox(session, "tenancy.sentiment.analyzed.v1", tenant_id, None,
+                       {"sentiment": sentiment, "score": score})
+        session.commit()
+        return row
+
+    @staticmethod
+    def suggest_reply(session: Session, tenant_id, data: dict) -> models.SmartReply:
+        """Smart Reply Suggestions (548)."""
+        context = data.get("context", "").lower()
+        reply = "Thanks for reaching out — we're on it."
+        if "bill" in context or "invoice" in context:
+            reply = "I can help with your bill. Could you share the invoice number?"
+        elif "slow" in context or "internet" in context:
+            reply = "Let's run a line test. Please reboot the router and try again."
+        elif "outage" in context or "down" in context:
+            reply = "We've detected an outage in your area and are restoring service."
+        row = models.SmartReply(tenant_id=tenant_id, context=data.get("context", ""),
+                                suggested_reply=reply)
+        session.add(row)
+        session.flush()
+        publish_outbox(session, "tenancy.reply.suggestion.generated.v1", tenant_id, None,
+                       {"reply": reply})
+        session.commit()
+        return row
+
+    @staticmethod
+    def elect_leader(session: Session, tenant_id, data: dict) -> models.ConsensusLeader:
+        """Consensus Mechanism (615): Raft-style leader election."""
+        cluster = data.get("cluster", "default")
+        node_id = data.get("node_id", "node-1")
+        term = int(data.get("term", 1))
+        votes = int(data.get("votes", 0))
+        total = int(data.get("total_nodes", votes))
+        quorum = total // 2 + 1  # Raft majority
+        is_leader = votes >= quorum
+        row = session.query(models.ConsensusLeader).filter(
+            models.ConsensusLeader.tenant_id == tenant_id,
+            models.ConsensusLeader.cluster == cluster).first()
+        if row:
+            row.node_id, row.term, row.votes, row.is_leader = node_id, term, votes, is_leader
+        else:
+            row = models.ConsensusLeader(tenant_id=tenant_id, cluster=cluster, node_id=node_id,
+                                         term=term, votes=votes, is_leader=is_leader)
+            session.add(row)
+        session.flush()
+        if is_leader:
+            publish_outbox(session, "tenancy.leader.elected.v1", tenant_id, None,
+                           {"cluster": cluster, "node_id": node_id, "term": term})
+        session.commit()
+        return row
+
+    @staticmethod
+    def release_beta(session: Session, tenant_id, data: dict) -> models.BetaRollout:
+        """Beta Rollouts (747)."""
+        row = models.BetaRollout(tenant_id=tenant_id, status="BETA", **_no_tenant(data))
+        session.add(row)
+        session.flush()
+        publish_outbox(session, "tenancy.beta.released.v1", tenant_id, None,
+                       {"feature": row.feature, "version": row.version, "cohort_pct": row.cohort_pct})
+        session.commit()
+        return row
+
+    @staticmethod
+    def calculate_carbon(session: Session, tenant_id, data: dict) -> models.CarbonFootprint:
+        """Carbon Footprint (762)."""
+        row = models.CarbonFootprint(tenant_id=tenant_id, **_no_tenant(data))
+        session.add(row)
+        session.flush()
+        publish_outbox(session, "tenancy.carbon.calculated.v1", tenant_id, None,
+                       {"scope": row.scope, "co2_kg": row.co2_kg, "period": row.period})
+        session.commit()
+        return row
+
+    @staticmethod
+    def execute_intent(session: Session, tenant_id, data: dict) -> models.IntentExecution:
+        """Intent Orchestration (832)."""
+        row = models.IntentExecution(tenant_id=tenant_id, status="EXECUTED", **_no_tenant(data))
+        session.add(row)
+        session.flush()
+        publish_outbox(session, "tenancy.intent.executed.v1", tenant_id, None,
+                       {"intent": row.intent, "action": row.action})
+        session.commit()
+        return row
+
+    @staticmethod
+    def extract_clause(session: Session, tenant_id, data: dict) -> models.ClauseExtraction:
+        """Clause Extraction (909)."""
+        row = models.ClauseExtraction(tenant_id=tenant_id, **_no_tenant(data))
+        session.add(row)
+        session.flush()
+        publish_outbox(session, "tenancy.clause.extracted.v1", tenant_id, None,
+                       {"document_id": row.document_id, "clause_type": row.clause_type})
+        session.commit()
+        return row
+
+    @staticmethod
+    def assess_risk(session: Session, tenant_id, data: dict) -> models.RiskAssessment:
+        """Risk Detection (910) + Supplier Risk Mgmt (925)."""
+        score = float(data.get("score", 0.0))
+        level = data.get("risk_level")
+        if not level:
+            level = "LOW" if score < 30 else ("MEDIUM" if score < 60 else ("HIGH" if score < 85 else "CRITICAL"))
+        clean = {k: v for k, v in data.items() if k not in ("tenant_id", "score", "risk_level")}
+        row = models.RiskAssessment(tenant_id=tenant_id, risk_level=level,
+                                    score=score, **clean)
+        session.add(row)
+        session.flush()
+        publish_outbox(session, "tenancy.risk.detected.v1", tenant_id, None,
+                       {"entity": row.entity, "entity_id": row.entity_id, "risk_level": level})
+        session.commit()
+        return row
+
+    @staticmethod
+    def suggest_strategy(session: Session, tenant_id, data: dict) -> models.StrategyPlan:
+        """Strategic Planning AI (918)."""
+        row = models.StrategyPlan(tenant_id=tenant_id, **_no_tenant(data))
+        session.add(row)
+        session.flush()
+        publish_outbox(session, "tenancy.strategy.suggested.v1", tenant_id, None,
+                       {"objective": row.objective})
+        session.commit()
+        return row
+
+    @staticmethod
+    def validate_ethics(session: Session, tenant_id, data: dict) -> models.EthicsValidation:
+        """Ethics Engine (935)."""
+        decision = (data.get("decision") or "").lower()
+        unethical = any(w in decision for w in ("bias", "discriminat", "exclude", "penaliz"))
+        row = models.EthicsValidation(tenant_id=tenant_id, decision=data.get("decision", ""),
+                                      ethical=not unethical,
+                                      reason=None if not unethical else "Flagged by ethics engine")
+        session.add(row)
+        session.flush()
+        publish_outbox(session, "tenancy.ethics.validated.v1", tenant_id, None,
+                       {"ethical": row.ethical})
+        session.commit()
+        return row

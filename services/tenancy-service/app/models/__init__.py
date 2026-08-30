@@ -97,6 +97,18 @@ from .governance import (  # noqa: F401
     Translation,
     UsageMeter,
 )
+from .core_ai import (  # noqa: F401
+    BetaRollout,
+    CarbonFootprint,
+    ClauseExtraction,
+    ConsensusLeader,
+    EthicsValidation,
+    IntentExecution,
+    RiskAssessment,
+    SentimentAnalysis,
+    SmartReply,
+    StrategyPlan,
+)
 
 from ..routing import tenant_owned
 
@@ -120,6 +132,9 @@ _TENANT_OWNED = (
     CostRecord, GovernancePolicy, ComplianceCheck, ThreatHunt, ServiceChain,
     Insight, KnowledgeDoc, ProcurementOrder, InventoryForecast, RoiRecord,
     ScalingRule, MeshLink, CloudAbstraction, Translation,
+    SentimentAnalysis, SmartReply, ConsensusLeader, BetaRollout,
+    CarbonFootprint, IntentExecution, ClauseExtraction, RiskAssessment,
+    StrategyPlan, EthicsValidation,
 )
 for _model in _TENANT_OWNED:
     tenant_owned(_model)

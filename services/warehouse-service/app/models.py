@@ -69,3 +69,15 @@ class EcosystemMetric(Base, Timestamped):
     period: Mapped[str] = mapped_column(String(20), default="MONTH")
     metric: Mapped[str] = mapped_column(String(80), nullable=False)
     value: Mapped[float] = mapped_column(Float, default=0.0)
+
+
+class ScenarioComparison(Base, Timestamped):
+    """Scenario Comparison Engine (feature 1340): compare simulations."""
+    __tablename__ = "wh_scenario_comparison"
+    __table_args__ = (UniqueConstraint("tenant_id", "comparison_name", name="uq_wh_scenario_comp"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    comparison_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    baseline: Mapped[dict] = mapped_column(JSON, default=dict)
+    alternatives: Mapped[list] = mapped_column(JSON, default=list)  # [{"name": ..., "metrics": {...}, "delta": {...}}]
+    winner: Mapped[str | None] = mapped_column(String(160))

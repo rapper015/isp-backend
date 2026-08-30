@@ -83,3 +83,28 @@ def test_rbac_auditor_denied_write(client, tenant_id):
     r = client.post("/api/nms/ops/escalation-policies", headers=auditor, json={
         "name": "X", "rule_json": {}})
     assert r.status_code == 403
+
+
+def test_runbook_automation(client, headers, tenant_id):
+    rb = client.post("/api/nms/ops/runbooks", headers=headers, json={
+        "name": "Link down recovery", "trigger": "LINK_DOWN",
+        "steps": ["Verify ONT power", "Check OLT port", "Escalate to L2"]})
+    assert rb.status_code == 201
+    rid = rb.json()["id"]
+    assert rb.json()["executions"] == 0
+    tr = client.post(f"/api/nms/ops/runbooks/{rid}/trigger", headers=headers)
+    assert tr.json()["executions"] == 1
+    rl = client.get("/api/nms/ops/runbooks", headers=headers)
+    assert len(rl.json()) == 1
+
+
+def test_anomaly_heatmap(client, headers, tenant_id):
+    hm = client.post("/api/nms/ops/anomaly/heatmap", headers=headers, json={
+        "scope": "MH-CIRCLE", "period": "DAY",
+        "cells": [{"key": "MH-GW1", "severity": 0.9, "count": 8},
+                  {"key": "MH-GW2", "severity": 0.4, "count": 3}],
+        "anomaly_count": 11})
+    assert hm.status_code == 201
+    assert hm.json()["anomaly_count"] == 11
+    rl = client.get("/api/nms/ops/anomaly/heatmaps", headers=headers)
+    assert len(rl.json()) == 1

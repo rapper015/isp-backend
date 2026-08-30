@@ -75,6 +75,8 @@ TOPOLOGY = {
         "oss.infra.risk_assessed.v1",
         "oss.security.ddos_detected.v1",
         "oss.security.ddos_mitigated.v1",
+        "oss.ott.integrated.v1",
+        "oss.pole.tracked.v1",
     ],
 }
 

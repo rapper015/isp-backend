@@ -53,6 +53,17 @@ PUBLISHED_TOPOLOGY = {
     "tenancy.mesh_link.established.v1",
     "tenancy.cloud.abstraction_registered.v1",
     "tenancy.workload.migrated.v1",
+    # core-platform AI/governance (Master Spec Batch 8g)
+    "tenancy.sentiment.analyzed.v1",
+    "tenancy.reply.suggestion.generated.v1",
+    "tenancy.leader.elected.v1",
+    "tenancy.beta.released.v1",
+    "tenancy.carbon.calculated.v1",
+    "tenancy.intent.executed.v1",
+    "tenancy.clause.extracted.v1",
+    "tenancy.risk.detected.v1",
+    "tenancy.strategy.suggested.v1",
+    "tenancy.ethics.validated.v1",
 }
 
 # Commission basis events consumed from other services (idempotent).

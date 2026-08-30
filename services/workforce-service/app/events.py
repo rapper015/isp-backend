@@ -20,6 +20,9 @@ PUBLISHED_TOPOLOGY = {
     "workforce.inventory.issued.v1": "A device was issued to a technician.",
     "workforce.inventory.synced.v1": "Field inventory was reconciled with the warehouse.",
     "workforce.sla.breached.v1": "A field SLA deadline was missed.",
+    "workforce.expert.session.started.v1": "A remote expert assistance session started.",
+    "workforce.failure.visualization.rendered.v1": "An onsite failure visualization was rendered.",
+    "workforce.equipment.device.recognized.v1": "A device was recognized for AR overlay.",
 }
 
 CONSUMED_TOPOLOGY = {

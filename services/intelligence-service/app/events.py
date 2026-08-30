@@ -39,6 +39,15 @@ PUBLISHED_TOPOLOGY = {
     "ai.automation_coverage.computed.v1",
     "ai.node_profit.recorded.v1",
     "ai.region_profitability.recorded.v1",
+    # aiops advanced (Master Spec Batch 8h)
+    "ai.network.twin.created.v1",
+    "ai.scaling.optimized.v1",
+    "ai.pricing.changed.v1",
+    "ai.business.twin.created.v1",
+    "ai.upsell.suggested.v1",
+    "ai.voice.responded.v1",
+    "ai.sentiment.handled.v1",
+    "ai.workforce.replaced.v1",
 }
 
 # Consumed domain events -> normalized analytical contracts.

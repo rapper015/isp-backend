@@ -268,8 +268,36 @@ class AdaptiveMfaRule(UUIDMixin, Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class LegalNotice(UUIDMixin, Base):
+    """Automated legal notice workflows (feature 1280)."""
+    __tablename__ = "sec_legal_notice"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    notice_type: Mapped[str] = mapped_column(String(120), index=True)  # e.g. breach, lawful-interception, dmca
+    subject: Mapped[str] = mapped_column(String(200))
+    recipient: Mapped[str] = mapped_column(String(200))
+    details: Mapped[dict] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(20), default="DRAFT")  # DRAFT -> PROCESSING -> SERVED -> CLOSED
+    served_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ForensicInvestigation(UUIDMixin, Base):
+    """Digital forensics engine: evidence chain + timeline + findings (feature 1443)."""
+    __tablename__ = "sec_forensic_investigation"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    case_ref: Mapped[str] = mapped_column(String(200), index=True)
+    scope: Mapped[str] = mapped_column(String(200))
+    evidence_items: Mapped[list] = mapped_column(JSON, default=list)  # hashes, sources
+    timeline: Mapped[list] = mapped_column(JSON, default=list)
+    findings: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="OPEN")  # OPEN -> COMPLETE
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 for _t in (SecurityEvent, EvidenceBlock, CompliancePolicy, PolicyViolation,
            RetentionPolicy, ConsentRecord, DataAccessRequest, SecurityCase,
            CaseEvent, AuditLog, Vulnerability, LIRequest,
-           CircleRegion, GeoBlockRule, ThreatPlaybook, AdaptiveMfaRule):
+           CircleRegion, GeoBlockRule, ThreatPlaybook, AdaptiveMfaRule,
+           LegalNotice, ForensicInvestigation):
     _register(_t.__tablename__)

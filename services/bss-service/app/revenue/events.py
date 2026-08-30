@@ -50,6 +50,13 @@ EVENTS = (
     "monetization.churn_tracked.v1",
     "monetization.trial_converted.v1",
     "monetization.stickiness_computed.v1",
+    # growth / engagement (Master Spec Batch 8)
+    "catalog.coupon.applied.v1",
+    "catalog.points.redeemed.v1",
+    "catalog.service.composed.v1",
+    "catalog.expense.categorized.v1",
+    "catalog.margin.improved.v1",
+    "catalog.referral.triggered.v1",
 )
 
 

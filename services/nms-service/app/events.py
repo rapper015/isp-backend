@@ -35,6 +35,8 @@ PUBLISHED_TOPOLOGY = {
     "nms.degradation.applied.v1",
     "nms.queue.saturation_protected.v1",
     "nms.queue.protection.applied.v1",
+    "nms.runbook.triggered.v1",
+    "nms.anomaly.heatmap.generated.v1",
 }
 
 

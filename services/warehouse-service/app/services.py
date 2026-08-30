@@ -4,7 +4,8 @@ import uuid
 from sqlalchemy.orm import Session
 
 from . import events
-from .models import AnalyticsCluster, EcosystemMetric, Kpi, Profitability, RevenueTrend
+from .models import (AnalyticsCluster, EcosystemMetric, Kpi, Profitability,
+                     RevenueTrend, ScenarioComparison)
 
 
 def _tid(tenant_id) -> uuid.UUID:
@@ -96,6 +97,35 @@ class AnalyticsService:
         row.value = float(data.get("value", row.value or 0.0))
         events.outbox(db, "warehouse.ecosystem.recorded.v1", t, {"partner": row.partner, "metric": row.metric})
         events.outbox(db, "warehouse.ecosystem.analyzed.v1", t, {"partner": row.partner, "metric": row.metric})
+        db.commit()
+        db.refresh(row)
+        return row
+
+    # 1340 Scenario Comparison Engine
+    def compare_scenarios(self, db: Session, tenant_id, data: dict):
+        t = _tid(tenant_id)
+        name = data["comparison_name"]
+        baseline = data.get("baseline") or {}
+        alternatives = data.get("alternatives") or []
+        # pick the alternative with the best delta on the primary metric
+        winner = None
+        best = None
+        metric = data.get("primary_metric")
+        for alt in alternatives:
+            delta = alt.get("delta") or {}
+            if metric and metric in delta:
+                score = float(delta[metric])
+                if best is None or score > best:
+                    best, winner = score, alt.get("name")
+        row = db.query(ScenarioComparison).filter_by(tenant_id=t, comparison_name=name).first()
+        if row is None:
+            row = ScenarioComparison(tenant_id=t, comparison_name=name, baseline=baseline,
+                                     alternatives=alternatives, winner=winner)
+            db.add(row)
+        else:
+            row.baseline, row.alternatives, row.winner = baseline, alternatives, winner
+        events.outbox(db, "warehouse.scenario.comparison.generated.v1", t,
+                      {"comparison_name": name, "winner": winner})
         db.commit()
         db.refresh(row)
         return row

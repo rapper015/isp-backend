@@ -14,8 +14,8 @@ from .routing import enforce_scope, record_audit, require_tenant_id
 from .security import _required_permission, get_auth_context, require_permission
 from .context import TenantContext
 from .services import (CaseService, ComplianceOpsService, ConsentService, DsarService,
-                       EventService, LiService, PolicyService, RetentionService,
-                       VulnerabilityService)
+                       EventService, ForensicsService, LiService, NoticeService,
+                       PolicyService, RetentionService, VulnerabilityService)
 
 
 def _db():
@@ -588,3 +588,65 @@ def evaluate_mfa(body: dict, request: Request,
                  db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("events.ingest"))):
     require_tenant_id(ctx)
     return ComplianceOpsService.evaluate_mfa(db, ctx, body.get("context", {}))
+
+
+# ---------------------------------------------------------------------------
+# Automated legal notice handling (feature 1280)
+# ---------------------------------------------------------------------------
+@app.post("/api/siem/v1/notices", status_code=201)
+def create_notice(body: dict, request: Request,
+                  db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("cases.manage"))):
+    require_tenant_id(ctx)
+    row = NoticeService.create(db, ctx, body)
+    return {"id": str(row.id), "notice_type": row.notice_type, "subject": row.subject,
+            "recipient": row.recipient, "status": row.status}
+
+
+@app.get("/api/siem/v1/notices")
+def list_notices(request: Request, db: Session = Depends(_db),
+                 ctx: TenantContext = Depends(_auth("cases.view"))):
+    q = enforce_scope(db.query(models.LegalNotice), models.LegalNotice, ctx)
+    return [{"id": str(r.id), "notice_type": r.notice_type, "subject": r.subject,
+             "recipient": r.recipient, "status": r.status} for r in q.all()]
+
+
+@app.post("/api/siem/v1/notices/{notice_id}/process")
+def process_notice(notice_id: uuid.UUID, request: Request,
+                   db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("cases.manage"))):
+    try:
+        row = NoticeService.process(db, ctx, notice_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"id": str(row.id), "notice_type": row.notice_type, "status": row.status,
+            "served_at": row.served_at.isoformat() if row.served_at else None}
+
+
+# ---------------------------------------------------------------------------
+# Digital forensics engine (feature 1443)
+# ---------------------------------------------------------------------------
+@app.post("/api/siem/v1/forensics", status_code=201)
+def start_investigation(body: dict, request: Request,
+                        db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("cases.manage"))):
+    require_tenant_id(ctx)
+    row = ForensicsService.start(db, ctx, body)
+    return {"id": str(row.id), "case_ref": row.case_ref, "scope": row.scope,
+            "evidence_count": len(row.evidence_items or []), "status": row.status}
+
+
+@app.get("/api/siem/v1/forensics")
+def list_investigations(request: Request, db: Session = Depends(_db),
+                        ctx: TenantContext = Depends(_auth("cases.view"))):
+    q = enforce_scope(db.query(models.ForensicInvestigation), models.ForensicInvestigation, ctx)
+    return [{"id": str(r.id), "case_ref": r.case_ref, "scope": r.scope,
+             "status": r.status} for r in q.all()]
+
+
+@app.post("/api/siem/v1/forensics/{inv_id}/complete")
+def complete_investigation(inv_id: uuid.UUID, body: dict, request: Request,
+                          db: Session = Depends(_db), ctx: TenantContext = Depends(_auth("cases.manage"))):
+    try:
+        row = ForensicsService.complete(db, ctx, inv_id, body.get("findings", ""))
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {"id": str(row.id), "case_ref": row.case_ref, "status": row.status,
+            "evidence_count": len(row.evidence_items or [])}

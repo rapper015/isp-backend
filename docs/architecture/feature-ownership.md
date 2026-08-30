@@ -7,10 +7,9 @@ Recommended owner -> tracked evidence services mapping (repository reality):
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 83 |
-| COMPLETE | 25 |
+| COMPLETE | 38 |
 | CONDITIONAL_FUTURE | 1 |
-| MISSING | 11 |
-| PARTIAL | 284 |
+| PARTIAL | 282 |
 
 Total features: 404
 
@@ -19,10 +18,9 @@ Total features: 404
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 4 |
-| COMPLETE | 2 |
+| COMPLETE | 17 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 3 |
-| PARTIAL | 132 |
+| PARTIAL | 120 |
 
 Total features: 141
 
@@ -31,10 +29,9 @@ Total features: 141
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 5 |
-| COMPLETE | 0 |
+| COMPLETE | 9 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 6 |
-| PARTIAL | 181 |
+| PARTIAL | 178 |
 
 Total features: 192
 
@@ -43,10 +40,9 @@ Total features: 192
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 15 |
-| COMPLETE | 1 |
+| COMPLETE | 6 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 2 |
-| PARTIAL | 146 |
+| PARTIAL | 143 |
 
 Total features: 164
 
@@ -55,10 +51,9 @@ Total features: 164
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 15 |
-| COMPLETE | 3 |
+| COMPLETE | 6 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 0 |
-| PARTIAL | 62 |
+| PARTIAL | 59 |
 
 Total features: 80
 
@@ -67,9 +62,8 @@ Total features: 80
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 5 |
-| COMPLETE | 7 |
+| COMPLETE | 9 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 2 |
 | PARTIAL | 100 |
 
 Total features: 114
@@ -81,7 +75,6 @@ Total features: 114
 | BLOCKED_EXTERNAL | 2 |
 | COMPLETE | 0 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 0 |
 | PARTIAL | 6 |
 
 Total features: 8
@@ -91,10 +84,9 @@ Total features: 8
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 2 |
-| COMPLETE | 4 |
+| COMPLETE | 7 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 2 |
-| PARTIAL | 101 |
+| PARTIAL | 100 |
 
 Total features: 109
 
@@ -103,9 +95,8 @@ Total features: 109
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 1 |
-| COMPLETE | 6 |
+| COMPLETE | 9 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 3 |
 | PARTIAL | 29 |
 
 Total features: 39
@@ -115,9 +106,8 @@ Total features: 39
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 2 |
-| COMPLETE | 8 |
+| COMPLETE | 9 |
 | CONDITIONAL_FUTURE | 0 |
-| MISSING | 1 |
 | PARTIAL | 55 |
 
 Total features: 66
@@ -127,9 +117,8 @@ Total features: 66
 | Status | Count |
 |---|---|
 | BLOCKED_EXTERNAL | 1 |
-| COMPLETE | 4 |
+| COMPLETE | 12 |
 | CONDITIONAL_FUTURE | 51 |
-| MISSING | 8 |
 | PARTIAL | 119 |
 
 Total features: 183

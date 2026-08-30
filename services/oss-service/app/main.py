@@ -38,6 +38,8 @@ from .services.assets_service import (
     EnterpriseService,
     InfraService,
     InventoryDriftService,
+    OttService,
+    PoleService,
     SecurityService,
     TelemetryService,
     TrafficService,
@@ -599,4 +601,38 @@ def sync_property(payload: dict, session: Session = Depends(db)):
     p = TelemetryService.sync_property(session, UUID(str(payload.get("tenant_id"))), payload)
     return {"id": str(p.id), "property_name": p.property_name, "pms_system": p.pms_system,
             "status": p.status}
+
+
+# ===========================================================================
+# OTT partner APIs + pole management (Batch 8: 659, 1134)
+# ===========================================================================
+
+@app.post("/api/oss/ott/partners", status_code=201, dependencies=[Depends(management_auth)])
+def integrate_ott_partner(payload: dict, session: Session = Depends(db)):
+    p = OttService.integrate(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(p.id), "partner_name": p.partner_name,
+            "provider_type": p.provider_type, "status": p.status}
+
+
+@app.get("/api/oss/ott/partners", dependencies=[Depends(management_auth)])
+def list_ott_partners(tenant_id: UUID = Query(...), session: Session = Depends(db)):
+    return [{"id": str(p.id), "partner_name": p.partner_name,
+             "provider_type": p.provider_type, "api_endpoint": p.api_endpoint,
+             "status": p.status} for p in session.scalars(
+        select(models.OttPartner).where(models.OttPartner.tenant_id == tenant_id))]
+
+
+@app.post("/api/oss/poles", status_code=201, dependencies=[Depends(management_auth)])
+def track_pole(payload: dict, session: Session = Depends(db)):
+    pole = PoleService.track(session, UUID(str(payload.get("tenant_id"))), payload)
+    return {"id": str(pole.id), "pole_code": pole.pole_code, "location": pole.location,
+            "pole_type": pole.pole_type, "status": pole.status}
+
+
+@app.get("/api/oss/poles", dependencies=[Depends(management_auth)])
+def list_poles(tenant_id: UUID = Query(...), session: Session = Depends(db)):
+    return [{"id": str(p.id), "pole_code": p.pole_code, "location": p.location,
+             "pole_type": p.pole_type, "height_m": p.height_m,
+             "status": p.status} for p in session.scalars(
+        select(models.TelecomPole).where(models.TelecomPole.tenant_id == tenant_id))]
 

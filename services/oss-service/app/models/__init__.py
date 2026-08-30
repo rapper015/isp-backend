@@ -28,6 +28,8 @@ from .assets import (
     MOSScore,
     RoomBandwidth,
     PMSProperty,
+    OttPartner,
+    TelecomPole,
 )
 
 __all__ = [
@@ -64,4 +66,6 @@ __all__ = [
     "MOSScore",
     "RoomBandwidth",
     "PMSProperty",
+    "OttPartner",
+    "TelecomPole",
 ]

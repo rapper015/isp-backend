@@ -101,6 +101,8 @@ def _required_permission(method: str, path: str) -> str | None:
         return "predictions.view"
     if "/ops" in p:
         return "ai.ops.manage" if method in ("POST", "PUT", "PATCH") else "ai.ops.view"
+    if "/aiops" in p:
+        return "ai.ops.manage" if method in ("POST", "PUT", "PATCH") else "ai.ops.view"
     return "predictions.view"
 
 

@@ -110,3 +110,43 @@ class ResellerRegulatoryRecord(Base, Timestamped):
     report_type: Mapped[str] = mapped_column(String(80), nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="TRACKED")
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class KbFeedback(Base, Timestamped):
+    """KB feedback loop (feature 1190)."""
+    __tablename__ = "crm_kb_feedback"
+    __table_args__ = (Index("ix_crm_kb_feedback_tenant", "tenant_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    article_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    rating: Mapped[int] = mapped_column(Integer, default=0)  # 1..5
+    helpful: Mapped[bool] = mapped_column(default=False)
+    feedback: Mapped[str | None] = mapped_column(Text)
+    applied: Mapped[bool] = mapped_column(default=False)  # consumed to improve KB
+
+
+class ExperienceRecovery(Base, Timestamped):
+    """Experience recovery engine (feature 1459): auto-recover degraded QoE."""
+    __tablename__ = "crm_experience_recovery"
+    __table_args__ = (Index("ix_crm_recovery_tenant", "tenant_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    customer_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    metric: Mapped[str] = mapped_column(String(80), nullable=False)  # qoe, latency, mos
+    degraded_value: Mapped[float] = mapped_column(Float, default=0.0)
+    threshold: Mapped[float] = mapped_column(Float, default=0.0)
+    recovery_action: Mapped[str] = mapped_column(String(200), default="NOTIFY")
+    status: Mapped[str] = mapped_column(String(20), default="TRIGGERED")
+
+
+class LoyaltyScore(Base, Timestamped):
+    """Behavioral loyalty scoring (feature 1460)."""
+    __tablename__ = "crm_loyalty_score"
+    __table_args__ = (UniqueConstraint("tenant_id", "customer_id", "period", name="uq_crm_loyalty"),
+                      Index("ix_crm_loyalty_tenant", "tenant_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    customer_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    period: Mapped[str] = mapped_column(String(20), default="MONTH")
+    score: Mapped[float] = mapped_column(Float, default=0.0)
+    behavioral_factors: Mapped[dict] = mapped_column(JSON, default=dict)  # engagement, advocacy, tenure...

@@ -14,7 +14,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .database import Base, SessionLocal, engine
-from .models import (AuditLog, Branch, Customer, ExternalReference, FederationLink, Franchise, KycCase, KycDocument, Lead, LeadInteraction, FollowUp, ServiceLocation, Tenant, TicketSuggestion, TimelineEntry)
+from .models import (AuditLog, Branch, Customer, ExperienceRecovery, ExternalReference,
+                     FederationLink, Franchise, KbFeedback, KycCase, KycDocument, Lead,
+                     LeadInteraction, FollowUp, LoyaltyScore, ServiceLocation, Tenant,
+                     TicketSuggestion, TimelineEntry)
 from .schemas import (AddressCreate, BranchIn, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
 from .security import internal_service_auth
 from .services import (caf_service, conversion_service, customer_360, customer_service, duplicate_service, kyc_service, lead_service, lifecycle_service, merge_service, risk_service)
@@ -22,7 +25,10 @@ from .services.audit_service import record_audit
 from .services.ecosystem_service import (
     EscalationService,
     FederationService,
+    KbService,
+    LoyaltyService,
     PartnerService,
+    RecoveryService,
     RegulatoryService,
     SuggestionService,
     TicketSlaService,
@@ -950,3 +956,68 @@ def submit_regulatory(payload: dict, tenant_id: UUID, session: Session = Depends
     except KeyError:
         raise HTTPException(404, "regulatory record not found")
     return {"id": str(r.id), "status": r.status, "submitted_at": r.submitted_at}
+
+
+# ---------------------------------------------------------------------------
+# KB feedback loop, experience recovery, behavioral loyalty (Batch 8)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/crm/kb/feedback", status_code=201, dependencies=[Depends(internal_service_auth)])
+def capture_kb_feedback(payload: dict, tenant_id: UUID, request: Request,
+                        session: Session = Depends(db)):
+    fb = KbService.capture(session, tenant_id, payload, actor_of(request))
+    return {"id": str(fb.id), "article_id": fb.article_id, "rating": fb.rating,
+            "helpful": fb.helpful, "applied": fb.applied}
+
+
+@app.get("/api/crm/kb/feedback", dependencies=[Depends(internal_service_auth)])
+def list_kb_feedback(tenant_id: UUID, session: Session = Depends(db)):
+    rows = session.scalars(select(KbFeedback).where(KbFeedback.tenant_id == tenant_id)
+                           .order_by(KbFeedback.created_at.desc()).limit(100)).all()
+    return [{"id": str(f.id), "article_id": f.article_id, "rating": f.rating,
+             "helpful": f.helpful, "applied": f.applied} for f in rows]
+
+
+@app.post("/api/crm/kb/feedback/{feedback_id}/apply", dependencies=[Depends(internal_service_auth)])
+def apply_kb_feedback(feedback_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    try:
+        fb = KbService.apply(session, tenant_id, feedback_id)
+    except KeyError:
+        raise HTTPException(404, "feedback not found")
+    return {"id": str(fb.id), "article_id": fb.article_id, "applied": fb.applied}
+
+
+@app.post("/api/crm/recovery/trigger", status_code=201, dependencies=[Depends(internal_service_auth)])
+def trigger_recovery(payload: dict, tenant_id: UUID, request: Request,
+                     session: Session = Depends(db)):
+    rec = RecoveryService.trigger(session, tenant_id, payload, actor_of(request))
+    return {"id": str(rec.id), "customer_id": rec.customer_id, "metric": rec.metric,
+            "recovery_action": rec.recovery_action, "status": rec.status}
+
+
+@app.get("/api/crm/recovery", dependencies=[Depends(internal_service_auth)])
+def list_recovery(tenant_id: UUID, session: Session = Depends(db)):
+    rows = session.scalars(select(ExperienceRecovery).where(
+        ExperienceRecovery.tenant_id == tenant_id)
+        .order_by(ExperienceRecovery.created_at.desc()).limit(100)).all()
+    return [{"id": str(r.id), "customer_id": r.customer_id, "metric": r.metric,
+             "recovery_action": r.recovery_action, "status": r.status} for r in rows]
+
+
+@app.post("/api/crm/loyalty/score", status_code=201, dependencies=[Depends(internal_service_auth)])
+def calculate_loyalty(payload: dict, tenant_id: UUID, request: Request,
+                      session: Session = Depends(db)):
+    ls = LoyaltyService.score(session, tenant_id, payload, actor_of(request))
+    return {"id": str(ls.id), "customer_id": ls.customer_id, "period": ls.period,
+            "score": ls.score, "behavioral_factors": ls.behavioral_factors}
+
+
+@app.get("/api/crm/loyalty", dependencies=[Depends(internal_service_auth)])
+def list_loyalty(tenant_id: UUID, customer_id: str | None = None,
+                 session: Session = Depends(db)):
+    stmt = select(LoyaltyScore).where(LoyaltyScore.tenant_id == tenant_id)
+    if customer_id:
+        stmt = stmt.where(LoyaltyScore.customer_id == customer_id)
+    rows = session.scalars(stmt.order_by(LoyaltyScore.created_at.desc()).limit(100)).all()
+    return [{"id": str(l.id), "customer_id": l.customer_id, "period": l.period,
+             "score": l.score} for l in rows]

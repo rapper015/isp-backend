@@ -32,9 +32,10 @@ from .models import (ChurnScore, DataContract, DatasetSnapshot, FeatureDefinitio
                      Recommendation, RemediationIntent, RemediationPolicy, TrainingRun)
 from .routing import enforce_scope, require_platform_aggregate
 from .security import internal_service_auth, management_auth
-from .services import (audit_service, catalog_service, churn_service, feature_service,
-                       fraud_service, ingestion_service, maintenance_service, ml_service,
-                       operations_service, quality_service, remediation_service, report_service)
+from .services import (aiops_advanced_service, audit_service, catalog_service, churn_service,
+                       feature_service, fraud_service, ingestion_service, maintenance_service,
+                       ml_service, operations_service, quality_service, remediation_service,
+                       report_service)
 
 logger = logging.getLogger("intelligence")
 
@@ -779,3 +780,72 @@ def list_region_profitability(db: Session = Depends(db)):
         RegionProfitability.tenant_id == _tid()).order_by(RegionProfitability.profit_margin.desc()).all()
     return [{"id": str(r.id), "region": r.region, "period": r.period,
              "profit_margin": r.profit_margin} for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# Aiops advanced (Batch 8h: 731, 739, 861, 871, 883, 886, 888, 898)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/intelligence/v1/aiops/network-twin", dependencies=[Depends(management_auth)])
+def create_network_twin(payload: dict, request: Request, db: Session = Depends(db)):
+    row = aiops_advanced_service.AiopsAdvancedService.create_network_twin(db, _tid(), payload,
+                                                                          actor=_actor(request))
+    return {"id": str(row.id), "twin_name": row.twin_name}
+
+
+@app.get("/api/intelligence/v1/aiops/network-twin", dependencies=[Depends(management_auth)])
+def list_network_twin(db: Session = Depends(db)):
+    from app.models import NetworkTwin
+    rows = db.query(NetworkTwin).filter(NetworkTwin.tenant_id == _tid()).all()
+    return [{"id": str(r.id), "twin_name": r.twin_name} for r in rows]
+
+
+@app.post("/api/intelligence/v1/aiops/scaling", dependencies=[Depends(management_auth)])
+def autonomous_scale(payload: dict, request: Request, db: Session = Depends(db)):
+    row = aiops_advanced_service.AiopsAdvancedService.autonomous_scale(db, _tid(), payload,
+                                                                       actor=_actor(request))
+    return {"id": str(row.id), "service": row.service, "action": row.action, "reason": row.reason}
+
+
+@app.post("/api/intelligence/v1/aiops/pricing", dependencies=[Depends(management_auth)])
+def change_price(payload: dict, request: Request, db: Session = Depends(db)):
+    row = aiops_advanced_service.AiopsAdvancedService.change_price(db, _tid(), payload,
+                                                                   actor=_actor(request))
+    return {"id": str(row.id), "product": row.product, "old_price": row.old_price,
+            "new_price": row.new_price}
+
+
+@app.post("/api/intelligence/v1/aiops/business-twin", dependencies=[Depends(management_auth)])
+def create_business_twin(payload: dict, request: Request, db: Session = Depends(db)):
+    row = aiops_advanced_service.AiopsAdvancedService.create_business_twin(db, _tid(), payload,
+                                                                           actor=_actor(request))
+    return {"id": str(row.id), "twin_name": row.twin_name, "scenario": row.scenario}
+
+
+@app.post("/api/intelligence/v1/aiops/upsell", dependencies=[Depends(management_auth)])
+def suggest_upsell(payload: dict, request: Request, db: Session = Depends(db)):
+    row = aiops_advanced_service.AiopsAdvancedService.suggest_upsell(db, _tid(), payload,
+                                                                     actor=_actor(request))
+    return {"id": str(row.id), "customer_id": row.customer_id, "product": row.product}
+
+
+@app.post("/api/intelligence/v1/aiops/voice", dependencies=[Depends(management_auth)])
+def voice_respond(payload: dict, request: Request, db: Session = Depends(db)):
+    row = aiops_advanced_service.AiopsAdvancedService.voice_respond(db, _tid(), payload,
+                                                                    actor=_actor(request))
+    return {"id": str(row.id), "response": row.response}
+
+
+@app.post("/api/intelligence/v1/aiops/sentiment", dependencies=[Depends(management_auth)])
+def handle_sentiment(payload: dict, request: Request, db: Session = Depends(db)):
+    row = aiops_advanced_service.AiopsAdvancedService.handle_sentiment(db, _tid(), payload,
+                                                                       actor=_actor(request))
+    return {"id": str(row.id), "sentiment": row.sentiment, "action": row.action}
+
+
+@app.post("/api/intelligence/v1/aiops/workforce", dependencies=[Depends(management_auth)])
+def automate_workforce(payload: dict, request: Request, db: Session = Depends(db)):
+    row = aiops_advanced_service.AiopsAdvancedService.automate_workforce(db, _tid(), payload,
+                                                                         actor=_actor(request))
+    return {"id": str(row.id), "task_name": row.task_name, "automation_pct": row.automation_pct,
+            "status": row.status}

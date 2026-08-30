@@ -26,5 +26,6 @@ def upgrade():
 def downgrade():
     for t in ("nas_devices", "health_observations", "nms_escalation_policy",
               "nms_config_snapshot", "nms_approval_sla", "nms_cache_strategy",
-              "nms_degradation_rule", "nms_queue_saturation", "nms_outbox"):
+              "nms_degradation_rule", "nms_queue_saturation", "nms_runbook",
+              "nms_anomaly_heatmap", "nms_outbox"):
         op.drop_table(t)

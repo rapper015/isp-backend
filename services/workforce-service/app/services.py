@@ -530,3 +530,81 @@ class KpiService:
             session.add(row)
         session.commit()
         return row
+
+
+class ExpertService:
+    """Remote expert assistance (feature 1487)."""
+
+    @staticmethod
+    def start(session: Session, ctx: TenantContext, data: dict) -> models.ExpertSession:
+        tenant_id = ctx.require_tenant()
+        row = models.ExpertSession(tenant_id=tenant_id, status="ACTIVE", **data)
+        session.add(row)
+        session.flush()
+        events.publish(session, "workforce.expert.session.started.v1", "ExpertSession",
+                       row.id, {"work_order_id": row.work_order_id,
+                                "expert_id": row.expert_id, "channel": row.channel},
+                       tenant_id=tenant_id)
+        session.commit()
+        record_audit(session, ctx, "expert.start", "ExpertSession", str(row.id))
+        session.commit()
+        return row
+
+    @staticmethod
+    def end(session: Session, ctx: TenantContext, session_id: uuid.UUID) -> models.ExpertSession:
+        tenant_id = ctx.require_tenant()
+        row = session.query(models.ExpertSession).filter(
+            models.ExpertSession.id == session_id,
+            models.ExpertSession.tenant_id == tenant_id).first()
+        if not row:
+            raise KeyError("Expert session not found")
+        row.status = "ENDED"
+        row.ended_at = _utcnow()
+        session.commit()
+        return row
+
+
+class FailureVisualizationService:
+    """Failure visualization (feature 1488, read-model)."""
+
+    @staticmethod
+    def render(session: Session, ctx: TenantContext, data: dict) -> models.FailureVisualization:
+        tenant_id = ctx.require_tenant()
+        row = models.FailureVisualization(tenant_id=tenant_id, rendered=False, **data)
+        session.add(row)
+        session.flush()
+        events.publish(session, "workforce.failure.visualization.rendered.v1",
+                       "FailureVisualization", row.id,
+                       {"work_order_id": row.work_order_id, "fault_type": row.fault_type},
+                       tenant_id=tenant_id)
+        session.commit()
+        return row
+
+    @staticmethod
+    def mark_rendered(session: Session, ctx: TenantContext, vis_id: uuid.UUID) -> models.FailureVisualization:
+        tenant_id = ctx.require_tenant()
+        row = session.query(models.FailureVisualization).filter(
+            models.FailureVisualization.id == vis_id,
+            models.FailureVisualization.tenant_id == tenant_id).first()
+        if not row:
+            raise KeyError("Visualization not found")
+        row.rendered = True
+        session.commit()
+        return row
+
+
+class EquipmentOverlayService:
+    """Smart equipment overlay (feature 1489): AR device recognition."""
+
+    @staticmethod
+    def recognize(session: Session, ctx: TenantContext, data: dict) -> models.EquipmentOverlay:
+        tenant_id = ctx.require_tenant()
+        row = models.EquipmentOverlay(tenant_id=tenant_id, **data)
+        session.add(row)
+        session.flush()
+        events.publish(session, "workforce.equipment.device.recognized.v1",
+                       "EquipmentOverlay", row.id,
+                       {"device_id": row.device_id, "recognized_model": row.recognized_model},
+                       tenant_id=tenant_id)
+        session.commit()
+        return row

@@ -2,11 +2,13 @@ from contextlib import asynccontextmanager
 from datetime import datetime,timezone
 from os import getenv
 from uuid import UUID
+import uuid
 from fastapi import Depends,FastAPI,HTTPException,Request
 from pydantic import BaseModel,ConfigDict
 from sqlalchemy.orm import Session
 from .database import Base,SessionLocal,engine
-from .models import HealthObservation,NasDevice
+from . import models
+from .models import AnomalyHeatmap,HealthObservation,NasDevice,Runbook
 from .security import management_auth
 from .services import OpsService
 @asynccontextmanager
@@ -112,3 +114,43 @@ def protect_queue(payload: dict, request: Request, s: Session = Depends(db)):
     row = OpsService.protect_queue(s, _tid(request), payload)
     return {"id": str(row.id), "queue": row.queue, "depth": row.depth,
             "max_depth": row.max_depth, "protected": row.protected}
+
+
+@app.post("/api/nms/ops/runbooks", status_code=201, dependencies=[Depends(management_auth)])
+def create_runbook(payload: dict, request: Request, s: Session = Depends(db)):
+    row = OpsService.create_runbook(s, _tid(request), payload)
+    return {"id": str(row.id), "name": row.name, "trigger": row.trigger,
+            "steps": len(row.steps or []), "executions": row.executions,
+            "status": row.status}
+
+
+@app.get("/api/nms/ops/runbooks", dependencies=[Depends(management_auth)])
+def list_runbooks(request: Request, s: Session = Depends(db)):
+    tid = _tid(request)
+    rows = s.query(models.Runbook).filter(models.Runbook.tenant_id == tid).all()
+    return [{"id": str(r.id), "name": r.name, "trigger": r.trigger,
+             "executions": r.executions, "status": r.status} for r in rows]
+
+
+@app.post("/api/nms/ops/runbooks/{runbook_id}/trigger", dependencies=[Depends(management_auth)])
+def trigger_runbook(runbook_id: uuid.UUID, request: Request, s: Session = Depends(db)):
+    try:
+        row = OpsService.trigger_runbook(s, _tid(request), runbook_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Runbook not found")
+    return {"id": str(row.id), "name": row.name, "executions": row.executions}
+
+
+@app.post("/api/nms/ops/anomaly/heatmap", status_code=201, dependencies=[Depends(management_auth)])
+def generate_heatmap(payload: dict, request: Request, s: Session = Depends(db)):
+    row = OpsService.generate_heatmap(s, _tid(request), payload)
+    return {"id": str(row.id), "scope": row.scope, "period": row.period,
+            "cells": len(row.cells or []), "anomaly_count": row.anomaly_count}
+
+
+@app.get("/api/nms/ops/anomaly/heatmaps", dependencies=[Depends(management_auth)])
+def list_heatmaps(request: Request, s: Session = Depends(db)):
+    tid = _tid(request)
+    rows = s.query(models.AnomalyHeatmap).filter(models.AnomalyHeatmap.tenant_id == tid).all()
+    return [{"id": str(r.id), "scope": r.scope, "period": r.period,
+             "cells": len(r.cells or []), "anomaly_count": r.anomaly_count} for r in rows]

@@ -646,3 +646,81 @@ class ComplianceOpsService:
                 return {"mfa_required": True, "rule": rule.name,
                         "action": rule.trigger_action}
         return {"mfa_required": False, "rule": None}
+
+
+class NoticeService:
+    """Automated legal notice handling (feature 1280)."""
+
+    @staticmethod
+    def create(session: Session, ctx: TenantContext, data: dict) -> models.LegalNotice:
+        tenant_id = ctx.require_tenant()
+        row = models.LegalNotice(tenant_id=tenant_id, status="DRAFT", **data)
+        session.add(row)
+        session.commit()
+        record_audit(session, ctx, "notice.create", "LegalNotice", str(row.id))
+        session.commit()
+        return row
+
+    @staticmethod
+    def process(session: Session, ctx: TenantContext, notice_id: uuid.UUID) -> models.LegalNotice:
+        """Serve the notice and publish the workflow-complete event."""
+        tenant_id = ctx.require_tenant()
+        row = session.query(models.LegalNotice).filter(
+            models.LegalNotice.id == notice_id,
+            models.LegalNotice.tenant_id == tenant_id).first()
+        if not row:
+            raise KeyError("Notice not found")
+        row.status = "SERVED"
+        row.served_at = _utcnow()
+        session.commit()
+        events.publish(session, "siem.notice.processed.v1", "LegalNotice", row.id,
+                       {"notice_id": str(row.id), "notice_type": row.notice_type,
+                        "recipient": row.recipient, "status": row.status},
+                       tenant_id=tenant_id)
+        session.commit()
+        record_audit(session, ctx, "notice.process", "LegalNotice", str(row.id))
+        session.commit()
+        return row
+
+
+class ForensicsService:
+    """Digital forensics engine (feature 1443)."""
+
+    @staticmethod
+    def start(session: Session, ctx: TenantContext, data: dict) -> models.ForensicInvestigation:
+        tenant_id = ctx.require_tenant()
+        row = models.ForensicInvestigation(
+            tenant_id=tenant_id, status="OPEN",
+            evidence_items=data.get("evidence_items") or [],
+            timeline=data.get("timeline") or [],
+            case_ref=data.get("case_ref", ""),
+            scope=data.get("scope", ""),
+        )
+        session.add(row)
+        session.commit()
+        record_audit(session, ctx, "forensics.start", "ForensicInvestigation", str(row.id))
+        session.commit()
+        return row
+
+    @staticmethod
+    def complete(session: Session, ctx: TenantContext, inv_id: uuid.UUID,
+                 findings: str) -> models.ForensicInvestigation:
+        """Close the investigation with findings and publish InvestigationDone."""
+        tenant_id = ctx.require_tenant()
+        row = session.query(models.ForensicInvestigation).filter(
+            models.ForensicInvestigation.id == inv_id,
+            models.ForensicInvestigation.tenant_id == tenant_id).first()
+        if not row:
+            raise KeyError("Investigation not found")
+        row.status = "COMPLETE"
+        row.findings = findings
+        row.completed_at = _utcnow()
+        session.commit()
+        events.publish(session, "siem.investigation.done.v1", "ForensicInvestigation", row.id,
+                       {"investigation_id": str(row.id), "case_ref": row.case_ref,
+                        "evidence_count": len(row.evidence_items or [])},
+                       tenant_id=tenant_id)
+        session.commit()
+        record_audit(session, ctx, "forensics.complete", "ForensicInvestigation", str(row.id))
+        session.commit()
+        return row

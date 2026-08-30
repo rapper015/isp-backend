@@ -220,3 +220,82 @@ class WalletLedger(Base, Timestamped):
     amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     balance: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     reason: Mapped[str | None] = mapped_column(String(200))
+
+
+# --- Master Spec Batch 8f: coupons, redemption, service composition, expense
+# intelligence, margin optimization, viral growth ---
+
+class Coupon(Base, Timestamped):
+    """Coupon engine (feature 682): discount coupons."""
+    __tablename__ = "bss_coupon"
+    __table_args__ = (UniqueConstraint("tenant_id", "code", name="uq_bss_coupon"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("bss_tenants.id"), index=True, nullable=False)
+    code: Mapped[str] = mapped_column(String(64), nullable=False)
+    discount_type: Mapped[str] = mapped_column(String(20), default="PERCENT")  # PERCENT | FIXED
+    discount_value: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"))
+    max_uses: Mapped[int] = mapped_column(Integer, default=1)
+    used_count: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(20), default="ACTIVE")
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class Redemption(Base, Timestamped):
+    """Redemption (feature 690): redeem loyalty points for rewards."""
+    __tablename__ = "bss_redemption"
+    __table_args__ = (Index("ix_bss_redemption_tenant", "tenant_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("bss_tenants.id"), index=True, nullable=False)
+    customer_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    points: Mapped[int] = mapped_column(Integer, default=0)
+    reward: Mapped[str] = mapped_column(String(200), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="PENDING")  # PENDING -> REDEEMED
+
+
+class ServiceComposition(Base, Timestamped):
+    """Dynamic service composition (feature 808)."""
+    __tablename__ = "bss_service_composition"
+    __table_args__ = (UniqueConstraint("tenant_id", "composition_code", name="uq_bss_composition"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("bss_tenants.id"), index=True, nullable=False)
+    composition_code: Mapped[str] = mapped_column(String(64), nullable=False)
+    components: Mapped[list] = mapped_column(JSON, default=list)
+    price: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"))
+    status: Mapped[str] = mapped_column(String(20), default="ACTIVE")
+
+
+class ExpenseRecord(Base, Timestamped):
+    """Expense intelligence (feature 903): AI expense categorization."""
+    __tablename__ = "bss_expense_record"
+    __table_args__ = (Index("ix_bss_expense_tenant", "tenant_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("bss_tenants.id"), index=True, nullable=False)
+    description: Mapped[str] = mapped_column(String(300), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"))
+    category: Mapped[str] = mapped_column(String(80), default="OTHER")
+    confidence: Mapped[float] = mapped_column(Float, default=0.0)
+
+
+class MarginOptimization(Base, Timestamped):
+    """Margin optimization AI (feature 1265)."""
+    __tablename__ = "bss_margin_optimization"
+    __table_args__ = (UniqueConstraint("tenant_id", "segment", "period", name="uq_bss_margin_opt"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("bss_tenants.id"), index=True, nullable=False)
+    segment: Mapped[str] = mapped_column(String(120), nullable=False)
+    period: Mapped[str] = mapped_column(String(20), default="MONTH")
+    current_margin_pct: Mapped[float] = mapped_column(Float, default=0.0)
+    optimized_margin_pct: Mapped[float] = mapped_column(Float, default=0.0)
+    recommendation: Mapped[str | None] = mapped_column(Text)
+
+
+class Referral(Base, Timestamped):
+    """Viral growth engine (feature 1497): referral-based acquisition."""
+    __tablename__ = "bss_referral"
+    __table_args__ = (Index("ix_bss_referral_tenant", "tenant_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("bss_tenants.id"), index=True, nullable=False)
+    referrer_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    referee_id: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    reward: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"))
+    status: Mapped[str] = mapped_column(String(20), default="PENDING")  # PENDING -> CREDITED

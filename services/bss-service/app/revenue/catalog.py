@@ -338,3 +338,137 @@ class MonetizationService:
                        {"product": product, "score": score}, tenant_id=tenant_id)
         session.commit()
         return row
+
+
+class GrowthService:
+    """Coupons, redemption, service composition, expense intelligence,
+    margin optimization, viral referrals (Master Spec Batch 8)."""
+
+    @staticmethod
+    def issue_coupon(session, tenant_id, data: dict) -> models.Coupon:
+        """Coupon Engine (682): create a discount coupon."""
+        _tenant(session, tenant_id)
+        c = models.Coupon(tenant_id=tenant_id, status="ACTIVE", **_no_tenant(data))
+        session.add(c)
+        session.commit()
+        return c
+
+    @staticmethod
+    def apply_coupon(session, tenant_id, code: str, amount: Decimal) -> dict:
+        """Coupon Engine (682): apply a coupon to an amount."""
+        _tenant(session, tenant_id)
+        c = session.query(models.Coupon).filter(
+            models.Coupon.tenant_id == tenant_id, models.Coupon.code == code).first()
+        if not c or c.status != "ACTIVE":
+            raise KeyError("coupon not found or inactive")
+        if c.used_count >= c.max_uses:
+            raise ValueError("COUPON_EXHAUSTED")
+        c.used_count += 1
+        if c.discount_type == "FIXED":
+            discount = Decimal(str(c.discount_value))
+        else:
+            discount = Decimal(str(amount)) * Decimal(str(c.discount_value)) / Decimal("100")
+        discount = discount.quantize(Decimal("0.01"))
+        payable = max(Decimal("0.00"), Decimal(str(amount)) - discount)
+        session.flush()
+        publish_outbox(session, "catalog.coupon.applied.v1",
+                       {"code": code, "discount": str(discount), "payable": str(payable)},
+                       tenant_id=tenant_id)
+        session.commit()
+        return {"code": code, "discount": str(discount), "payable": str(payable),
+                "used_count": c.used_count}
+
+    @staticmethod
+    def redeem(session, tenant_id, data: dict) -> models.Redemption:
+        """Redemption (690): redeem loyalty points."""
+        _tenant(session, tenant_id)
+        r = models.Redemption(tenant_id=tenant_id, status="REDEEMED", **_no_tenant(data))
+        session.add(r)
+        session.flush()
+        publish_outbox(session, "catalog.points.redeemed.v1",
+                       {"customer_id": r.customer_id, "points": r.points, "reward": r.reward},
+                       tenant_id=tenant_id)
+        session.commit()
+        return r
+
+    @staticmethod
+    def compose(session, tenant_id, data: dict) -> models.ServiceComposition:
+        """Dynamic Service Composition (808): compose services on demand."""
+        _tenant(session, tenant_id)
+        c = models.ServiceComposition(tenant_id=tenant_id, status="ACTIVE", **_no_tenant(data))
+        session.add(c)
+        session.flush()
+        publish_outbox(session, "catalog.service.composed.v1",
+                       {"composition_code": c.composition_code,
+                        "components": len(c.components or []), "price": str(c.price)},
+                       tenant_id=tenant_id)
+        session.commit()
+        return c
+
+    @staticmethod
+    def categorize_expense(session, tenant_id, data: dict) -> models.ExpenseRecord:
+        """Expense Intelligence (903): AI expense categorization."""
+        _tenant(session, tenant_id)
+        description = (data.get("description") or "").lower()
+        category = "OTHER"
+        for kw, cat in (("rent", "FACILITY"), ("salary", "PAYROLL"), ("bandwidth", "NETWORK"),
+                        ("electric", "UTILITIES"), ("advertis", "MARKETING"), ("legal", "LEGAL"),
+                        ("software", "SOFTWARE"), ("hardware", "HARDWARE")):
+            if kw in description:
+                category = cat
+                break
+        rec = models.ExpenseRecord(tenant_id=tenant_id, category=category,
+                                   confidence=0.85, **_no_tenant(data))
+        session.add(rec)
+        session.flush()
+        publish_outbox(session, "catalog.expense.categorized.v1",
+                       {"description": data.get("description"), "category": category},
+                       tenant_id=tenant_id)
+        session.commit()
+        return rec
+
+    @staticmethod
+    def optimize_margin(session, tenant_id, data: dict) -> models.MarginOptimization:
+        """Margin Optimization AI (1265): recommend pricing/mix to lift margin."""
+        _tenant(session, tenant_id)
+        segment = data.get("segment", "")
+        period = data.get("period", "MONTH")
+        current = float(data.get("current_margin_pct", 0.0))
+        # heuristic: rebalance low-margin components toward the blended target
+        optimized = round(min(100.0, current + max(1.0, 5.0 - current * 0.05)), 2)
+        recommendation = data.get("recommendation") or (
+            "Shift traffic mix to high-margin plans and renegotiate backhaul per-GB.")
+        row = session.query(models.MarginOptimization).filter(
+            models.MarginOptimization.tenant_id == tenant_id,
+            models.MarginOptimization.segment == segment,
+            models.MarginOptimization.period == period).first()
+        if row:
+            row.current_margin_pct = current
+            row.optimized_margin_pct = optimized
+            row.recommendation = recommendation
+        else:
+            row = models.MarginOptimization(tenant_id=tenant_id, segment=segment, period=period,
+                                            current_margin_pct=current,
+                                            optimized_margin_pct=optimized,
+                                            recommendation=recommendation)
+            session.add(row)
+        session.flush()
+        publish_outbox(session, "catalog.margin.improved.v1",
+                       {"segment": segment, "current": current, "optimized": optimized},
+                       tenant_id=tenant_id)
+        session.commit()
+        return row
+
+    @staticmethod
+    def trigger_referral(session, tenant_id, data: dict) -> models.Referral:
+        """Viral Growth Engine (1497): referral-based acquisition."""
+        _tenant(session, tenant_id)
+        r = models.Referral(tenant_id=tenant_id, status="PENDING", **_no_tenant(data))
+        session.add(r)
+        session.flush()
+        publish_outbox(session, "catalog.referral.triggered.v1",
+                       {"referrer_id": r.referrer_id, "referee_id": r.referee_id,
+                        "reward": str(r.reward)},
+                       tenant_id=tenant_id)
+        session.commit()
+        return r

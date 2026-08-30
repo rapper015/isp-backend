@@ -402,3 +402,37 @@ class TelemetryService:
         session.add(p)
         session.commit()
         return p
+
+
+class OttService:
+    """OTT partner APIs (feature 659)."""
+
+    @staticmethod
+    def integrate(session: Session, tenant_id, data: dict) -> models.OttPartner:
+        _tenant(session, tenant_id)
+        p = models.OttPartner(tenant_id=tenant_id, status="ACTIVE", **_no_tenant(data))
+        session.add(p)
+        session.flush()
+        publish_outbox(session, "oss.ott.integrated.v1",
+                       {"partner_id": str(p.id), "partner_name": p.partner_name,
+                        "provider_type": p.provider_type},
+                       tenant_id=tenant_id)
+        session.commit()
+        return p
+
+
+class PoleService:
+    """Telecom pole management (feature 1134)."""
+
+    @staticmethod
+    def track(session: Session, tenant_id, data: dict) -> models.TelecomPole:
+        _tenant(session, tenant_id)
+        pole = models.TelecomPole(tenant_id=tenant_id, status="ACTIVE", **_no_tenant(data))
+        session.add(pole)
+        session.flush()
+        publish_outbox(session, "oss.pole.tracked.v1",
+                       {"pole_id": str(pole.id), "pole_code": pole.pole_code,
+                        "location": pole.location, "status": pole.status},
+                       tenant_id=tenant_id)
+        session.commit()
+        return pole

@@ -88,3 +88,30 @@ class QueueSaturation(Base, Timestamped):
     depth: Mapped[int] = mapped_column(Integer, default=0)
     max_depth: Mapped[int] = mapped_column(Integer, default=1000)
     protected: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+# --- Master Spec Batch 8d: runbook automation + anomaly heatmaps ---
+
+class Runbook(Base, Timestamped):
+    """Runbook Automation (feature 284): predefined incident workflows."""
+    __tablename__ = "nms_runbook"
+    __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_nms_runbook"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    trigger: Mapped[str] = mapped_column(String(120), nullable=False)  # event type / severity
+    steps: Mapped[list] = mapped_column(JSON, default=list)
+    executions: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(20), default="ACTIVE")
+
+
+class AnomalyHeatmap(Base, Timestamped):
+    """Anomaly Heatmaps (feature 743): visual anomaly clusters by region/service."""
+    __tablename__ = "nms_anomaly_heatmap"
+    __table_args__ = (UniqueConstraint("tenant_id", "period", "scope", name="uq_nms_heatmap"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    period: Mapped[str] = mapped_column(String(20), default="DAY")
+    scope: Mapped[str] = mapped_column(String(120), nullable=False)  # region | service | device group
+    cells: Mapped[list] = mapped_column(JSON, default=list)  # [{"key": "MH-GW1", "severity": 0.8, "count": 12}]
+    anomaly_count: Mapped[int] = mapped_column(Integer, default=0)

@@ -52,3 +52,17 @@ def test_tenant_isolation(client, headers, tenant_id):
 def test_rbac_readonly_denied_write(client, tenant_id):
     ro = {"Authorization": f"Bearer {make_token('READ_ONLY', tenant_id)}"}
     assert client.post("/api/warehouse/kpis", headers=ro, json={"code": "X", "name": "X"}).status_code == 403
+
+
+def test_scenario_comparison_engine(client, headers, tenant_id):
+    r = client.post("/api/warehouse/scenarios/compare", headers=headers, json={
+        "comparison_name": "FTTH-vs-5G", "primary_metric": "payback_years",
+        "baseline": {"payback_years": 4.0},
+        "alternatives": [
+            {"name": "FTTH", "metrics": {"payback_years": 3.1}, "delta": {"payback_years": 0.9}},
+            {"name": "5G", "metrics": {"payback_years": 5.2}, "delta": {"payback_years": -1.2}},
+        ]})
+    assert r.status_code == 200
+    assert r.json()["winner"] == "FTTH"
+    rl = client.get("/api/warehouse/scenarios", headers=headers)
+    assert len(rl.json()) == 1

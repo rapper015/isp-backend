@@ -5,9 +5,10 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ..models import (FederationLink, Partner, PartnerHierarchyNode,
-                      PartnerPerformanceRecord, ResellerRegulatoryRecord,
-                      TicketEscalation, TicketSlaTimer, TicketSuggestion)
+from ..models import (ExperienceRecovery, FederationLink, KbFeedback, LoyaltyScore,
+                      Partner, PartnerHierarchyNode, PartnerPerformanceRecord,
+                      ResellerRegulatoryRecord, TicketEscalation, TicketSlaTimer,
+                      TicketSuggestion)
 from ..services.audit_service import audit, correlation, outbox
 
 
@@ -276,3 +277,83 @@ class RegulatoryService:
         r.submitted_at = _now()
         session.commit()
         return r
+
+
+class KbService:
+    """KB feedback loop (feature 1190): capture and consume feedback."""
+
+    @staticmethod
+    def capture(session: Session, tenant_id, data: dict, actor: str = "system") -> KbFeedback:
+        fb = KbFeedback(tenant_id=tenant_id, rating=int(data.get("rating", 0)),
+                        helpful=bool(data.get("helpful", False)),
+                        feedback=data.get("feedback"), applied=False,
+                        article_id=data.get("article_id", ""))
+        session.add(fb)
+        session.flush()
+        outbox(session, "crm.kb.feedback.captured.v1", tenant_id, correlation(None),
+               {"article_id": fb.article_id, "rating": fb.rating, "helpful": fb.helpful})
+        audit(session, tenant_id, actor, "kb.feedback.capture", "KbFeedback", fb.id,
+              safe_after={"article_id": fb.article_id, "rating": fb.rating})
+        session.commit()
+        return fb
+
+    @staticmethod
+    def apply(session: Session, tenant_id, feedback_id: uuid.UUID) -> KbFeedback:
+        fb = session.query(KbFeedback).filter(
+            KbFeedback.id == feedback_id, KbFeedback.tenant_id == tenant_id).first()
+        if not fb:
+            raise KeyError("feedback not found")
+        fb.applied = True
+        session.commit()
+        return fb
+
+
+class RecoveryService:
+    """Experience recovery engine (feature 1459)."""
+
+    @staticmethod
+    def trigger(session: Session, tenant_id, data: dict, actor: str = "system") -> ExperienceRecovery:
+        rec = ExperienceRecovery(
+            tenant_id=tenant_id,
+            customer_id=data.get("customer_id", ""),
+            metric=data.get("metric", "qoe"),
+            degraded_value=float(data.get("degraded_value", 0.0)),
+            threshold=float(data.get("threshold", 0.0)),
+            recovery_action=data.get("recovery_action", "NOTIFY"),
+            status="TRIGGERED",
+        )
+        session.add(rec)
+        session.flush()
+        outbox(session, "crm.recovery.triggered.v1", tenant_id, correlation(None),
+               {"customer_id": rec.customer_id, "metric": rec.metric,
+                "action": rec.recovery_action})
+        audit(session, tenant_id, actor, "recovery.trigger", "ExperienceRecovery", rec.id,
+              safe_after={"customer_id": rec.customer_id, "metric": rec.metric})
+        session.commit()
+        return rec
+
+
+class LoyaltyService:
+    """Behavioral loyalty scoring (feature 1460)."""
+
+    @staticmethod
+    def score(session: Session, tenant_id, data: dict, actor: str = "system") -> LoyaltyScore:
+        period = data.get("period", "MONTH")
+        row = session.query(LoyaltyScore).filter(
+            LoyaltyScore.tenant_id == tenant_id,
+            LoyaltyScore.customer_id == data.get("customer_id", ""),
+            LoyaltyScore.period == period).first()
+        factors = data.get("behavioral_factors") or {}
+        score = float(data.get("score", 0.0))
+        if row:
+            row.score = score
+            row.behavioral_factors = factors
+        else:
+            row = LoyaltyScore(tenant_id=tenant_id, customer_id=data.get("customer_id", ""),
+                               period=period, score=score, behavioral_factors=factors)
+            session.add(row)
+        session.flush()
+        outbox(session, "crm.loyalty.score.calculated.v1", tenant_id, correlation(None),
+               {"customer_id": row.customer_id, "period": period, "score": score})
+        session.commit()
+        return row

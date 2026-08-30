@@ -117,12 +117,18 @@ def build_service_evidence(service_dir: Path) -> dict:
             code_parts.append(lower)
         for m in re.finditer(r"@app\.(get|post|put|patch|delete)\(\s*[\"']([^\"']+)", text):
             routes.add(m.group(2).lower())
-        for m in re.finditer(r"PUBLISHED_TOPOLOGY\s*=\s*\{([^}]*)\}", text):
-            for ev in re.findall(r"[\"']([a-z0-9_.]+\.v[0-9]+)[\"']", m.group(1)):
-                events.add(ev.lower())
-        for m in re.finditer(r"CONSUMED_EVENTS\s*=\s*\{([^}]*)\}", text):
-            for ev in re.findall(r"[\"']([a-z0-9_.]+\.v[0-9]+)[\"']", m.group(1)):
-                events.add(ev.lower())
+        # APIRouter(prefix="/api/<svc>") + @router.<method>("...") -> full path.
+        prefixes = [pm.group(1).lower().rstrip("/")
+                    for pm in re.finditer(r"APIRouter\s*\(\s*prefix\s*=\s*[\"']([^\"']+)", text)]
+        for m in re.finditer(r"@router\.(get|post|put|patch|delete)\(\s*[\"']([^\"']+)", text):
+            rel = m.group(2).lower()
+            for prefix in prefixes:
+                routes.add((prefix + "/" + rel).lower())
+        # Any quoted `<context>.<...>.vN` is a published/consumed event name,
+        # regardless of which topology container holds it (PUBLISHED_TOPOLOGY,
+        # TOPOLOGY dict, EVENTS tuple, CRM_EVENTS tuple, ...).
+        for ev in re.findall(r"[\"']([a-z0-9_]+(?:\.[a-z0-9_]+)+\.v[0-9]+)[\"']", text):
+            events.add(ev.lower())
         for m in re.finditer(r"class (\w+)\(Base", text):
             models.add(m.group(1).lower())
     code = "\n".join(code_parts)

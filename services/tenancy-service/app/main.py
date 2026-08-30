@@ -82,7 +82,7 @@ from .services import (
     tenant_service,
     wallet_service,
 )
-from .services.governance_service import CampaignService, GovernanceService, NotificationService
+from .services.governance_service import CampaignService, CoreAiService, GovernanceService, NotificationService
 
 
 @asynccontextmanager
@@ -1305,3 +1305,91 @@ def translate(payload: dict, request: Request, session: Session = Depends(db)):
                                     payload.get("target_lang", "es"))
     return {"id": str(t.id), "source_text": t.source_text, "translated_text": t.translated_text,
             "target_lang": t.target_lang}
+
+
+# ---------------------------------------------------------------------------
+# Core-platform AI/governance (Batch 8g: 532, 548, 615, 747, 762, 832, 909,
+# 910, 918, 925, 935)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/tenancy/governance/sentiment", status_code=201, dependencies=[Depends(management_auth)])
+def analyze_sentiment(payload: dict, request: Request, session: Session = Depends(db)):
+    row = CoreAiService.analyze_sentiment(session, _tid(None), payload)
+    return {"id": str(row.id), "sentiment": row.sentiment, "score": row.score}
+
+
+@app.get("/api/tenancy/governance/sentiment", dependencies=[Depends(management_auth)])
+def list_sentiment(request: Request, session: Session = Depends(db)):
+    rows = session.scalars(select(models.SentimentAnalysis).where(
+        models.SentimentAnalysis.tenant_id == _tid(None)).order_by(
+        models.SentimentAnalysis.created_at.desc()).limit(100)).all()
+    return [{"id": str(r.id), "text": r.text[:60], "sentiment": r.sentiment, "score": r.score}
+            for r in rows]
+
+
+@app.post("/api/tenancy/governance/smart-reply", status_code=201, dependencies=[Depends(management_auth)])
+def suggest_reply(payload: dict, request: Request, session: Session = Depends(db)):
+    row = CoreAiService.suggest_reply(session, _tid(None), payload)
+    return {"id": str(row.id), "suggested_reply": row.suggested_reply}
+
+
+@app.post("/api/tenancy/governance/consensus/elect", status_code=201, dependencies=[Depends(management_auth)])
+def elect_leader(payload: dict, request: Request, session: Session = Depends(db)):
+    row = CoreAiService.elect_leader(session, _tid(None), payload)
+    return {"id": str(row.id), "cluster": row.cluster, "node_id": row.node_id,
+            "term": row.term, "votes": row.votes, "is_leader": row.is_leader}
+
+
+@app.post("/api/tenancy/governance/beta-rollouts", status_code=201, dependencies=[Depends(management_auth)])
+def release_beta(payload: dict, request: Request, session: Session = Depends(db)):
+    row = CoreAiService.release_beta(session, _tid(None), payload)
+    return {"id": str(row.id), "feature": row.feature, "version": row.version,
+            "cohort_pct": row.cohort_pct, "status": row.status}
+
+
+@app.post("/api/tenancy/governance/carbon", status_code=201, dependencies=[Depends(management_auth)])
+def calculate_carbon(payload: dict, request: Request, session: Session = Depends(db)):
+    row = CoreAiService.calculate_carbon(session, _tid(None), payload)
+    return {"id": str(row.id), "scope": row.scope, "co2_kg": row.co2_kg, "period": row.period}
+
+
+@app.post("/api/tenancy/governance/intents", status_code=201, dependencies=[Depends(management_auth)])
+def execute_intent(payload: dict, request: Request, session: Session = Depends(db)):
+    row = CoreAiService.execute_intent(session, _tid(None), payload)
+    return {"id": str(row.id), "intent": row.intent, "action": row.action, "status": row.status}
+
+
+@app.post("/api/tenancy/governance/clauses/extract", status_code=201, dependencies=[Depends(management_auth)])
+def extract_clause(payload: dict, request: Request, session: Session = Depends(db)):
+    row = CoreAiService.extract_clause(session, _tid(None), payload)
+    return {"id": str(row.id), "document_id": row.document_id, "clause_type": row.clause_type}
+
+
+@app.post("/api/tenancy/governance/risk", status_code=201, dependencies=[Depends(management_auth)])
+def assess_risk(payload: dict, request: Request, session: Session = Depends(db)):
+    row = CoreAiService.assess_risk(session, _tid(None), payload)
+    return {"id": str(row.id), "entity": row.entity, "entity_id": row.entity_id,
+            "risk_level": row.risk_level, "score": row.score}
+
+
+@app.get("/api/tenancy/governance/risk", dependencies=[Depends(management_auth)])
+def list_risks(entity: str | None = None, request: Request = None, session: Session = Depends(db)):
+    stmt = select(models.RiskAssessment).where(models.RiskAssessment.tenant_id == _tid(None))
+    if entity:
+        stmt = stmt.where(models.RiskAssessment.entity == entity)
+    rows = session.scalars(stmt.order_by(models.RiskAssessment.created_at.desc()).limit(100)).all()
+    return [{"id": str(r.id), "entity": r.entity, "entity_id": r.entity_id,
+             "risk_level": r.risk_level, "score": r.score} for r in rows]
+
+
+@app.post("/api/tenancy/governance/strategy", status_code=201, dependencies=[Depends(management_auth)])
+def suggest_strategy(payload: dict, request: Request, session: Session = Depends(db)):
+    row = CoreAiService.suggest_strategy(session, _tid(None), payload)
+    return {"id": str(row.id), "objective": row.objective, "recommendation": row.recommendation}
+
+
+@app.post("/api/tenancy/governance/ethics", status_code=201, dependencies=[Depends(management_auth)])
+def validate_ethics(payload: dict, request: Request, session: Session = Depends(db)):
+    row = CoreAiService.validate_ethics(session, _tid(None), payload)
+    return {"id": str(row.id), "decision": row.decision, "ethical": row.ethical,
+            "reason": row.reason}

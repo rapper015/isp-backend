@@ -26,5 +26,5 @@ def upgrade():
 
 def downgrade():
     for t in ("wh_kpi", "wh_revenue_trend", "wh_profitability", "wh_analytics_cluster",
-              "wh_ecosystem_metric", "wh_outbox"):
+              "wh_ecosystem_metric", "wh_scenario_comparison", "wh_outbox"):
         op.drop_table(t)

@@ -44,6 +44,9 @@ CRM_EVENTS = (
     "crm.ticket.escalated.v1",
     "crm.suggestion.generated.v1",
     "crm.regulatory.tracked.v1",
+    "crm.kb.feedback.captured.v1",
+    "crm.recovery.triggered.v1",
+    "crm.loyalty.score.calculated.v1",
 )
 
 

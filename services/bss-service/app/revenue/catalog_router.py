@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from ..database import SessionLocal
 from ..revenue.models import Tenant
 from . import models
-from .catalog import CatalogService, MonetizationService
+from .catalog import CatalogService, GrowthService, MonetizationService
 from .security import internal_service_auth
 
 router = APIRouter(prefix="/api/bss", dependencies=[Depends(internal_service_auth)])
@@ -241,3 +241,64 @@ def compute_stickiness(payload: dict, session: Session = Depends(db)):
         float(payload.get("retention_pct", 0)), payload.get("period", "MONTH"))
     return {"id": str(s.id), "product": s.product, "retention_pct": s.retention_pct,
             "stickiness_score": s.stickiness_score}
+
+
+# ---------------------------------------------------------------------------
+# Growth & engagement (Batch 8: 682, 690, 808, 903, 1265, 1497)
+# ---------------------------------------------------------------------------
+
+@router.post("/growth/coupons", status_code=201)
+def issue_coupon(payload: dict, session: Session = Depends(db)):
+    c = GrowthService.issue_coupon(session, _tenant_id(payload), payload)
+    return {"id": str(c.id), "code": c.code, "discount_type": c.discount_type,
+            "discount_value": str(c.discount_value), "max_uses": c.max_uses,
+            "status": c.status}
+
+
+@router.post("/growth/coupons/apply")
+def apply_coupon(payload: dict, session: Session = Depends(db)):
+    try:
+        result = GrowthService.apply_coupon(session, _tenant_id(payload),
+                                            payload.get("code"),
+                                            Decimal(str(payload.get("amount", 0))))
+    except KeyError as e:
+        raise HTTPException(404, str(e))
+    except ValueError as e:
+        raise HTTPException(409, str(e))
+    return result
+
+
+@router.post("/growth/redemptions", status_code=201)
+def redeem_points(payload: dict, session: Session = Depends(db)):
+    r = GrowthService.redeem(session, _tenant_id(payload), payload)
+    return {"id": str(r.id), "customer_id": r.customer_id, "points": r.points,
+            "reward": r.reward, "status": r.status}
+
+
+@router.post("/growth/compositions", status_code=201)
+def compose_service(payload: dict, session: Session = Depends(db)):
+    c = GrowthService.compose(session, _tenant_id(payload), payload)
+    return {"id": str(c.id), "composition_code": c.composition_code,
+            "components": len(c.components or []), "price": str(c.price),
+            "status": c.status}
+
+
+@router.post("/growth/expenses/categorize", status_code=201)
+def categorize_expense(payload: dict, session: Session = Depends(db)):
+    e = GrowthService.categorize_expense(session, _tenant_id(payload), payload)
+    return {"id": str(e.id), "description": e.description, "category": e.category,
+            "amount": str(e.amount), "confidence": e.confidence}
+
+
+@router.post("/growth/margin/optimize", status_code=201)
+def optimize_margin(payload: dict, session: Session = Depends(db)):
+    m = GrowthService.optimize_margin(session, _tenant_id(payload), payload)
+    return {"id": str(m.id), "segment": m.segment, "current_margin_pct": m.current_margin_pct,
+            "optimized_margin_pct": m.optimized_margin_pct, "recommendation": m.recommendation}
+
+
+@router.post("/growth/referrals", status_code=201)
+def trigger_referral(payload: dict, session: Session = Depends(db)):
+    r = GrowthService.trigger_referral(session, _tenant_id(payload), payload)
+    return {"id": str(r.id), "referrer_id": r.referrer_id, "referee_id": r.referee_id,
+            "reward": str(r.reward), "status": r.status}
