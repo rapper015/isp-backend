@@ -120,12 +120,43 @@ services:
   aaa-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: aaa-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/aaa}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: aaa-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aaa
+      AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:-change-me-aaa-internal-key}
+      AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      AAA_JWT_SECRET: ${AAA_JWT_SECRET:-change-me-aaa-jwt-secret-0123456789abcdef}
+      AAA_INTERNAL_RATE_LIMIT: ${AAA_INTERNAL_RATE_LIMIT:-300}
+      AAA_MANAGEMENT_RATE_LIMIT: ${AAA_MANAGEMENT_RATE_LIMIT:-120}
+      AAA_REQUEST_MAX_BYTES: ${AAA_REQUEST_MAX_BYTES:-65536}
+      AAA_AUTO_CREATE_SCHEMA: ${AAA_AUTO_CREATE_SCHEMA:-false}
+      AAA_ENABLE_RADIUS_COMMANDS: ${AAA_ENABLE_RADIUS_COMMANDS:-false}
+      AAA_ROUTEROS_ADAPTER: ${AAA_ROUTEROS_ADAPTER:-real}
+      NAS_APPROVED_NETWORKS: ${NAS_APPROVED_NETWORKS:-10.0.0.0/8,192.168.0.0/16}
+      NAS_ALLOW_HOSTNAMES: ${NAS_ALLOW_HOSTNAMES:-false}
+      AAA_ALLOW_INSECURE_TLS: ${AAA_ALLOW_INSECURE_TLS:-false}
+      AAA_SESSION_STALE_SECONDS: ${AAA_SESSION_STALE_SECONDS:-900}
+      AAA_RADIUS_HEARTBEAT_SECONDS: ${AAA_RADIUS_HEARTBEAT_SECONDS:-120}
+      AAA_OUTBOX_BATCH_SIZE: ${AAA_OUTBOX_BATCH_SIZE:-100}
+      AAA_COMMAND_MAX_ATTEMPTS: ${AAA_COMMAND_MAX_ATTEMPTS:-3}
+      AAA_WORKER_INTERVAL_SECONDS: ${AAA_WORKER_INTERVAL_SECONDS:-5}
 
   aaa-worker:
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
     command: ["python", "-m", "app.worker_runner"]
-    environment: {<<: *domain-environment, SERVICE_NAME: aaa-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/aaa}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: aaa-worker
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aaa
+      AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:-change-me-aaa-internal-key}
+      AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      AAA_JWT_SECRET: ${AAA_JWT_SECRET:-change-me-aaa-jwt-secret-0123456789abcdef}
+      AAA_SESSION_STALE_SECONDS: ${AAA_SESSION_STALE_SECONDS:-900}
+      AAA_RADIUS_HEARTBEAT_SECONDS: ${AAA_RADIUS_HEARTBEAT_SECONDS:-120}
+      AAA_OUTBOX_BATCH_SIZE: ${AAA_OUTBOX_BATCH_SIZE:-100}
+      AAA_COMMAND_MAX_ATTEMPTS: ${AAA_COMMAND_MAX_ATTEMPTS:-3}
+      AAA_WORKER_INTERVAL_SECONDS: ${AAA_WORKER_INTERVAL_SECONDS:-5}
     depends_on:
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
