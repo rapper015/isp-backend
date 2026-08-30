@@ -6,6 +6,19 @@ from .kyc import KycCase, KycDocument
 from .caf import CafRecord
 from .lifecycle import CustomerLifecycleEvent, CustomerRisk, TimelineEntry
 from .audit import AuditLog, ConsumerInbox, OutboxEvent
+from .ecosystem import (
+    ExperienceRecovery,
+    FederationLink,
+    KbFeedback,
+    LoyaltyScore,
+    Partner,
+    PartnerHierarchyNode,
+    PartnerPerformanceRecord,
+    ResellerRegulatoryRecord,
+    TicketEscalation,
+    TicketSlaTimer,
+    TicketSuggestion,
+)
 
 __all__ = [
     "Tenant", "Lead", "LeadAssignment", "LeadInteraction", "FollowUp", "LeadStageHistory",
@@ -13,4 +26,7 @@ __all__ = [
     "CustomerOwnership", "ExternalReference", "KycCase", "KycDocument", "CafRecord",
     "CustomerLifecycleEvent", "CustomerRisk", "TimelineEntry", "AuditLog",
     "OutboxEvent", "ConsumerInbox",
+    "Partner", "PartnerPerformanceRecord", "PartnerHierarchyNode", "FederationLink",
+    "TicketSlaTimer", "TicketEscalation", "TicketSuggestion", "ResellerRegulatoryRecord",
+    "KbFeedback", "ExperienceRecovery", "LoyaltyScore",
 ]
