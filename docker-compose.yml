@@ -31,35 +31,9 @@ services:
     volumes:
       - ./infrastructure/gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      crm-service:
-        condition: service_healthy
-      bss-service:
-        condition: service_healthy
-      oss-service:
-        condition: service_healthy
       aaa-service:
         condition: service_healthy
       identity-service:
-        condition: service_healthy
-      nms-service:
-        condition: service_healthy
-      ipam-service:
-        condition: service_healthy
-      siem-service:
-        condition: service_healthy
-      workforce-service:
-        condition: service_healthy
-      warehouse-service:
-        condition: service_healthy
-      aiops-service:
-        condition: service_healthy
-      device-management-service:
-        condition: service_healthy
-      tenancy-service:
-        condition: service_healthy
-      assurance-service:
-        condition: service_healthy
-      intelligence-service:
         condition: service_healthy
     networks: [edge, platform]
 
@@ -69,7 +43,7 @@ services:
       POSTGRES_DB: isp
       POSTGRES_USER: isp
       POSTGRES_PASSWORD: isp
-      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,identity,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy,assurance,intelligence
+      POSTGRES_MULTIPLE_DATABASES: aaa,identity
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
@@ -103,21 +77,6 @@ services:
       timeout: 3s
       retries: 10
     networks: [platform]
-
-  crm-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: crm-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: crm-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/crm}
-
-  bss-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: bss-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: bss-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/bss}
-
-  oss-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: oss-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: oss-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/oss}
 
   aaa-service:
     <<: *domain-service
@@ -182,176 +141,6 @@ services:
       IDENTITY_BOOTSTRAP_ADMIN_USERNAME: ${IDENTITY_BOOTSTRAP_ADMIN_USERNAME:-admin}
       IDENTITY_BOOTSTRAP_ADMIN_PASSWORD: ${IDENTITY_BOOTSTRAP_ADMIN_PASSWORD:-change-me-admin-password}
 
-  nms-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: nms-service}}
-    environment:
-      <<: *domain-environment
-      SERVICE_NAME: nms-service
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/nms
-      NMS_JWT_SECRET: ${NMS_JWT_SECRET:-change-me-nms-jwt-secret-0123456789abcdef}
-      NMS_INTERNAL_API_KEY: ${NMS_INTERNAL_API_KEY:-change-me-nms-internal-key}
-      NMS_INTERNAL_API_KEYS: ${NMS_INTERNAL_API_KEY:-change-me-nms-internal-key}
-
-  ipam-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: ipam-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: ipam-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/ipam}
-
-  siem-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: siem-service}}
-    environment:
-      <<: *domain-environment
-      SERVICE_NAME: siem-service
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/siem
-      SIEM_JWT_SECRET: ${SIEM_JWT_SECRET:-change-me-siem-jwt-secret-0123456789abcdef}
-      SIEM_INTERNAL_API_KEY: ${SIEM_INTERNAL_API_KEY:-change-me-siem-internal-key}
-      SIEM_ENCRYPTION_KEY: ${SIEM_ENCRYPTION_KEY:-change-me-siem-encryption-key-0123456789abcdef}
-
-  siem-worker:
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: siem-service}}
-    command: ["python", "-m", "app.worker_runner"]
-    environment:
-      <<: *domain-environment
-      SERVICE_NAME: siem-worker
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/siem
-      SIEM_JWT_SECRET: ${SIEM_JWT_SECRET:-change-me-siem-jwt-secret-0123456789abcdef}
-      SIEM_INTERNAL_API_KEY: ${SIEM_INTERNAL_API_KEY:-change-me-siem-internal-key}
-      SIEM_ENCRYPTION_KEY: ${SIEM_ENCRYPTION_KEY:-change-me-siem-encryption-key-0123456789abcdef}
-    depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
-      valkey: {condition: service_healthy}
-    networks: [platform]
-
-  workforce-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: workforce-service}}
-    environment:
-      <<: *domain-environment
-      SERVICE_NAME: workforce-service
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/workforce
-      WORKFORCE_JWT_SECRET: ${WORKFORCE_JWT_SECRET:-change-me-workforce-jwt-secret-0123456789abcdef}
-      WORKFORCE_INTERNAL_API_KEY: ${WORKFORCE_INTERNAL_API_KEY:-change-me-workforce-internal-key}
-
-  workforce-worker:
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: workforce-service}}
-    command: ["python", "-m", "app.worker_runner"]
-    environment:
-      <<: *domain-environment
-      SERVICE_NAME: workforce-worker
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/workforce
-      WORKFORCE_JWT_SECRET: ${WORKFORCE_JWT_SECRET:-change-me-workforce-jwt-secret-0123456789abcdef}
-      WORKFORCE_INTERNAL_API_KEY: ${WORKFORCE_INTERNAL_API_KEY:-change-me-workforce-internal-key}
-    depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
-      valkey: {condition: service_healthy}
-    networks: [platform]
-
-  warehouse-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: warehouse-service}}
-    environment:
-      <<: *domain-environment
-      SERVICE_NAME: warehouse-service
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/warehouse
-      WAREHOUSE_JWT_SECRET: ${WAREHOUSE_JWT_SECRET:-change-me-warehouse-jwt-secret-0123456789abcdef}
-      WAREHOUSE_INTERNAL_API_KEY: ${WAREHOUSE_INTERNAL_API_KEY:-change-me-warehouse-internal-key}
-      WAREHOUSE_INTERNAL_API_KEYS: ${WAREHOUSE_INTERNAL_API_KEY:-change-me-warehouse-internal-key}
-
-  aiops-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aiops-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: aiops-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/aiops}
-
-  device-management-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: device-management-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: device-management-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/device_management, ACS_PROVIDER: genieacs, GENIEACS_BASE_URL: http://genieacs:7557, DEVICE_FIRMWARE_DIR: /data/firmware}
-    volumes:
-      - device-firmware:/data/firmware
-
-  device-management-worker:
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: device-management-service}}
-    command: ["python", "-m", "app.worker_runner"]
-    environment: {<<: *domain-environment, SERVICE_NAME: device-management-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/device_management, ACS_PROVIDER: genieacs, GENIEACS_BASE_URL: http://genieacs:7557, DEVICE_FIRMWARE_DIR: /data/firmware}
-    depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
-      valkey: {condition: service_healthy}
-    networks: [platform]
-    volumes:
-      - device-firmware:/data/firmware
-
-  tenancy-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: tenancy-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: tenancy-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/tenancy}
-
-  tenancy-worker:
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: tenancy-service}}
-    command: ["python", "-m", "app.worker_runner"]
-    environment: {<<: *domain-environment, SERVICE_NAME: tenancy-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/tenancy}
-    depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
-      valkey: {condition: service_healthy}
-    networks: [platform]
-
-  assurance-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: assurance-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: assurance-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/assurance}
-
-  assurance-worker:
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: assurance-service}}
-    command: ["python", "-m", "app.worker_runner"]
-    environment: {<<: *domain-environment, SERVICE_NAME: assurance-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/assurance}
-    depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
-      valkey: {condition: service_healthy}
-    networks: [platform]
-
-  intelligence-service:
-    <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: intelligence-service}}
-    environment:
-      <<: *domain-environment
-      SERVICE_NAME: intelligence-service
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/intelligence
-      REDIS_URL: redis://valkey:6379/0
-      INTELLIGENCE_JWT_SECRET: ${INTELLIGENCE_JWT_SECRET:-change-me-intelligence-jwt-secret-0123456789abcdef}
-      INTELLIGENCE_INTERNAL_API_KEY: ${INTELLIGENCE_INTERNAL_API_KEY:-change-me-intelligence-internal-key}
-      INTELLIGENCE_RATE_LIMIT: ${INTELLIGENCE_RATE_LIMIT:-120}
-      ENVIRONMENT: ${ENVIRONMENT:-development}
-      LOG_JSON: ${LOG_JSON:-true}
-
-  intelligence-worker:
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: intelligence-service}}
-    command: ["python", "-m", "app.worker_runner"]
-    environment:
-      <<: *domain-environment
-      SERVICE_NAME: intelligence-worker
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/intelligence
-      REDIS_URL: redis://valkey:6379/0
-      INTELLIGENCE_JWT_SECRET: ${INTELLIGENCE_JWT_SECRET:-change-me-intelligence-jwt-secret-0123456789abcdef}
-      INTELLIGENCE_INTERNAL_API_KEY: ${INTELLIGENCE_INTERNAL_API_KEY:-change-me-intelligence-internal-key}
-      INTELLIGENCE_RATE_LIMIT: ${INTELLIGENCE_RATE_LIMIT:-120}
-      ENVIRONMENT: ${ENVIRONMENT:-development}
-      LOG_JSON: ${LOG_JSON:-true}
-    depends_on:
-      postgres: {condition: service_healthy}
-      rabbitmq: {condition: service_healthy}
-      valkey: {condition: service_healthy}
-    networks: [platform]
-
-  # ---- Optional observability stack (start with --profile observability) ----
-  # The assurance-service is the governance layer; metrics/logs/traces are stored
-  # by these components via the OpenTelemetry Collector (config under
-  # infrastructure/observability/).
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.112.0
     profiles: ["observability"]
