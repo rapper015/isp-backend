@@ -1,0 +1,1320 @@
+# Client Feature Gap Analysis
+
+## Status summary
+
+| Status | Count |
+|---|---|
+| PARTIAL | 984 |
+| MISSING | 308 |
+| BLOCKED_EXTERNAL | 135 |
+| CONDITIONAL_FUTURE | 52 |
+| COMPLETE | 21 |
+
+## By owner
+| Owner | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
+|---|---|---|---|---|---|
+| aaa-service | 15 | 3 | 0 | 0 | 62 |
+| aiops-service | 1 | 2 | 51 | 16 | 113 |
+| bss-service | 5 | 0 | 0 | 34 | 153 |
+| core-platform-service | 83 | 13 | 1 | 57 | 250 |
+| crm-service | 4 | 0 | 0 | 14 | 123 |
+| data-warehouse-service | 2 | 2 | 0 | 7 | 55 |
+| ipam-service | 2 | 0 | 0 | 0 | 6 |
+| nms-service | 5 | 1 | 0 | 8 | 100 |
+| oss-service | 15 | 0 | 0 | 32 | 117 |
+| siem-service | 2 | 0 | 0 | 106 | 1 |
+| workforce-service | 1 | 0 | 0 | 34 | 4 |
+
+## By priority
+| Priority | BLOCKED_EXTERNAL | COMPLETE | CONDITIONAL_FUTURE | MISSING | PARTIAL |
+|---|---|---|---|---|---|
+| P0 | 93 | 17 | 1 | 193 | 706 |
+| P1 | 42 | 4 | 8 | 111 | 273 |
+| P2 | 0 | 0 | 41 | 4 | 5 |
+| P3 | 0 | 0 | 2 | 0 | 0 |
+
+## Missing / partial P0 and P1 (implementation backlog)
+
+- **1** [P0] core-platform-service: Create Tenant (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **2** [P0] core-platform-service: Update Tenant (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **3** [P0] core-platform-service: Delete Tenant (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **5** [P0] core-platform-service: Tenant Isolation Config (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **6** [P1] core-platform-service: Region Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **7** [P0] core-platform-service: Tenant Quotas (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **8** [P1] core-platform-service: Tenant Branding (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **9** [P0] core-platform-service: Billing Config (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **10** [P0] core-platform-service: Currency Setup (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **11** [P0] core-platform-service: Timezone Settings (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **12** [P1] core-platform-service: Localization (MISSING) — no implementation evidence found in owning service
+- **13** [P0] core-platform-service: Role Definition (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **14** [P0] core-platform-service: Permission Matrix (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **15** [P1] core-platform-service: Access Templates (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **16** [P0] core-platform-service: User Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **17** [P0] core-platform-service: User Update (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **18** [P0] core-platform-service: User Deactivation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **19** [P1] core-platform-service: Bulk User Import (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **20** [P0] core-platform-service: Password Policy (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **21** [P0] core-platform-service: MFA Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **23** [P0] core-platform-service: Session Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **24** [P0] core-platform-service: Session Termination (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **25** [P0] core-platform-service: API Keys Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **26** [P0] core-platform-service: Rate Limiting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **27** [P0] core-platform-service: IP Whitelisting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **28** [P1] core-platform-service: Threat Detection Hooks (MISSING) — no implementation evidence found in owning service
+- **29** [P0] core-platform-service: Audit Trail (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **30** [P0] core-platform-service: Audit Viewer (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **31** [P0] core-platform-service: Retention Policy (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **32** [P1] core-platform-service: Feature Flags (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **33** [P0] core-platform-service: Global Config Store (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **34** [P0] core-platform-service: Cache Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **35** [P0] core-platform-service: Event Bus (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **36** [P0] core-platform-service: Webhook Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **39** [P0] core-platform-service: Notification Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **42** [P0] core-platform-service: Service Health Check (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **43** [P0] core-platform-service: Dependency Health (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **44** [P0] core-platform-service: Central Logging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **45** [P0] core-platform-service: Policy Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **46** [P0] core-platform-service: Compliance Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **47** [P0] core-platform-service: Backup Scheduler (PARTIAL) — deployment manifests present; per-feature service control pending
+- **51** [P0] crm-service: Create Lead (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **52** [P0] crm-service: Lead Ingestion API (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **53** [P0] crm-service: Update Lead (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **54** [P1] crm-service: Delete Lead (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **55** [P0] crm-service: Lead Assignment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **56** [P1] crm-service: Reseller Lead Upload (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **57** [P0] crm-service: Lead Status Pipeline (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **58** [P0] crm-service: Duplicate Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **59** [P1] crm-service: Lead Scoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **60** [P1] crm-service: Lead Notes (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **61** [P0] crm-service: Convert Lead to Customer (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **62** [P1] crm-service: Convert to Opportunity (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **63** [P1] crm-service: Opportunity Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **64** [P1] crm-service: Proposal Generation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **65** [P1] crm-service: Win/Loss Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **66** [P0] crm-service: KYC Capture (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **67** [P0] crm-service: KYC Verification (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **69** [P0] crm-service: Document Upload (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **70** [P0] crm-service: KYC Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **71** [P0] crm-service: Create Customer (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **72** [P0] crm-service: Update Customer (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **73** [P1] crm-service: Customer Segmentation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **74** [P1] crm-service: Customer Tags (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **75** [P0] crm-service: Customer Lifecycle Status (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **76** [P1] crm-service: Account Merge (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **77** [P0] crm-service: Customer 360 View (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **78** [P0] crm-service: Communication History (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **79** [P1] crm-service: Relationship Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **80** [P0] crm-service: Customer Login Portal (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **81** [P0] crm-service: Profile Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **82** [P0] crm-service: Service Request (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **83** [P1] crm-service: Mobile App Access (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **84** [P0] crm-service: Usage Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **85** [P0] crm-service: Plan Change Request (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **86** [P0] crm-service: Payment Interface (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **87** [P0] crm-service: Complaint Logging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **88** [P0] crm-service: KYC Upload (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **89** [P1] crm-service: Churn Prediction (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **90** [P1] crm-service: Retention Campaign (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **91** [P1] crm-service: Feedback Collection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **92** [P1] crm-service: NPS Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **94** [P0] crm-service: Customer Archive (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **95** [P0] crm-service: Data Retrieval (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **96** [P0] crm-service: Retention Policy (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **97** [P0] crm-service: Workflow Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **98** [P0] crm-service: Rule Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **99** [P0] crm-service: Notification Triggers (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **101** [P0] bss-service: Create Product (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **102** [P0] bss-service: Update Product (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **103** [P1] bss-service: Delete Product (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **104** [P0] bss-service: Bundle Products (MISSING) — no implementation evidence found in owning service
+- **105** [P0] bss-service: Pricing Models (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **106** [P0] bss-service: Create Plan (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **107** [P0] bss-service: Update Plan (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **108** [P1] bss-service: Plan Versioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **109** [P0] bss-service: Assign Plan to Customer (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **110** [P0] bss-service: Plan Change (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **111** [P0] bss-service: Usage Rating Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **112** [P0] bss-service: Real-time Charging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **113** [P0] bss-service: Offline Charging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **114** [P0] bss-service: Discount Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **115** [P0] bss-service: Tax Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **116** [P0] bss-service: Billing Cycle Config (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **117** [P0] bss-service: Bill Generation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **118** [P1] bss-service: Bill Preview (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **119** [P0] bss-service: Invoice Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **120** [P0] bss-service: Credit Notes (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **121** [P1] bss-service: Debit Notes (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **122** [P1] bss-service: Proforma Invoice (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **123** [P0] bss-service: Payment Capture (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **125** [P0] bss-service: Payment Reconciliation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **126** [P0] bss-service: Refund Processing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **127** [P1] bss-service: Wallet System (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **128** [P0] bss-service: Auto Debit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **129** [P1] bss-service: Payment Retry Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **130** [P0] bss-service: Revenue Leakage Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **131** [P0] bss-service: Revenue Reports (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **132** [P0] bss-service: Fraud Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **133** [P0] bss-service: Credit Limit Config (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **134** [P0] bss-service: Credit Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **135** [P0] bss-service: Service Suspension (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **136** [P0] bss-service: FUP Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **137** [P0] bss-service: QoS Policy Bind (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **138** [P1] bss-service: Regional Pricing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **139** [P1] bss-service: Time-based Pricing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **140** [P1] bss-service: Volume Discounts (MISSING) — no implementation evidence found in owning service
+- **141** [P0] bss-service: Dunning Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **142** [P1] bss-service: Collection Cases (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **143** [P0] bss-service: Manual Adjustment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **144** [P0] bss-service: Billing Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **147** [P0] bss-service: AR Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **148** [P0] bss-service: Aging Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **149** [P0] bss-service: Ledger Export (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **150** [P0] bss-service: High Volume Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **151** [P0] aaa-service: User Authentication (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **152** [P0] aaa-service: Multi-Factor Auth (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **153** [P0] aaa-service: MAC Authentication (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **154** [P1] aaa-service: Certificate Auth (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **155** [P0] aaa-service: Policy Assignment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **156** [P0] aaa-service: Role-Based Access (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **157** [P0] aaa-service: VLAN Assignment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **158** [P0] aaa-service: IP Assignment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **159** [P0] aaa-service: Session Limits (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **160** [P0] aaa-service: Session Start (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **161** [P0] aaa-service: Session Stop (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **162** [P0] aaa-service: Interim Updates (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **163** [P0] aaa-service: CDR/IPDR Generation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **164** [P0] aaa-service: High Volume Processing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **165** [P0] aaa-service: Session Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **166** [P0] aaa-service: Session Termination (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **167** [P0] aaa-service: Idle Timeout (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **168** [P1] aaa-service: Reauthentication (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **183** [P1] aaa-service: Device Profiling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **184** [P0] aaa-service: Access Control Policies (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **185** [P0] aaa-service: Quarantine VLAN (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **186** [P1] aaa-service: Guest Access (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **187** [P0] aaa-service: Device Blacklisting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **188** [P0] aaa-service: Device Whitelisting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **189** [P0] aaa-service: Bandwidth Profiles (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **190** [P1] aaa-service: Burst Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **191** [P1] aaa-service: Time-Based Policies (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **192** [P1] aaa-service: App-Based Policies (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **194** [P0] aaa-service: Session Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **195** [P0] aaa-service: Lawful Interception Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **197** [P0] aaa-service: Failover Mechanism (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **198** [P0] aaa-service: Distributed AAA (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **199** [P1] aaa-service: Fraud Detection Hooks (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **201** [P0] oss-service: Network Asset Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **202** [P0] oss-service: Asset Update (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **203** [P1] oss-service: Asset Decommission (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **204** [P0] oss-service: Asset Categorization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **205** [P0] oss-service: Vendor Management (MISSING) — no implementation evidence found in owning service
+- **206** [P0] oss-service: Serial Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **207** [P1] oss-service: Warranty Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **208** [P0] oss-service: Firmware Tracking (MISSING) — no implementation evidence found in owning service
+- **209** [P1] oss-service: Device Templates (MISSING) — no implementation evidence found in owning service
+- **210** [P0] oss-service: Auto Discovery (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **211** [P0] oss-service: Network Topology View (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **212** [P0] oss-service: Layered Topology (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **213** [P0] oss-service: Link Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **214** [P0] oss-service: Dependency Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **215** [P1] oss-service: Path Trace (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **216** [P0] ipam-service: IP Pool Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **217** [P0] ipam-service: Subnet Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **218** [P0] ipam-service: IP Allocation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **219** [P0] ipam-service: IP Reservation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **220** [P0] ipam-service: IP Conflict Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **221** [P0] ipam-service: IPv6 Support (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **224** [P0] oss-service: GIS Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **225** [P0] oss-service: Geo Tagging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **226** [P1] oss-service: Coverage Mapping (MISSING) — no implementation evidence found in owning service
+- **227** [P1] oss-service: Heat Maps (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **228** [P0] oss-service: OLT Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **229** [P0] oss-service: ONT Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **230** [P0] oss-service: PON Port Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **231** [P0] oss-service: Splitter Management (MISSING) — no implementation evidence found in owning service
+- **232** [P0] oss-service: Fiber Route Planning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **233** [P0] oss-service: Fiber Link Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **234** [P0] oss-service: Fiber Capacity Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **235** [P1] oss-service: Splicing Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **236** [P0] oss-service: Fault Localization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **238** [P0] oss-service: Stock Inventory (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **239** [P0] oss-service: Warehouse Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **240** [P0] oss-service: Asset Allocation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **241** [P0] oss-service: Asset Return (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **242** [P1] oss-service: RMA Processing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **243** [P0] oss-service: Network Capacity Planning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **244** [P0] oss-service: Utilization Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **245** [P0] oss-service: Threshold Alerts (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **246** [P0] oss-service: Config Push (MISSING) — no implementation evidence found in owning service
+- **247** [P0] oss-service: Backup Configs (PARTIAL) — deployment manifests present; per-feature service control pending
+- **248** [P0] oss-service: Config Drift Detection (MISSING) — no implementation evidence found in owning service
+- **251** [P0] nms-service: Device Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **252** [P0] nms-service: Interface Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **253** [P0] nms-service: Bandwidth Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **254** [P0] nms-service: CPU/Memory Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **255** [P0] nms-service: Latency Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **256** [P0] nms-service: Packet Loss Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **257** [P0] nms-service: SLA Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **258** [P0] nms-service: Service Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **259** [P1] nms-service: Synthetic Probes (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **260** [P1] nms-service: Streaming Telemetry (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **261** [P0] nms-service: Threshold Alerts (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **262** [P0] nms-service: Event Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **263** [P0] nms-service: Alarm Prioritization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **264** [P1] nms-service: Alert Suppression (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **265** [P0] nms-service: Notification Routing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **266** [P0] nms-service: Escalation Policies (MISSING) — no implementation evidence found in owning service
+- **267** [P0] nms-service: Fault Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **268** [P0] nms-service: Fault Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **269** [P0] nms-service: Root Cause Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **270** [P0] nms-service: Impact Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **272** [P0] nms-service: Fault History (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **273** [P0] nms-service: NOC Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **274** [P1] nms-service: Custom Dashboards (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **275** [P0] nms-service: Geo Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **276** [P0] nms-service: SLA Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **277** [P0] nms-service: Capacity Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **278** [P0] nms-service: Performance Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **279** [P0] nms-service: Availability Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **280** [P0] nms-service: SLA Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **281** [P1] nms-service: Audit Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **282** [P0] nms-service: Auto Remediation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **283** [P0] nms-service: Script Execution (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **284** [P1] nms-service: Runbook Automation (MISSING) — no implementation evidence found in owning service
+- **285** [P1] nms-service: Anomaly Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **286** [P1] nms-service: Predictive Failure (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **287** [P1] nms-service: Noise Reduction (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **288** [P1] nms-service: Smart RCA (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **292** [P0] nms-service: Syslog Collection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **293** [P0] nms-service: Log Parsing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **294** [P0] nms-service: Regulatory Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **295** [P0] nms-service: Horizontal Scaling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **296** [P0] nms-service: Data Retention Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **297** [P0] nms-service: High Availability (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **298** [P0] nms-service: Access Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **299** [P0] nms-service: Data Encryption (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **301** [P0] crm-service: Ticket Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **302** [P0] crm-service: Ticket API (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **303** [P0] crm-service: Ticket Update (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **304** [P0] crm-service: Ticket Assignment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **305** [P0] crm-service: Ticket Status Workflow (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **306** [P0] crm-service: Ticket Priority (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **307** [P0] crm-service: Ticket Categorization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **308** [P0] crm-service: SLA Binding (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **309** [P0] crm-service: SLA Definition (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **310** [P0] crm-service: SLA Timer (MISSING) — no implementation evidence found in owning service
+- **311** [P0] crm-service: SLA Breach Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **312** [P0] crm-service: SLA Escalation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **313** [P0] crm-service: Ticket Comments (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **314** [P1] crm-service: Attachment Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **315** [P1] crm-service: Ticket Merge (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **316** [P1] crm-service: Ticket Split (MISSING) — no implementation evidence found in owning service
+- **317** [P1] crm-service: Knowledge Base Link (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **318** [P0] crm-service: Auto Ticket Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **319** [P0] crm-service: Customer Notification (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **320** [P0] crm-service: Ticket Closure Validation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **321** [P0] crm-service: Incident Declaration (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **322** [P1] crm-service: War Room (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **323** [P0] crm-service: Incident Timeline (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **324** [P0] crm-service: Post Incident Review (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **325** [P0] crm-service: Service Request Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **326** [P0] crm-service: Catalog Requests (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **327** [P0] crm-service: Workflow Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **328** [P0] crm-service: Approval Workflow (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **329** [P0] workforce-service: Work Order Creation (MISSING) — no implementation evidence found in owning service
+- **330** [P0] workforce-service: Assignment Dispatch (MISSING) — no implementation evidence found in owning service
+- **331** [P1] workforce-service: Route Optimization (MISSING) — no implementation evidence found in owning service
+- **332** [P0] workforce-service: Work Order Status (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **333** [P0] workforce-service: On-site Updates (MISSING) — no implementation evidence found in owning service
+- **334** [P0] workforce-service: Job Completion (MISSING) — no implementation evidence found in owning service
+- **335** [P1] workforce-service: Digital Signature (MISSING) — no implementation evidence found in owning service
+- **336** [P1] workforce-service: Photo Upload (MISSING) — no implementation evidence found in owning service
+- **337** [P0] workforce-service: Device Issuance (MISSING) — no implementation evidence found in owning service
+- **338** [P0] workforce-service: Spare Parts Mgmt (MISSING) — no implementation evidence found in owning service
+- **339** [P0] workforce-service: Inventory Sync (MISSING) — no implementation evidence found in owning service
+- **340** [P0] workforce-service: Mobile Workforce App (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **341** [P1] workforce-service: Offline Mode (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **342** [P0] workforce-service: GPS Tracking (MISSING) — 
+- **343** [P1] workforce-service: Geo Fencing (MISSING) — 
+- **344** [P0] workforce-service: Shift Scheduling (MISSING) — no implementation evidence found in owning service
+- **345** [P1] workforce-service: Leave Management (MISSING) — no implementation evidence found in owning service
+- **346** [P0] workforce-service: Technician KPI (MISSING) — no implementation evidence found in owning service
+- **347** [P0] workforce-service: SLA Compliance (MISSING) — no implementation evidence found in owning service
+- **348** [P0] workforce-service: Customer Feedback (MISSING) — no implementation evidence found in owning service
+- **349** [P0] workforce-service: Issue Escalation (MISSING) — no implementation evidence found in owning service
+- **351** [P0] crm-service: Create Reseller (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **352** [P0] crm-service: Update Reseller (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **353** [P0] crm-service: Deactivate Reseller (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **354** [P0] crm-service: Multi-Level Hierarchy (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **355** [P0] crm-service: Parent Assignment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **356** [P1] crm-service: Depth Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **357** [P0] crm-service: Territory Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **358** [P0] crm-service: Reseller Login (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **359** [P0] crm-service: Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **360** [P0] crm-service: Customer Mgmt (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **361** [P0] crm-service: Lead Mgmt (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **362** [P0] crm-service: Ticket Mgmt (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **363** [P0] crm-service: Service Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **364** [P0] crm-service: Plan Assignment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **365** [P0] crm-service: Suspension Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **366** [P0] bss-service: Commission Rules (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **367** [P0] bss-service: Revenue Share (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **368** [P0] bss-service: Commission Calculation (MISSING) — no implementation evidence found in owning service
+- **369** [P0] bss-service: Payout Processing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **370** [P0] bss-service: Commission Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **371** [P0] bss-service: Reseller Wallet (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **372** [P0] bss-service: Recharge Wallet (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **373** [P0] bss-service: Wallet Deduction (MISSING) — no implementation evidence found in owning service
+- **374** [P0] bss-service: Credit Limit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **375** [P0] bss-service: Credit Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **376** [P0] bss-service: Auto Suspension (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **377** [P0] bss-service: Invoice View (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **378** [P0] bss-service: Invoice Generation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **379** [P0] bss-service: Payment Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **380** [P0] crm-service: Branding Config (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **381** [P1] crm-service: Custom Domain (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **382** [P1] crm-service: App Customization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **383** [P0] bss-service: Subscriber Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **384** [P0] bss-service: Revenue Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **385** [P0] bss-service: Usage Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **386** [P0] crm-service: Role-Based Access (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **387** [P0] crm-service: Feature Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **390** [P0] crm-service: Reseller Audit Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **391** [P0] crm-service: Regulatory Tracking (MISSING) — no implementation evidence found in owning service
+- **392** [P0] crm-service: Ticket Escalation (MISSING) — no implementation evidence found in owning service
+- **393** [P1] crm-service: Knowledge Base (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **394** [P1] crm-service: Auto Provision Rules (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **395** [P0] crm-service: Performance Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **396** [P1] crm-service: Churn Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **397** [P0] crm-service: Fraud Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **398** [P0] crm-service: Access Monitoring (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **399** [P0] crm-service: Multi-Tenant Reseller (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **400** [P0] crm-service: Hierarchy Scaling (MISSING) — no implementation evidence found in owning service
+- **401** [P0] siem-service: Regulatory Framework Setup (MISSING) — no implementation evidence found in owning service
+- **402** [P0] siem-service: License Management (MISSING) — no implementation evidence found in owning service
+- **403** [P0] siem-service: Circle/Region Mapping (MISSING) — no implementation evidence found in owning service
+- **404** [P0] siem-service: Retention Policy Config (MISSING) — no implementation evidence found in owning service
+- **405** [P0] siem-service: Auto Data Archival (MISSING) — no implementation evidence found in owning service
+- **406** [P0] siem-service: Auto Data Purge (MISSING) — no implementation evidence found in owning service
+- **407** [P0] siem-service: Central Log Repository (MISSING) — no implementation evidence found in owning service
+- **408** [P0] siem-service: Tamper Proof Logs (MISSING) — no implementation evidence found in owning service
+- **409** [P0] siem-service: Log Search & Retrieval (MISSING) — no implementation evidence found in owning service
+- **410** [P0] siem-service: Log Export (MISSING) — no implementation evidence found in owning service
+- **411** [P0] siem-service: LI Enablement (MISSING) — no implementation evidence found in owning service
+- **412** [P0] siem-service: Target Identification (MISSING) — no implementation evidence found in owning service
+- **413** [P0] siem-service: Traffic Mirroring (MISSING) — no implementation evidence found in owning service
+- **414** [P0] siem-service: Session Logging (MISSING) — no implementation evidence found in owning service
+- **415** [P0] siem-service: LI Audit Logs (MISSING) — no implementation evidence found in owning service
+- **416** [P0] siem-service: Authorization Control (MISSING) — no implementation evidence found in owning service
+- **417** [P0] siem-service: Data Encryption (MISSING) — no implementation evidence found in owning service
+- **418** [P0] siem-service: Data Masking (MISSING) — no implementation evidence found in owning service
+- **419** [P0] siem-service: Key Management (MISSING) — no implementation evidence found in owning service
+- **420** [P0] siem-service: Secure Access Logging (MISSING) — no implementation evidence found in owning service
+- **421** [P0] siem-service: Consent Management (MISSING) — no implementation evidence found in owning service
+- **422** [P0] siem-service: Data Access Requests (MISSING) — no implementation evidence found in owning service
+- **423** [P0] siem-service: Right to Erasure (MISSING) — no implementation evidence found in owning service
+- **424** [P1] siem-service: Data Portability (MISSING) — no implementation evidence found in owning service
+- **425** [P0] siem-service: Compliance Dashboard (MISSING) — 
+- **426** [P0] siem-service: Violation Detection (MISSING) — no implementation evidence found in owning service
+- **427** [P1] siem-service: Risk Assessment (MISSING) — no implementation evidence found in owning service
+- **428** [P0] siem-service: Regulatory Reports (MISSING) — no implementation evidence found in owning service
+- **429** [P0] siem-service: Audit Reports (MISSING) — no implementation evidence found in owning service
+- **430** [P0] siem-service: Incident Reports (MISSING) — no implementation evidence found in owning service
+- **432** [P0] siem-service: Event Forwarding (MISSING) — no implementation evidence found in owning service
+- **433** [P1] siem-service: Threat Intelligence (MISSING) — no implementation evidence found in owning service
+- **434** [P1] siem-service: Alert Correlation (MISSING) — no implementation evidence found in owning service
+- **435** [P0] aiops-service: Fraud Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **436** [P0] aiops-service: Fraud Case Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **437** [P0] aiops-service: Blacklist Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **438** [P0] siem-service: Full Audit Trail (MISSING) — no implementation evidence found in owning service
+- **439** [P0] siem-service: Audit Search (MISSING) — no implementation evidence found in owning service
+- **440** [P0] siem-service: Audit Export (MISSING) — no implementation evidence found in owning service
+- **441** [P0] siem-service: Policy Definition (MISSING) — no implementation evidence found in owning service
+- **442** [P0] siem-service: Policy Enforcement (MISSING) — no implementation evidence found in owning service
+- **443** [P1] siem-service: Policy Exceptions (MISSING) — no implementation evidence found in owning service
+- **444** [P1] siem-service: Access Reviews (MISSING) — no implementation evidence found in owning service
+- **445** [P1] siem-service: Segregation of Duties (MISSING) — no implementation evidence found in owning service
+- **446** [P1] siem-service: Compliance Checklist (MISSING) — no implementation evidence found in owning service
+- **447** [P0] siem-service: Multi-Region Compliance (PARTIAL) — deployment manifests present; per-feature service control pending
+- **448** [P0] siem-service: High Volume Logging (MISSING) — no implementation evidence found in owning service
+- **450** [P0] siem-service: Continuous Compliance Scan (MISSING) — no implementation evidence found in owning service
+- **451** [P0] data-warehouse-service: Data Ingestion (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **452** [P0] data-warehouse-service: ETL Pipelines (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **453** [P0] data-warehouse-service: Data Lake Storage (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **454** [P0] data-warehouse-service: Data Mart Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **455** [P0] data-warehouse-service: Schema Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **456** [P0] data-warehouse-service: Data Partitioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **457** [P0] data-warehouse-service: Data Retention (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **458** [P0] data-warehouse-service: Data Quality Checks (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **459** [P0] data-warehouse-service: Dashboard Builder (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **460** [P0] data-warehouse-service: Business Dashboards (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **461** [P0] data-warehouse-service: Network Dashboards (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **462** [P0] data-warehouse-service: Financial Dashboards (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **463** [P0] data-warehouse-service: Custom Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **464** [P0] data-warehouse-service: Scheduled Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **465** [P0] data-warehouse-service: Report Export (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **466** [P0] data-warehouse-service: Drill Down Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **467** [P0] data-warehouse-service: Real-time Analytics (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **468** [P0] data-warehouse-service: KPI Management (MISSING) — no implementation evidence found in owning service
+- **469** [P0] data-warehouse-service: Customer Segmentation Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **470** [P0] aiops-service: Churn Prediction Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **471** [P0] data-warehouse-service: Lifetime Value (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **472** [P0] data-warehouse-service: Usage Patterns (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **473** [P0] data-warehouse-service: Traffic Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **474** [P0] data-warehouse-service: Capacity Forecasting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **475** [P0] data-warehouse-service: Fault Trends (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **476** [P0] data-warehouse-service: SLA Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **477** [P0] data-warehouse-service: Revenue Trends (MISSING) — no implementation evidence found in owning service
+- **478** [P0] data-warehouse-service: Profitability Analysis (MISSING) — no implementation evidence found in owning service
+- **479** [P0] data-warehouse-service: AR/AP Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **480** [P0] data-warehouse-service: Leakage Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **481** [P0] aiops-service: Anomaly Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **482** [P0] aiops-service: Predictive Failure (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **483** [P1] aiops-service: Recommendation Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **484** [P1] aiops-service: Auto Remediation Insights (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **485** [P0] aiops-service: Root Cause Intelligence (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **486** [P0] aiops-service: Customer Experience Insights (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **487** [P1] aiops-service: Model Training (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **489** [P1] aiops-service: Feature Store (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **490** [P1] aiops-service: Experiment Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **491** [P0] data-warehouse-service: Data Lineage (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **492** [P0] data-warehouse-service: Access Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **493** [P0] data-warehouse-service: Data Catalog (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **494** [P0] data-warehouse-service: Data Audits (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **497** [P0] data-warehouse-service: Event Streaming (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **498** [P0] data-warehouse-service: Real-time Processing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **499** [P0] data-warehouse-service: Horizontal Scaling (MISSING) — no implementation evidence found in owning service
+- **500** [P0] data-warehouse-service: High Throughput (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **504** [P0] core-platform-service: Push Notification (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **507** [P0] core-platform-service: Message Queue (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **508** [P0] core-platform-service: Template Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **512** [P0] core-platform-service: Event Notifications (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **513** [P0] core-platform-service: Notification Routing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **514** [P0] core-platform-service: Retry Mechanism (MISSING) — no implementation evidence found in owning service
+- **515** [P0] core-platform-service: Throttling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **518** [P0] core-platform-service: Broadcast Message (MISSING) — no implementation evidence found in owning service
+- **519** [P0] core-platform-service: Campaign Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **520** [P0] core-platform-service: Campaign Scheduling (MISSING) — no implementation evidence found in owning service
+- **521** [P0] core-platform-service: Audience Segmentation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **522** [P0] core-platform-service: Campaign Execution (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **523** [P0] core-platform-service: Campaign Analytics (MISSING) — no implementation evidence found in owning service
+- **524** [P1] core-platform-service: A/B Testing (MISSING) — no implementation evidence found in owning service
+- **525** [P0] core-platform-service: Conversion Tracking (MISSING) — no implementation evidence found in owning service
+- **526** [P0] core-platform-service: Omnichannel Inbox (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **527** [P0] core-platform-service: Chat Support (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **528** [P0] core-platform-service: Conversation History (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **529** [P1] core-platform-service: Auto Responses (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **530** [P0] core-platform-service: SLA-based Responses (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **531** [P0] core-platform-service: Feedback Collection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **532** [P1] core-platform-service: Sentiment Analysis (MISSING) — no implementation evidence found in owning service
+- **533** [P1] core-platform-service: Survey Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **534** [P0] core-platform-service: NPS Campaigns (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **535** [P0] core-platform-service: Notification Preferences (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **536** [P0] core-platform-service: DND Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **537** [P0] core-platform-service: Template Approval Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **538** [P0] core-platform-service: Communication Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **541** [P0] core-platform-service: High Volume Messaging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **542** [P0] core-platform-service: Queue Scaling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **543** [P0] core-platform-service: Delivery Tracking (MISSING) — no implementation evidence found in owning service
+- **544** [P1] core-platform-service: Read Receipts (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **545** [P0] core-platform-service: Failure Handling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **546** [P0] core-platform-service: Message Encryption (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **547** [P1] core-platform-service: Spam Detection (MISSING) — no implementation evidence found in owning service
+- **548** [P1] core-platform-service: Smart Reply Suggestions (MISSING) — no implementation evidence found in owning service
+- **549** [P1] core-platform-service: Chatbot Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **550** [P0] core-platform-service: Communication Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **559** [P1] core-platform-service: Developer Portal (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **601** [P0] core-platform-service: Zero Touch Provisioning (ZTP) (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **602** [P0] core-platform-service: Auto Device Discovery (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **603** [P0] core-platform-service: Template-based Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **604** [P0] core-platform-service: Bulk Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **605** [P0] core-platform-service: Service Orchestration (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **606** [P0] core-platform-service: Rollback Mechanism (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **607** [P0] core-platform-service: Network Automation Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **608** [P1] core-platform-service: Intent-Based Networking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **609** [P0] core-platform-service: Policy Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **610** [P1] core-platform-service: Closed Loop Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **611** [P0] core-platform-service: Distributed Config Store (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **612** [P0] core-platform-service: Service Registry (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **613** [P0] core-platform-service: Distributed Transactions (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **614** [P0] core-platform-service: Eventual Consistency (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **615** [P1] core-platform-service: Consensus Mechanism (MISSING) — no implementation evidence found in owning service
+- **619** [P0] core-platform-service: Disaster Recovery (PARTIAL) — deployment manifests present; per-feature service control pending
+- **620** [P0] nms-service: Metrics Collection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **621** [P0] nms-service: Distributed Tracing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **622** [P0] nms-service: Log Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **623** [P0] nms-service: APM (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **624** [P0] nms-service: SLO/SLI Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **625** [P1] nms-service: Error Budget Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **626** [P0] nms-service: Circuit Breaker (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **627** [P0] nms-service: Retry Patterns (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **628** [P0] nms-service: Rate Limiting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **629** [P1] nms-service: Bulkhead Pattern (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **630** [P0] core-platform-service: Horizontal Scaling (MISSING) — no implementation evidence found in owning service
+- **632** [P1] core-platform-service: Load Shedding (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **633** [P0] core-platform-service: Queue Backpressure (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **634** [P1] core-platform-service: Edge Node Support (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **635** [P1] core-platform-service: Edge Caching (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **636** [P1] core-platform-service: Local Breakout (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **637** [P0] core-platform-service: Zero Trust Architecture (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **638** [P0] core-platform-service: Service Mesh (MISSING) — no implementation evidence found in owning service
+- **639** [P0] core-platform-service: mTLS (MISSING) — no implementation evidence found in owning service
+- **640** [P0] core-platform-service: Secrets Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **641** [P0] core-platform-service: Deployment Pipeline (PARTIAL) — deployment manifests present; per-feature service control pending
+- **642** [P0] core-platform-service: Blue-Green Deployments (PARTIAL) — deployment manifests present; per-feature service control pending
+- **643** [P0] core-platform-service: Canary Releases (PARTIAL) — deployment manifests present; per-feature service control pending
+- **644** [P0] core-platform-service: Rollback Deployments (PARTIAL) — deployment manifests present; per-feature service control pending
+- **645** [P1] core-platform-service: Chaos Engineering (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **646** [P0] core-platform-service: Load Testing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **647** [P0] core-platform-service: Failover Testing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **648** [P0] core-platform-service: Platform Policies (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **649** [P0] core-platform-service: Resource Quotas (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **650** [P1] core-platform-service: Cost Optimization (MISSING) — no implementation evidence found in owning service
+- **651** [P1] oss-service: IPTV Service Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **652** [P1] oss-service: Channel Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **653** [P1] oss-service: Channel Bouquet (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **654** [P1] oss-service: STB Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **657** [P1] oss-service: Subscriber Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **658** [P1] bss-service: OTT Subscription Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **659** [P1] oss-service: OTT Partner APIs (MISSING) — no implementation evidence found in owning service
+- **660** [P1] oss-service: OTT Access Portal (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **661** [P1] oss-service: SIP Account Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **663** [P1] oss-service: CDR Processing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **664** [P1] bss-service: VoIP Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **665** [P1] oss-service: Call Routing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **666** [P1] oss-service: DID Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **667** [P1] oss-service: Quality Monitoring (MISSING) — no implementation evidence found in owning service
+- **669** [P1] oss-service: Cache Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **670** [P1] oss-service: Traffic Offloading (MISSING) — no implementation evidence found in owning service
+- **671** [P0] oss-service: MPLS Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **672** [P0] oss-service: Leased Line Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **673** [P0] oss-service: VPN Services (MISSING) — no implementation evidence found in owning service
+- **675** [P0] oss-service: Bandwidth on Demand (MISSING) — no implementation evidence found in owning service
+- **676** [P0] oss-service: SLA Contracts (MISSING) — no implementation evidence found in owning service
+- **677** [P1] bss-service: API Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **679** [P0] bss-service: Partner Revenue Share (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **680** [P0] bss-service: Service Catalog (MISSING) — no implementation evidence found in owning service
+- **681** [P0] bss-service: Offer Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **682** [P1] bss-service: Coupon Engine (MISSING) — no implementation evidence found in owning service
+- **683** [P1] bss-service: Dynamic Pricing (MISSING) — no implementation evidence found in owning service
+- **684** [P0] bss-service: Usage Aggregation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **685** [P0] bss-service: Cross Product Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **686** [P0] bss-service: Revenue Streams (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **687** [P1] aiops-service: Subscription Fraud (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **688** [P1] aiops-service: Usage Fraud (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **689** [P1] bss-service: Loyalty Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **690** [P1] bss-service: Redemption (MISSING) — no implementation evidence found in owning service
+- **691** [P0] bss-service: Converged Services (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **692** [P1] bss-service: Family Plans (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **693** [P0] bss-service: Add-on Services (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **694** [P1] bss-service: Service Marketplace (MISSING) — no implementation evidence found in owning service
+- **695** [P1] bss-service: Vendor Onboarding (MISSING) — no implementation evidence found in owning service
+- **696** [P1] bss-service: Catalog Sync (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **697** [P1] data-warehouse-service: Offer Effectiveness (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **698** [P0] data-warehouse-service: Revenue Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **699** [P0] bss-service: High Volume Charging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **700** [P0] bss-service: Real-time Monetization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **701** [P0] oss-service: IoT Device Registry (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **702** [P0] oss-service: IoT Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **703** [P0] oss-service: Device Lifecycle Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **704** [P0] oss-service: IoT SIM/eSIM Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **706** [P0] oss-service: IoT Data Ingestion (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **707** [P0] oss-service: Device Telemetry (MISSING) — no implementation evidence found in owning service
+- **708** [P1] oss-service: IoT Policy Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **709** [P0] oss-service: IoT Security (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **710** [P0] oss-service: IoT Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **711** [P1] oss-service: Smart City Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **715** [P0] oss-service: Public WiFi Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **716** [P1] oss-service: Sensor Network Mgmt (MISSING) — no implementation evidence found in owning service
+- **717** [P0] oss-service: Hotel Property Mgmt (MISSING) — no implementation evidence found in owning service
+- **718** [P0] oss-service: Guest WiFi Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **719** [P0] oss-service: Room-based Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **720** [P0] oss-service: Voucher Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **721** [P0] oss-service: Captive Portal (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **722** [P0] oss-service: Bandwidth Control (MISSING) — no implementation evidence found in owning service
+- **723** [P0] oss-service: Campus Network Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **724** [P0] oss-service: VLAN Segmentation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **725** [P0] oss-service: Guest Access Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **727** [P0] oss-service: QoE Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **728** [P0] oss-service: MOS Scoring (MISSING) — no implementation evidence found in owning service
+- **729** [P1] oss-service: App Experience Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **730** [P0] oss-service: SLA Experience Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **731** [P1] aiops-service: Network Digital Twin (MISSING) — no implementation evidence found in owning service
+- **732** [P1] aiops-service: Simulation Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **733** [P1] aiops-service: Impact Prediction (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **734** [P1] aiops-service: Failure Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **735** [P1] aiops-service: Self-Healing Network (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **736** [P1] aiops-service: Intent Verification (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **737** [P1] aiops-service: Policy Learning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **738** [P1] aiops-service: Closed Loop Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **739** [P1] aiops-service: Autonomous Scaling (MISSING) — no implementation evidence found in owning service
+- **740** [P1] aiops-service: Autonomous Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **741** [P0] nms-service: Experience Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **742** [P0] nms-service: Service Map (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **743** [P1] nms-service: Anomaly Heatmaps (MISSING) — no implementation evidence found in owning service
+- **744** [P1] nms-service: Root Cause Graph (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **745** [P1] core-platform-service: Sandbox Environment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **746** [P1] core-platform-service: Feature Experimentation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **747** [P1] core-platform-service: Beta Rollouts (MISSING) — no implementation evidence found in owning service
+- **748** [P0] core-platform-service: User Feedback Loop (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **749** [P1] core-platform-service: Innovation Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **750** [P0] core-platform-service: Product Insights (MISSING) — no implementation evidence found in owning service
+- **752** [P0] core-platform-service: Cloud Abstraction Layer (MISSING) — no implementation evidence found in owning service
+- **753** [P0] core-platform-service: Cross-Cloud Failover (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **754** [P0] core-platform-service: Workload Portability (MISSING) — no implementation evidence found in owning service
+- **756** [P0] core-platform-service: Cost Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **757** [P0] core-platform-service: Cost Allocation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **758** [P0] core-platform-service: Budget Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **759** [P0] core-platform-service: Cost Optimization (MISSING) — no implementation evidence found in owning service
+- **760** [P0] core-platform-service: Usage Metering (MISSING) — no implementation evidence found in owning service
+- **761** [P1] core-platform-service: Energy Monitoring (MISSING) — no implementation evidence found in owning service
+- **762** [P1] core-platform-service: Carbon Footprint (MISSING) — no implementation evidence found in owning service
+- **763** [P1] core-platform-service: Green Routing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **764** [P1] core-platform-service: Power Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **765** [P1] core-platform-service: Sustainability Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **766** [P0] core-platform-service: Digital Identity Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **767** [P0] core-platform-service: Identity Federation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **768** [P1] core-platform-service: Decentralized Identity (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **769** [P0] core-platform-service: Identity Verification (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **770** [P1] core-platform-service: Identity Risk Scoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **771** [P1] core-platform-service: Blockchain Ledger (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **772** [P1] core-platform-service: Smart Contracts (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **773** [P1] core-platform-service: Billing Settlement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **774** [P1] core-platform-service: Fraud Prevention (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **776** [P0] core-platform-service: Policy Engine v2 (MISSING) — no implementation evidence found in owning service
+- **777** [P1] core-platform-service: AI Policy Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **778** [P1] core-platform-service: Risk Engine (MISSING) — no implementation evidence found in owning service
+- **779** [P0] core-platform-service: Compliance Automation (MISSING) — no implementation evidence found in owning service
+- **780** [P1] core-platform-service: Audit AI Insights (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **782** [P0] core-platform-service: Threat Hunting (MISSING) — no implementation evidence found in owning service
+- **783** [P0] core-platform-service: Behavior Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **784** [P1] core-platform-service: Insider Threat Detection (MISSING) — no implementation evidence found in owning service
+- **785** [P1] core-platform-service: Zero-Day Protection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **786** [P0] core-platform-service: Digital Experience Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **787** [P0] core-platform-service: Journey Orchestration (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **788** [P0] core-platform-service: Personalization Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **789** [P1] core-platform-service: Context Awareness (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **790** [P0] core-platform-service: Omnichannel Consistency (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **791** [P1] core-platform-service: Data Mesh Architecture (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **792** [P1] core-platform-service: Federated Queries (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **793** [P1] core-platform-service: Data Virtualization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **794** [P0] core-platform-service: Real-time Data Fabric (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **795** [P1] core-platform-service: Data Sharing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **796** [P0] nms-service: Ultra Low Latency (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **797** [P1] nms-service: Network Slicing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **799** [P1] nms-service: Edge AI Processing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **800** [P0] nms-service: High Frequency Processing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **801** [P0] bss-service: Enterprise Marketplace (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **802** [P0] bss-service: Enterprise Catalog (MISSING) — no implementation evidence found in owning service
+- **803** [P0] bss-service: Vendor Onboarding (MISSING) — no implementation evidence found in owning service
+- **804** [P0] bss-service: Vendor SLA Contracts (MISSING) — no implementation evidence found in owning service
+- **806** [P0] bss-service: Revenue Settlement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **807** [P0] bss-service: Service Bundling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **808** [P1] bss-service: Dynamic Service Composition (MISSING) — no implementation evidence found in owning service
+- **809** [P0] bss-service: Contract Lifecycle Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **810** [P0] bss-service: Contract Compliance (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **811** [P0] bss-service: SLA Pricing (MISSING) — no implementation evidence found in owning service
+- **812** [P0] bss-service: Penalty Rules (MISSING) — no implementation evidence found in owning service
+- **813** [P0] bss-service: SLA Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **814** [P0] bss-service: SLA Credits (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **815** [P0] bss-service: SLA Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **816** [P0] bss-service: API Marketplace (MISSING) — no implementation evidence found in owning service
+- **817** [P0] bss-service: API Subscription Plans (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **818** [P0] bss-service: API Usage Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **819** [P0] bss-service: Rate Plan Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **820** [P0] bss-service: API Revenue Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **821** [P0] crm-service: Partner Onboarding (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **822** [P1] crm-service: Partner Certification (MISSING) — no implementation evidence found in owning service
+- **823** [P0] crm-service: Partner Performance (MISSING) — no implementation evidence found in owning service
+- **824** [P0] crm-service: Partner Lifecycle (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **825** [P0] crm-service: Partner SLA Mgmt (MISSING) — no implementation evidence found in owning service
+- **826** [P0] crm-service: Cross Operator Federation (MISSING) — no implementation evidence found in owning service
+- **827** [P1] crm-service: Roaming Support (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **828** [P0] crm-service: Identity Federation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **829** [P0] crm-service: Billing Federation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **830** [P0] core-platform-service: Multi-Domain Orchestration (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **831** [P0] core-platform-service: Service Chaining (MISSING) — no implementation evidence found in owning service
+- **832** [P1] core-platform-service: Intent Orchestration (MISSING) — no implementation evidence found in owning service
+- **833** [P0] core-platform-service: Orchestration Policies (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **834** [P1] core-platform-service: Cross-Domain SLA (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **835** [P1] bss-service: Partner App Store (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **836** [P0] bss-service: Subscription Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **837** [P0] bss-service: License Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **838** [P0] bss-service: Usage Metering (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **839** [P0] data-warehouse-service: Ecosystem Analytics (MISSING) — no implementation evidence found in owning service
+- **840** [P0] data-warehouse-service: Partner Insights (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **841** [P0] data-warehouse-service: Marketplace Insights (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **842** [P0] siem-service: Partner Security (MISSING) — no implementation evidence found in owning service
+- **843** [P0] siem-service: Cross-Domain Security (MISSING) — no implementation evidence found in owning service
+- **844** [P1] siem-service: Trust Framework (MISSING) — no implementation evidence found in owning service
+- **845** [P0] core-platform-service: Partner Governance (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **846** [P0] core-platform-service: Policy Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **847** [P0] core-platform-service: Ecosystem Scaling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **848** [P0] core-platform-service: Global Ecosystem (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **849** [P1] core-platform-service: Ecosystem Sandbox (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **850** [P1] core-platform-service: Co-Innovation Platform (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **851** [P1] aiops-service: Lights-Out NOC (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **852** [P1] aiops-service: Auto Incident Resolution (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **853** [P1] aiops-service: Self-Healing Workflows (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **854** [P1] aiops-service: Predictive Incident Avoidance (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **855** [P1] aiops-service: AI Root Cause Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **856** [P1] aiops-service: Autonomous Provisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **857** [P1] aiops-service: Autonomous Scaling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **858** [P1] aiops-service: Autonomous Network Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **859** [P1] aiops-service: Autonomous Policy Tuning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **860** [P1] aiops-service: Autonomous Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **861** [P1] aiops-service: Autonomous Pricing (MISSING) — no implementation evidence found in owning service
+- **862** [P1] aiops-service: Revenue Optimization AI (MISSING) — no implementation evidence found in owning service
+- **863** [P1] aiops-service: Churn Prevention AI (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **864** [P1] aiops-service: Customer Journey AI (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **865** [P0] aiops-service: Robotic Process Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **866** [P0] aiops-service: Workflow Bots (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **867** [P1] aiops-service: Screen Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **868** [P0] aiops-service: AI Workflow Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **869** [P0] aiops-service: Decision Intelligence (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **871** [P1] aiops-service: Business Digital Twin (MISSING) — no implementation evidence found in owning service
+- **872** [P1] aiops-service: Revenue Simulation (MISSING) — no implementation evidence found in owning service
+- **873** [P1] aiops-service: Customer Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **874** [P1] aiops-service: Market Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **875** [P1] aiops-service: Pricing Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **876** [P1] aiops-service: AI Model Orchestration (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **877** [P1] aiops-service: Model Governance (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **878** [P1] aiops-service: Explainable AI (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **879** [P1] aiops-service: Bias Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **880** [P1] aiops-service: Model Drift Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **881** [P1] aiops-service: AI Offer Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **882** [P1] aiops-service: Cross-Sell Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **883** [P1] aiops-service: Upsell Engine (MISSING) — no implementation evidence found in owning service
+- **884** [P1] aiops-service: Bundling Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **885** [P0] aiops-service: Virtual Assistant (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **886** [P1] aiops-service: Voice Assistant (MISSING) — no implementation evidence found in owning service
+- **887** [P1] aiops-service: Auto Ticket Resolution (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **888** [P1] aiops-service: Sentiment Response (MISSING) — no implementation evidence found in owning service
+- **889** [P0] aiops-service: Personalization Engine v2 (MISSING) — no implementation evidence found in owning service
+- **891** [P0] core-platform-service: Follow-the-Sun Support (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **892** [P0] core-platform-service: Multi-Language AI (MISSING) — no implementation evidence found in owning service
+- **893** [P0] core-platform-service: Cross-Region SLA Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **894** [P0] core-platform-service: Global Compliance Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **901** [P1] bss-service: Autonomous Accounting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **902** [P0] bss-service: Auto Ledger Reconciliation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **903** [P1] bss-service: Expense Intelligence (MISSING) — no implementation evidence found in owning service
+- **904** [P0] bss-service: Financial Forecasting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **905** [P0] bss-service: Budget Planning (MISSING) — no implementation evidence found in owning service
+- **906** [P0] bss-service: Cash Flow Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **907** [P1] bss-service: Tax Optimization AI (MISSING) — no implementation evidence found in owning service
+- **908** [P1] core-platform-service: Contract Intelligence (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **909** [P1] core-platform-service: Clause Extraction (MISSING) — no implementation evidence found in owning service
+- **910** [P1] core-platform-service: Risk Detection (MISSING) — no implementation evidence found in owning service
+- **911** [P1] core-platform-service: Contract Auto Drafting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **912** [P0] core-platform-service: Compliance Check AI (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **913** [P1] core-platform-service: Workforce Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **914** [P1] core-platform-service: Talent Prediction (MISSING) — no implementation evidence found in owning service
+- **915** [P1] core-platform-service: Attrition Prediction (MISSING) — no implementation evidence found in owning service
+- **916** [P0] core-platform-service: Workforce Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **917** [P1] core-platform-service: Role Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **918** [P1] core-platform-service: Strategic Planning AI (MISSING) — no implementation evidence found in owning service
+- **919** [P1] core-platform-service: Scenario Planning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **920** [P0] core-platform-service: Market Intelligence (MISSING) — no implementation evidence found in owning service
+- **921** [P1] core-platform-service: Investment Optimization (MISSING) — no implementation evidence found in owning service
+- **922** [P0] core-platform-service: Portfolio Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **923** [P1] core-platform-service: Vendor Selection AI (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **924** [P0] core-platform-service: Procurement Automation (MISSING) — no implementation evidence found in owning service
+- **925** [P1] core-platform-service: Supplier Risk Mgmt (MISSING) — no implementation evidence found in owning service
+- **926** [P0] core-platform-service: Inventory Forecasting (MISSING) — no implementation evidence found in owning service
+- **927** [P1] core-platform-service: Purchase Optimization (MISSING) — no implementation evidence found in owning service
+- **928** [P1] core-platform-service: Knowledge Graph (MISSING) — no implementation evidence found in owning service
+- **929** [P0] core-platform-service: Semantic Search (MISSING) — no implementation evidence found in owning service
+- **930** [P1] core-platform-service: Knowledge Recommendations (MISSING) — no implementation evidence found in owning service
+- **931** [P1] core-platform-service: Organizational Memory (MISSING) — no implementation evidence found in owning service
+- **932** [P0] core-platform-service: Executive Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **933** [P1] core-platform-service: Policy Intelligence (MISSING) — no implementation evidence found in owning service
+- **934** [P0] core-platform-service: Decision Audit Trail (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **935** [P1] core-platform-service: Ethics Engine (MISSING) — no implementation evidence found in owning service
+- **936** [P0] siem-service: Enterprise Risk Mgmt (MISSING) — no implementation evidence found in owning service
+- **937** [P0] siem-service: Predictive Risk (MISSING) — no implementation evidence found in owning service
+- **938** [P1] siem-service: Risk Mitigation Engine (MISSING) — no implementation evidence found in owning service
+- **940** [P0] core-platform-service: Enterprise Command Center (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **941** [P0] core-platform-service: Real-time Decisioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **942** [P1] core-platform-service: Autonomous Task Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **943** [P0] core-platform-service: Cross-Domain Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **944** [P0] core-platform-service: Operational Intelligence (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **945** [P1] core-platform-service: Innovation Lab (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **946** [P1] core-platform-service: Idea Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **947** [P1] core-platform-service: Innovation Pipeline (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **948** [P0] core-platform-service: ROI Tracking (MISSING) — no implementation evidence found in owning service
+- **949** [P1] core-platform-service: Disruption Detection (MISSING) — no implementation evidence found in owning service
+- **950** [P1] core-platform-service: Future Readiness Index (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1001** [P0] oss-service: Order Creation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1002** [P0] oss-service: Order Decomposition (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1003** [P0] oss-service: Order Orchestration (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1004** [P0] oss-service: Order Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1005** [P0] oss-service: Order Fallout Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1006** [P0] oss-service: Retry Logic (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1007** [P0] oss-service: Order Cancellation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1008** [P0] oss-service: Order SLA Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1009** [P0] bss-service: Service Catalog (MISSING) — no implementation evidence found in owning service
+- **1010** [P0] oss-service: Resource Catalog (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1011** [P0] oss-service: Service-Resource Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1012** [P0] oss-service: Inventory Sync (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1013** [P0] oss-service: Drift Detection (MISSING) — no implementation evidence found in owning service
+- **1014** [P1] oss-service: Auto Correction (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1015** [P0] oss-service: Network Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1016** [P0] oss-service: Subscriber Session Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1017** [P0] oss-service: NAT Pool Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1018** [P0] oss-service: NAT Logging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1019** [P1] oss-service: Traffic Classification (MISSING) — no implementation evidence found in owning service
+- **1020** [P1] oss-service: URL Filtering (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1021** [P0] oss-service: Policy Control Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1022** [P0] bss-service: Interconnect Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1023** [P0] bss-service: Usage Exchange (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1024** [P0] bss-service: Settlement Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1025** [P0] core-platform-service: Service Degradation Rules (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1026** [P0] core-platform-service: SLA Adjustment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1027** [P0] core-platform-service: Billing Freeze (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1028** [P0] oss-service: ONT Activation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1029** [P0] oss-service: PON Authentication (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1030** [P0] oss-service: Signal Test (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1031** [P0] oss-service: Fiber Splicing Workflow (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1032** [P0] aiops-service: SIM Cloning Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1033** [P0] aiops-service: IRSF Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1034** [P1] aiops-service: OTT Bypass Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1035** [P0] bss-service: Double Entry Ledger (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1036** [P0] bss-service: Deferred Revenue (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1037** [P0] bss-service: Accrual Accounting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1038** [P0] bss-service: Revenue Recognition (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1039** [P0] siem-service: CAF Management (MISSING) — no implementation evidence found in owning service
+- **1040** [P0] siem-service: CAF Audit Trail (MISSING) — no implementation evidence found in owning service
+- **1041** [P0] siem-service: IPDR Format Export (MISSING) — no implementation evidence found in owning service
+- **1042** [P0] siem-service: LEA Interface (MISSING) — no implementation evidence found in owning service
+- **1043** [P0] data-warehouse-service: Data Residency Rules (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1044** [P0] data-warehouse-service: BYOK (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1045** [P0] bss-service: Product Launch (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1046** [P0] bss-service: Product Sunset (MISSING) — no implementation evidence found in owning service
+- **1047** [P0] bss-service: Migration Plan (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1048** [P1] core-platform-service: Network Simulator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1049** [P1] core-platform-service: PPPoE Simulator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1050** [P0] core-platform-service: Billing Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1051** [P0] core-platform-service: Concurrent Session Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1052** [P0] core-platform-service: Billing Peak Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1054** [P0] core-platform-service: DB Load Testing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1055** [P0] core-platform-service: Session Failover Test (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1057** [P0] core-platform-service: Order Lifecycle Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1058** [P0] core-platform-service: Provisioning Flow Test (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1059** [P0] core-platform-service: Ticket Workflow Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1060** [P0] core-platform-service: SLA Breach Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1061** [P0] aaa-service: Global Policy Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1062** [P0] aaa-service: Hierarchical Policies (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1063** [P0] aaa-service: Conditional Rules Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1064** [P0] aaa-service: Policy Versioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1065** [P0] aaa-service: Policy Rollback (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1066** [P0] aaa-service: PPPoE Server Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1067** [P0] aaa-service: Hotspot Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1068** [P0] aaa-service: DHCP Relay Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1069** [P1] aaa-service: ARP Table Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1070** [P1] aaa-service: MAC Learning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1071** [P0] aaa-service: Anti-Spoofing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1072** [P1] aaa-service: Storm Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1073** [P0] aaa-service: Port Security (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1074** [P0] aaa-service: DHCP Snooping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1075** [P0] aaa-service: Queue Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1076** [P0] aaa-service: Traffic Shaping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1077** [P0] aaa-service: Congestion Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1078** [P0] aaa-service: Priority Scheduling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1079** [P0] nms-service: Command Execution Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1080** [P0] nms-service: Bulk Command Execution (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1081** [P0] nms-service: Command Audit Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1082** [P0] nms-service: Config Diff Viewer (MISSING) — no implementation evidence found in owning service
+- **1083** [P0] nms-service: Rollback Config (PARTIAL) — deployment manifests present; per-feature service control pending
+- **1084** [P0] oss-service: Peak Network Forecast (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1085** [P0] oss-service: Subscriber Growth Forecast (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1086** [P0] oss-service: Expansion Trigger Rules (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1087** [P0] oss-service: Saturation Alerts (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1088** [P0] data-warehouse-service: Daily Ops Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1089** [P0] data-warehouse-service: Weekly Health Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1090** [P0] data-warehouse-service: Incident Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1091** [P0] data-warehouse-service: SLA Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1092** [P0] data-warehouse-service: Customer Reports (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1093** [P1] core-platform-service: Release Notes Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1094** [P0] core-platform-service: Env Promotion (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1095** [P0] core-platform-service: Config Versioning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1096** [P1] core-platform-service: Rollforward Support (PARTIAL) — deployment manifests present; per-feature service control pending
+- **1097** [P0] core-platform-service: Deployment Monitoring (PARTIAL) — deployment manifests present; per-feature service control pending
+- **1098** [P0] core-platform-service: Error Spike Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1099** [P0] core-platform-service: Auto Rollback Trigger (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1100** [P0] core-platform-service: Release Health Score (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1101** [P1] core-platform-service: OLT Simulator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1102** [P1] core-platform-service: ONT Emulator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1103** [P0] core-platform-service: Traffic Generator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1104** [P0] core-platform-service: Failover Simulator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1105** [P1] core-platform-service: Chaos Injection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1106** [P1] core-platform-service: Latency Emulator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1107** [P1] core-platform-service: Packet Loss Emulator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1108** [P0] core-platform-service: Billing Edge Case Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1109** [P1] core-platform-service: Device Certification Lab (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1110** [P1] core-platform-service: Firmware Compliance (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1111** [P0] workforce-service: Installation Checklist (MISSING) — no implementation evidence found in owning service
+- **1112** [P0] workforce-service: Site Feasibility Check (MISSING) — no implementation evidence found in owning service
+- **1113** [P0] workforce-service: Cable Routing Plan (MISSING) — no implementation evidence found in owning service
+- **1114** [P1] workforce-service: Power Availability Check (MISSING) — no implementation evidence found in owning service
+- **1115** [P0] workforce-service: Signal Validation (MISSING) — no implementation evidence found in owning service
+- **1116** [P0] workforce-service: Customer Handover (MISSING) — no implementation evidence found in owning service
+- **1117** [P0] workforce-service: Preventive Maintenance (MISSING) — no implementation evidence found in owning service
+- **1118** [P0] workforce-service: Emergency Repair (MISSING) — no implementation evidence found in owning service
+- **1119** [P0] workforce-service: Site Visit Logs (MISSING) — no implementation evidence found in owning service
+- **1120** [P0] workforce-service: Asset Condition Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1121** [P0] nms-service: Shift Handover Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1122** [P0] nms-service: War Room Logs (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1123** [P0] nms-service: Decision Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1124** [P0] nms-service: Approval SLA (MISSING) — no implementation evidence found in owning service
+- **1125** [P0] nms-service: Human Task Queue (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1126** [P0] nms-service: Escalation Chain (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1127** [P0] bss-service: Ledger Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1128** [P0] bss-service: Revenue Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1129** [P0] bss-service: Billing Dispute Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1130** [P0] bss-service: Tax Audit (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1131** [P0] bss-service: Dispute Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1132** [P0] bss-service: Adjustment Workflow (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1133** [P0] bss-service: Refund Validation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1134** [P1] oss-service: Pole Management (MISSING) — no implementation evidence found in owning service
+- **1135** [P0] oss-service: Duct Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1136** [P0] oss-service: Right of Way Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1137** [P0] oss-service: Lease Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1138** [P0] oss-service: Site Ownership (MISSING) — no implementation evidence found in owning service
+- **1139** [P1] oss-service: Utility Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1140** [P0] oss-service: Fiber Utilization Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1141** [P0] oss-service: Spare Capacity Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1142** [P0] oss-service: Network Expansion Planner (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1143** [P0] oss-service: CapEx Tracking (MISSING) — no implementation evidence found in owning service
+- **1144** [P0] oss-service: ROI Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1145** [P0] oss-service: Vendor SLA Tracking (MISSING) — no implementation evidence found in owning service
+- **1146** [P0] oss-service: Vendor Performance (MISSING) — no implementation evidence found in owning service
+- **1147** [P0] oss-service: Vendor Penalties (MISSING) — no implementation evidence found in owning service
+- **1148** [P0] oss-service: Vendor Contracts (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1149** [P0] oss-service: Vendor Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1150** [P1] oss-service: Vendor Risk Monitor (MISSING) — no implementation evidence found in owning service
+- **1151** [P0] nms-service: Error Budget Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1152** [P0] nms-service: SLA Burn Rate (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1153** [P0] nms-service: Incident Trend Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1154** [P1] nms-service: Fault Injection Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1155** [P0] nms-service: Multi-Zone Failover (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1156** [P0] nms-service: End-to-End Trace (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1157** [P0] nms-service: High Cardinality Metrics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1158** [P0] nms-service: Log Enrichment (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1159** [P0] nms-service: Cross-Domain Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1160** [P1] nms-service: Dynamic Alert Thresholds (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1161** [P0] siem-service: IPDR Retention Mgmt (MISSING) — no implementation evidence found in owning service
+- **1162** [P0] siem-service: LI Real-Time Feed (MISSING) — no implementation evidence found in owning service
+- **1163** [P0] siem-service: Data Access Audit (MISSING) — no implementation evidence found in owning service
+- **1164** [P0] siem-service: Geo Blocking (MISSING) — no implementation evidence found in owning service
+- **1165** [P0] siem-service: Emergency Services Routing (MISSING) — no implementation evidence found in owning service
+- **1166** [P0] nms-service: Query Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1167** [P0] nms-service: Cache Strategy (MISSING) — no implementation evidence found in owning service
+- **1168** [P0] nms-service: Hot Path Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1169** [P0] nms-service: Peak Traffic Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1170** [P0] nms-service: Session Scaling Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1171** [P0] siem-service: Runtime Protection (MISSING) — no implementation evidence found in owning service
+- **1172** [P0] siem-service: Container Security (MISSING) — no implementation evidence found in owning service
+- **1173** [P0] siem-service: Vulnerability Scanning (MISSING) — no implementation evidence found in owning service
+- **1174** [P0] siem-service: Patch Management (MISSING) — no implementation evidence found in owning service
+- **1175** [P0] siem-service: Security Baselines (MISSING) — no implementation evidence found in owning service
+- **1176** [P0] data-warehouse-service: Data Consistency Checker (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1177** [P1] data-warehouse-service: Data Repair Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1180** [P0] data-warehouse-service: Cross-Region Restore (PARTIAL) — deployment manifests present; per-feature service control pending
+- **1181** [P0] core-platform-service: Role-Based UI Engine (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1182** [P0] core-platform-service: Custom Dashboards per Role (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1183** [P1] core-platform-service: Accessibility Compliance (MISSING) — 
+- **1184** [P0] core-platform-service: Responsive Design (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1185** [P0] core-platform-service: Theme Engine (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1186** [P0] core-platform-service: User Journey Tracking (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1187** [P1] core-platform-service: Clickstream Analytics (MISSING) — 
+- **1188** [P1] core-platform-service: UX Optimization (MISSING) — 
+- **1189** [P1] crm-service: KB Auto Generation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1190** [P1] crm-service: KB Feedback Loop (MISSING) — no implementation evidence found in owning service
+- **1191** [P0] crm-service: Suggested Resolutions (MISSING) — no implementation evidence found in owning service
+- **1192** [P0] aiops-service: Ops Command Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1193** [P0] aiops-service: System Health Score (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1194** [P0] aiops-service: Risk Score Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1195** [P0] aiops-service: Operational Forecasting (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1196** [P0] core-platform-service: Global Policy Sync (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1197** [P0] core-platform-service: Audit Consolidation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1198** [P1] core-platform-service: Governance Score (MISSING) — no implementation evidence found in owning service
+- **1199** [P0] core-platform-service: Platform Health Index (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1200** [P1] core-platform-service: System Completeness Score (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1201** [P0] oss-service: BGP Configuration Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1202** [P0] oss-service: Route Policy Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1203** [P0] oss-service: Route Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1204** [P0] oss-service: Peering Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1206** [P0] oss-service: Traffic Engineering Policies (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1207** [P1] oss-service: Path Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1208** [P0] oss-service: DDoS Detection (MISSING) — no implementation evidence found in owning service
+- **1210** [P0] bss-service: IP Transit Billing Awareness (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1211** [P0] data-warehouse-service: IPv4 Exhaustion Tracker (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1212** [P0] data-warehouse-service: CGNAT Analytics Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1214** [P0] aaa-service: RF Spectrum Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1215** [P0] aaa-service: Link Alignment Tool (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1216** [P0] aaa-service: Signal Interference Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1217** [P1] aaa-service: RAN Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1218** [P1] aaa-service: Cell Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1219** [P0] aaa-service: WiFi Monetization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1220** [P1] aaa-service: Captive Portal Campaigns (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1221** [P0] bss-service: Profit Center Mgmt (MISSING) — no implementation evidence found in owning service
+- **1222** [P0] bss-service: Cost Center Mgmt (MISSING) — no implementation evidence found in owning service
+- **1223** [P0] bss-service: Multi-Entity Ledger (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1224** [P0] bss-service: Tax Jurisdiction Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1225** [P0] bss-service: Revenue vs Network Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1226** [P0] crm-service: Real-Time QoE Scoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1227** [P0] crm-service: Journey Funnel Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1228** [P0] crm-service: Proactive Issue Resolution (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1229** [P1] crm-service: Gamification Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1234** [P0] siem-service: SOC Dashboard (MISSING) — 
+- **1235** [P0] siem-service: Security Automation Engine (MISSING) — no implementation evidence found in owning service
+- **1236** [P0] siem-service: Threat Hunting Playbooks (MISSING) — no implementation evidence found in owning service
+- **1237** [P1] siem-service: Breach Simulation (MISSING) — no implementation evidence found in owning service
+- **1238** [P0] nms-service: KPI-Event Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1239** [P0] nms-service: Customer Impact Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1240** [P0] siem-service: GDPR Compliance Engine (MISSING) — no implementation evidence found in owning service
+- **1241** [P1] siem-service: FCC/ETSI Compliance (MISSING) — no implementation evidence found in owning service
+- **1242** [P0] siem-service: Multi-Country Localization (MISSING) — no implementation evidence found in owning service
+- **1243** [P0] siem-service: Law Enforcement Workflow (MISSING) — no implementation evidence found in owning service
+- **1244** [P0] core-platform-service: Unified Admin Console (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1245** [P0] core-platform-service: Persona-Based Dashboards (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1246** [P0] bss-service: Go-To-Market Workflow (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1247** [P1] bss-service: Pricing A/B Testing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1248** [P0] bss-service: Plan Profitability Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1249** [P0] bss-service: Feature Adoption Tracking (MISSING) — no implementation evidence found in owning service
+- **1250** [P1] aiops-service: Business Impact Predictor (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1251** [P0] oss-service: BGP Route Leak Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1252** [P0] oss-service: RPKI Validation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1253** [P1] oss-service: Automated Peering Optimization (MISSING) — no implementation evidence found in owning service
+- **1254** [P0] oss-service: Traffic Cost Optimization (MISSING) — no implementation evidence found in owning service
+- **1255** [P0] oss-service: DDoS Auto Mitigation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1256** [P1] oss-service: Botnet Detection (MISSING) — no implementation evidence found in owning service
+- **1257** [P0] data-warehouse-service: Traffic Behavior Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1258** [P1] data-warehouse-service: Subscriber Network Profiling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1259** [P1] aaa-service: Terrain-Aware Planning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1260** [P1] aaa-service: Weather Impact Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1261** [P0] aaa-service: Hotspot ROI Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1262** [P1] aaa-service: Dynamic Pricing WiFi (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1263** [P0] bss-service: Real-Time Profit Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1264** [P1] bss-service: Cost Leakage Detection (MISSING) — no implementation evidence found in owning service
+- **1265** [P1] bss-service: Margin Optimization AI (MISSING) — no implementation evidence found in owning service
+- **1266** [P0] bss-service: Demand-Based Revenue Forecast (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1267** [P1] aiops-service: Persona Behavior Modeling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1268** [P0] aiops-service: Churn Root Cause Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1269** [P0] crm-service: Offer Auto Trigger (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1270** [P1] crm-service: Service Downgrade Prevention (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1274** [P0] siem-service: SOC Incident Timeline (MISSING) — no implementation evidence found in owning service
+- **1275** [P1] siem-service: Auto Playbook Tuning (MISSING) — no implementation evidence found in owning service
+- **1276** [P1] siem-service: Threat Attribution (MISSING) — no implementation evidence found in owning service
+- **1277** [P0] nms-service: Revenue Drop Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1278** [P0] nms-service: SLA Impact Simulator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1279** [P0] siem-service: Cross-Border Data Rules Engine (MISSING) — no implementation evidence found in owning service
+- **1280** [P1] siem-service: Automated Notice Handling (MISSING) — no implementation evidence found in owning service
+- **1281** [P0] core-platform-service: Smart Dashboard Builder (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1282** [P0] core-platform-service: KPI Widgets Library (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1283** [P0] bss-service: Campaign-Product Sync (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1284** [P1] bss-service: Elastic Pricing Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1285** [P1] bss-service: Revenue per Feature (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1286** [P0] nms-service: Graceful Degradation Engine (MISSING) — no implementation evidence found in owning service
+- **1287** [P0] nms-service: Traffic Shedding Logic (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1288** [P0] nms-service: Fail-Safe Mode (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1289** [P0] aiops-service: System Bottleneck Detector (MISSING) — no implementation evidence found in owning service
+- **1290** [P0] aiops-service: Resource Optimization AI (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1291** [P0] aiops-service: Forecast-Based Scaling (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1292** [P1] aiops-service: Cross-System Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1293** [P0] bss-service: Partner SLA Analytics (MISSING) — no implementation evidence found in owning service
+- **1294** [P1] bss-service: Revenue Split Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1295** [P1] bss-service: Marketplace Demand Forecast (MISSING) — no implementation evidence found in owning service
+- **1296** [P0] aiops-service: Ops Efficiency Score (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1297** [P0] aiops-service: Automation Coverage Tracking (MISSING) — no implementation evidence found in owning service
+- **1298** [P1] aiops-service: Human Effort Reduction (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1299** [P1] core-platform-service: Optimization Score (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1300** [P1] core-platform-service: Enterprise Maturity Index (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1301** [P1] bss-service: Surge Pricing Engine (MISSING) — no implementation evidence found in owning service
+- **1302** [P1] bss-service: Location-Based Pricing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1303** [P1] bss-service: Micro-Charging Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1304** [P0] bss-service: Session-Level Charging (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1305** [P0] bss-service: Revenue Leakage Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1306** [P1] bss-service: Context-Aware Offers (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1307** [P1] bss-service: Time-Slot Pricing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1308** [P1] aiops-service: Autonomous Routing Decision (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1309** [P0] aiops-service: Congestion Prediction (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1310** [P0] aiops-service: Capacity Risk Prediction (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1311** [P1] aiops-service: Subscriber Mobility Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1312** [P0] aiops-service: Network Health Trend (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1313** [P1] aiops-service: Auto Configuration Tuning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1314** [P1] aiops-service: Cross-Domain Healing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1315** [P0] aiops-service: Dependency Failure Prevention (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1316** [P0] nms-service: Feature Toggle System (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1317** [P0] nms-service: Emergency Kill Switch (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1318** [P0] crm-service: Churn Intervention Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1319** [P0] crm-service: Renewal Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1320** [P0] crm-service: Contract Renewal Alerts (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1321** [P0] crm-service: Smart Ticket Routing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1322** [P1] aiops-service: Resolution Time Prediction (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1323** [P1] crm-service: Customer Effort Score (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1324** [P1] core-platform-service: Adaptive UI (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1325** [P0] core-platform-service: Smart Notifications (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1329** [P1] siem-service: Adaptive Threat Response (MISSING) — no implementation evidence found in owning service
+- **1330** [P1] siem-service: Continuous Authentication (MISSING) — no implementation evidence found in owning service
+- **1331** [P1] siem-service: Session Risk Scoring (MISSING) — no implementation evidence found in owning service
+- **1332** [P1] siem-service: Geo Anomaly Detection (MISSING) — no implementation evidence found in owning service
+- **1333** [P0] siem-service: Data Transfer Audit (MISSING) — no implementation evidence found in owning service
+- **1334** [P0] siem-service: Retention Validation (MISSING) — no implementation evidence found in owning service
+- **1335** [P0] siem-service: Regulatory Reporting Automation (MISSING) — no implementation evidence found in owning service
+- **1336** [P1] bss-service: Subscription Cohort Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1337** [P0] bss-service: ARPU Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1338** [P1] bss-service: CAC Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1339** [P0] bss-service: LTV/CAC Ratio (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1340** [P1] data-warehouse-service: Scenario Comparison Engine (MISSING) — no implementation evidence found in owning service
+- **1341** [P1] data-warehouse-service: Forecast Confidence Score (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1342** [P0] data-warehouse-service: Data Freshness Monitor (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1343** [P0] nms-service: Latency SLA Enforcement (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1344** [P0] nms-service: Queue Saturation Protection (MISSING) — no implementation evidence found in owning service
+- **1345** [P0] nms-service: Async Failure Recovery (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1346** [P0] aiops-service: Smart Resource Allocation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1347** [P0] aiops-service: Multi-Tenant Resource Isolation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1348** [P0] aiops-service: Workload Balancer (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1349** [P0] aiops-service: Platform Drift Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1350** [P1] aiops-service: Enterprise Optimization Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1351** [P0] aiops-service: Cross-Layer Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1352** [P1] aiops-service: Root-Cause Confidence Score (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1353** [P1] aiops-service: Failure Cascade Prediction (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1354** [P0] aiops-service: SLA Risk Indicator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1355** [P0] aiops-service: Traffic Shift Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1356** [P0] aiops-service: Microburst Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1357** [P1] aiops-service: Packet Flow Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1358** [P0] aiops-service: Latency Root Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1359** [P0] aiops-service: Revenue Impact Forecast (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1360** [P1] aiops-service: Plan Usage Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1361** [P0] aiops-service: Subscriber Segmentation AI (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1362** [P1] aiops-service: Upsell Timing Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1363** [P1] aiops-service: Sentiment Trend Analysis (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1364** [P0] aiops-service: Experience Degradation Alerts (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1365** [P1] aiops-service: Lifetime Engagement Score (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1366** [P0] aiops-service: Complaint Pattern Mining (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1367** [P1] siem-service: Lateral Movement Detection (MISSING) — no implementation evidence found in owning service
+- **1368** [P0] siem-service: Privilege Escalation Detection (MISSING) — no implementation evidence found in owning service
+- **1370** [P0] siem-service: Adaptive MFA (MISSING) — no implementation evidence found in owning service
+- **1371** [P0] siem-service: Real-Time Compliance Engine (MISSING) — no implementation evidence found in owning service
+- **1372** [P0] siem-service: Cross-System Audit Sync (MISSING) — no implementation evidence found in owning service
+- **1373** [P1] siem-service: Regulatory Change Adapter (MISSING) — no implementation evidence found in owning service
+- **1374** [P1] siem-service: Audit Risk Scoring (MISSING) — no implementation evidence found in owning service
+- **1375** [P1] nms-service: Trace Replay Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1376** [P0] nms-service: Service Dependency Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1377** [P0] nms-service: Event Storm Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1378** [P1] nms-service: Log Pattern Learning (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1379** [P0] core-platform-service: Feature Rollout Phasing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1380** [P1] core-platform-service: Region-Based Feature Control (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1381** [P0] core-platform-service: Tenant Feature Isolation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1382** [P0] core-platform-service: Kill-Switch Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1383** [P1] nms-service: Ultra High Throughput Mode (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1384** [P1] nms-service: Background Job Accelerator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1385** [P1] nms-service: IO Optimization Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1386** [P0] core-platform-service: Cold Storage Tiering (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1387** [P0] core-platform-service: Hot Data Prioritization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1388** [P1] core-platform-service: Data Access Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1389** [P0] core-platform-service: Storage Cost Optimization (MISSING) — no implementation evidence found in owning service
+- **1390** [P1] core-platform-service: Partner Dependency Map (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1391** [P0] core-platform-service: Cross-Partner SLA Sync (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1392** [P1] core-platform-service: Partner Risk Forecast (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1393** [P1] aiops-service: Automation Drift Detection (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1394** [P1] aiops-service: Manual Override Analytics (MISSING) — no implementation evidence found in owning service
+- **1395** [P0] aiops-service: Ops Bottleneck Analyzer (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1396** [P0] aiops-service: SLA Compliance Predictor (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1397** [P1] core-platform-service: Autonomous Optimization Loop (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1398** [P1] core-platform-service: Self-Tuning System Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1399** [P1] core-platform-service: System Intelligence Index (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1400** [P1] core-platform-service: Global Optimization Score (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1401** [P0] bss-service: Multi-Ledger Consolidation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1402** [P0] bss-service: IFRS/GAAP Compliance Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1403** [P0] bss-service: Cost Allocation Engine (Network) (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1404** [P0] bss-service: Partner Tax Handling (TDS/WHT) (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1405** [P0] crm-service: Onboarding Journey Tracking (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1406** [P0] crm-service: Onboarding SLA Monitoring (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1407** [P0] aiops-service: Conversational Memory Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1408** [P0] oss-service: Optical Power Trending (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1409** [P0] oss-service: Network Maintenance Scheduler (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1410** [P0] oss-service: Planned Outage Management (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1411** [P0] bss-service: Enterprise Contract Billing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1412** [P0] bss-service: Multi-Site Account Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1413** [P0] bss-service: Hierarchy-Based Billing Split (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1414** [P0] siem-service: Security Case Management (MISSING) — no implementation evidence found in owning service
+- **1415** [P0] siem-service: SOC Workflow Lifecycle (MISSING) — no implementation evidence found in owning service
+- **1416** [P0] siem-service: Data Breach Notification Workflow (MISSING) — no implementation evidence found in owning service
+- **1417** [P0] core-platform-service: Feature Usage Telemetry (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1418** [P0] core-platform-service: Tenant SLA Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1419** [P0] core-platform-service: Platform SLA Guarantees (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1420** [P0] aiops-service: Profit per Node (MISSING) — no implementation evidence found in owning service
+- **1421** [P0] aiops-service: Customer Acquisition Funnel (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1422** [P0] crm-service: Sales Commission Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1423** [P0] workforce-service: Digital Network Diagrams (MISSING) — 
+- **1424** [P1] workforce-service: AR Installation Assistance (MISSING) — no implementation evidence found in owning service
+- **1427** [P0] bss-service: Feature Monetization Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1428** [P0] bss-service: Trial Lifecycle Mgmt (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1429** [P0] bss-service: Subscription Lifecycle (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1430** [P0] bss-service: Churn Lifecycle Tracking (MISSING) — no implementation evidence found in owning service
+- **1431** [P0] bss-service: Trial Conversion Analytics (MISSING) — no implementation evidence found in owning service
+- **1432** [P1] data-warehouse-service: Drop-Off Root Cause (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1433** [P0] data-warehouse-service: SLA vs Revenue Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1434** [P1] data-warehouse-service: Commission Analytics (MISSING) — no implementation evidence found in owning service
+- **1435** [P0] core-platform-service: Tenant Profitability Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1436** [P0] core-platform-service: Tenant Usage Costing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1437** [P0] core-platform-service: SLA Penalty Automation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1438** [P0] core-platform-service: Cross-Domain Event Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1439** [P1] core-platform-service: Event Replay Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1440** [P0] core-platform-service: Cross-System Orchestration (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1441** [P0] siem-service: Multi-Regulator Engine (MISSING) — no implementation evidence found in owning service
+- **1442** [P1] siem-service: Cross-Jurisdiction Conflict Resolver (MISSING) — no implementation evidence found in owning service
+- **1443** [P1] siem-service: Digital Forensics Engine (MISSING) — no implementation evidence found in owning service
+- **1444** [P1] siem-service: Evidence Chain Mgmt (MISSING) — no implementation evidence found in owning service
+- **1445** [P0] aiops-service: Revenue Shock Detector (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1446** [P0] aiops-service: Demand Shock Response (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1447** [P0] core-platform-service: Full Lifecycle Traceability (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1448** [P0] core-platform-service: Tenant-Level Observability (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1449** [P1] core-platform-service: Business-Technical Alignment Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1450** [P1] core-platform-service: Operational Intelligence Engine v2 (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1451** [P0] bss-service: Group Financial Consolidation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1452** [P0] bss-service: Intercompany Settlement Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1453** [P1] bss-service: Transfer Pricing Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1454** [P0] bss-service: Financial Risk Exposure (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1455** [P1] bss-service: Liquidity Stress Testing (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1456** [P0] crm-service: Cross-Channel Journey Continuity (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1457** [P1] aiops-service: Intent Prediction Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1458** [P0] crm-service: Session-to-Journey Mapping (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1459** [P1] crm-service: Experience Recovery Engine (MISSING) — no implementation evidence found in owning service
+- **1460** [P1] crm-service: Behavioral Loyalty Scoring (MISSING) — no implementation evidence found in owning service
+- **1461** [P1] oss-service: Fiber Aging Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1462** [P0] oss-service: Infrastructure Risk Heatmap (MISSING) — no implementation evidence found in owning service
+- **1463** [P0] oss-service: Planned vs Unplanned Outage Analytics (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1464** [P1] oss-service: Maintenance Impact Predictor (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1465** [P1] oss-service: Asset Lifecycle Optimization (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1466** [P0] core-platform-service: Contract Profitability Analyzer (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1467** [P0] bss-service: Cross-Entity Customer View (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1468** [P0] bss-service: Multi-Contract Billing Engine (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1469** [P0] core-platform-service: Contract SLA Aggregator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1470** [P0] siem-service: Enterprise SLA Risk Engine (MISSING) — no implementation evidence found in owning service
+- **1471** [P0] siem-service: Incident Prioritization Engine (MISSING) — no implementation evidence found in owning service
+- **1472** [P0] siem-service: Automated Escalation Matrix (MISSING) — no implementation evidence found in owning service
+- **1473** [P0] siem-service: Breach Impact Analyzer (MISSING) — no implementation evidence found in owning service
+- **1474** [P0] siem-service: Customer Notification Tracker (MISSING) — no implementation evidence found in owning service
+- **1475** [P0] siem-service: Regulator Reporting Automation (MISSING) — no implementation evidence found in owning service
+- **1476** [P0] core-platform-service: Tenant Usage Cost Meter (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1477** [P0] core-platform-service: Feature Adoption Dashboard (PARTIAL) — read-model API present but acceptance criteria incomplete
+- **1478** [P0] core-platform-service: SLA Breach Root Cause (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1479** [P0] core-platform-service: Tenant Isolation Validator (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1480** [P0] core-platform-service: Performance Regression Detector (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1481** [P0] aiops-service: Region Profitability Analysis (MISSING) — no implementation evidence found in owning service
+- **1482** [P0] aiops-service: Product Profitability Heatmap (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1483** [P0] aiops-service: Cost vs Revenue Correlation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1485** [P0] aiops-service: Market Demand Predictor (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1486** [P0] workforce-service: Interactive Network Map (MISSING) — 
+- **1487** [P1] workforce-service: Remote Expert Assistance (MISSING) — no implementation evidence found in owning service
+- **1488** [P1] workforce-service: Failure Visualization (MISSING) — 
+- **1489** [P1] workforce-service: Smart Equipment Overlay (MISSING) — no implementation evidence found in owning service
+- **1490** [P0] workforce-service: Technician Productivity Score (MISSING) — no implementation evidence found in owning service
+- **1496** [P1] bss-service: Expansion Simulation (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1497** [P1] bss-service: Viral Growth Engine (MISSING) — no implementation evidence found in owning service
+- **1498** [P0] bss-service: Product Stickiness Score (MISSING) — no implementation evidence found in owning service
+- **1499** [P1] bss-service: Monetization Efficiency Index (PARTIAL) — partial evidence; acceptance criteria incomplete
+- **1500** [P1] core-platform-service: Full-System Intelligence Graph (PARTIAL) — partial evidence; acceptance criteria incomplete
