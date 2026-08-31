@@ -41,14 +41,14 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: isp
-      POSTGRES_USER: isp
-      POSTGRES_PASSWORD: isp
+      POSTGRES_USER: ${POSTGRES_USER:-isp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-isp}
       POSTGRES_MULTIPLE_DATABASES: aaa,identity
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U isp -d isp"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-isp} -d isp"]
       interval: 5s
       timeout: 3s
       retries: 10
