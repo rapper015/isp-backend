@@ -33,7 +33,7 @@ services:
     depends_on:
       aaa-service:
         condition: service_healthy
-      identity-service:
+      platform-core-service:
         condition: service_healthy
     networks: [edge, platform]
 
@@ -43,7 +43,7 @@ services:
       POSTGRES_DB: isp
       POSTGRES_USER: ${POSTGRES_USER:-isp}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-isp}
-      POSTGRES_MULTIPLE_DATABASES: aaa,identity
+      POSTGRES_MULTIPLE_DATABASES: aaa,platform_core
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
@@ -81,15 +81,13 @@ services:
   aaa-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
-    ports:
-      - "${AAA_PORT:-8000}:8000"
     environment:
       <<: *domain-environment
       SERVICE_NAME: aaa-service
       DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aaa
       AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:-change-me-aaa-internal-key}
       AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
-      AAA_JWT_SECRET: ${PLATFORM_JWT_SECRET:-change-me-platform-jwt-secret-0123456789abcdef}
+      PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       AAA_INTERNAL_RATE_LIMIT: ${AAA_INTERNAL_RATE_LIMIT:-300}
       AAA_MANAGEMENT_RATE_LIMIT: ${AAA_MANAGEMENT_RATE_LIMIT:-120}
       AAA_REQUEST_MAX_BYTES: ${AAA_REQUEST_MAX_BYTES:-65536}
@@ -114,7 +112,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aaa
       AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:-change-me-aaa-internal-key}
       AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
-      AAA_JWT_SECRET: ${PLATFORM_JWT_SECRET:-change-me-platform-jwt-secret-0123456789abcdef}
+      PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       AAA_SESSION_STALE_SECONDS: ${AAA_SESSION_STALE_SECONDS:-900}
       AAA_RADIUS_HEARTBEAT_SECONDS: ${AAA_RADIUS_HEARTBEAT_SECONDS:-120}
       AAA_OUTBOX_BATCH_SIZE: ${AAA_OUTBOX_BATCH_SIZE:-100}
@@ -126,22 +124,16 @@ services:
       valkey: {condition: service_healthy}
     networks: [platform]
 
-  identity-service:
+  platform-core-service:
     <<: *domain-service
-    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: identity-service}}
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: platform-core-service}}
     environment:
       <<: *domain-environment
-      SERVICE_NAME: identity-service
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/identity
-      IDENTITY_JWT_SECRET: ${IDENTITY_JWT_SECRET:-change-me-identity-jwt-secret-0123456789abcdef}
-      PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:-change-me-platform-jwt-secret-0123456789abcdef}
-      IDENTITY_TOKEN_TTL_SECONDS: ${IDENTITY_TOKEN_TTL_SECONDS:-43200}
-      IDENTITY_INTERNAL_API_KEY: ${IDENTITY_INTERNAL_API_KEY:-change-me-identity-internal-key}
-      IDENTITY_INTERNAL_API_KEYS: ${IDENTITY_INTERNAL_API_KEYS:-change-me-identity-internal-key}
-      IDENTITY_BOOTSTRAP_ADMIN_USERNAME: ${IDENTITY_BOOTSTRAP_ADMIN_USERNAME:-admin}
-      IDENTITY_BOOTSTRAP_ADMIN_PASSWORD: ${IDENTITY_BOOTSTRAP_ADMIN_PASSWORD:-change-me-admin-password}
-      IDENTITY_ALLOW_REGISTRATION: ${IDENTITY_ALLOW_REGISTRATION:-true}
-      IDENTITY_REGISTRATION_ROLE: ${IDENTITY_REGISTRATION_ROLE:-READ_ONLY}
+      SERVICE_NAME: platform-core-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/platform_core
+      PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
+      PLATFORM_BOOTSTRAP_ADMIN_USERNAME: ${PLATFORM_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      PLATFORM_BOOTSTRAP_ADMIN_PASSWORD: ${PLATFORM_BOOTSTRAP_ADMIN_PASSWORD:?set PLATFORM_BOOTSTRAP_ADMIN_PASSWORD in .env}
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.112.0

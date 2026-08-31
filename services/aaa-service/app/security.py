@@ -16,23 +16,6 @@ def decrypt_secret(value: str) -> str: return Fernet(_key()).decrypt(value.encod
 def new_shared_secret() -> str: return secrets.token_urlsafe(32)
 def hash_api_key(value: str) -> str: return hashlib.sha256(value.encode()).hexdigest()
 
-ROLE_PERMISSIONS = {
-    "super_admin": {"*"},
-    "noc_admin": {"aaa.nas.view", "aaa.nas.manage", "aaa.nas.rotate_secret", "aaa.radius_server.view", "aaa.radius_server.manage", "aaa.subscriber_policy.view", "aaa.subscriber_policy.manage", "aaa.session.view", "aaa.session.disconnect", "aaa.session.coa", "aaa.accounting.view", "aaa.usage.view", "aaa.audit.view",
-                   "nas.view", "nas.create", "nas.update", "nas.delete", "nas.enable", "nas.disable", "nas.decommission", "nas.credentials.manage", "nas.connection.test", "nas.discovery.run",
-                   "nas.configuration.view", "nas.configuration.plan", "nas.configuration.approve", "nas.configuration.apply", "nas.configuration.rollback",
-                   "nas.radius_assignment.manage", "nas.radius_secret.generate", "nas.radius_secret.view_once", "nas.radius_secret.rotate",
-                   "nas.radius_registration.confirm", "nas.radius_registration.verify", "nas.drift.view", "nas.drift.reconcile", "nas.audit.view",
-                   # Milestone 3 network control
-                   "aaa.policy.view", "aaa.policy.manage", "aaa.policy.explain", "aaa.session.reapply", "aaa.session.force_reauth",
-                   "aaa.control.view", "aaa.control.manage", "aaa.router.readiness", "aaa.router.manage", "aaa.fup.view", "aaa.fup.manage",
-                   "aaa.ip.view", "aaa.ip.regulatory_lookup", "aaa.reconcile.run"},
-    "network_operator": {"aaa.policy.view", "aaa.policy.explain", "aaa.session.view", "aaa.session.disconnect", "aaa.session.coa", "aaa.session.reapply",
-                         "aaa.control.view", "aaa.control.manage", "aaa.router.readiness", "aaa.fup.view", "aaa.ip.view", "aaa.reconcile.run", "aaa.accounting.view", "aaa.audit.view"},
-    "billing_admin": {"aaa.subscriber_policy.view", "aaa.usage.view", "aaa.accounting.view"},
-    "support_admin": {"aaa.subscriber_policy.view", "aaa.session.view", "aaa.accounting.view", "aaa.usage.view"},
-}
-
 def management_permission(method: str, path: str) -> str | None:
     if path == "/api/nas" or path.startswith("/api/nas/"):
         if path == "/api/nas":
@@ -96,23 +79,23 @@ def management_permission(method: str, path: str) -> str | None:
 
 async def _jwt_management_auth(request: Request) -> None:
     header = request.headers.get("Authorization", "")
-    secret = getenv("AAA_JWT_SECRET", "")
+    secret = getenv("PLATFORM_JWT_SECRET", "")
     if not header.startswith("Bearer ") or not secret: raise HTTPException(401, "management authentication failed")
     if len(secret) < 32: raise HTTPException(503, "management authentication is not securely configured")
-    try: claims = jwt.decode(header[7:], secret, algorithms=["HS256"])
+    try: claims = jwt.decode(header[7:], secret, algorithms=["HS256"], issuer="isp-platform", options={"require": ["sub", "exp", "iat", "iss", "jti"]})
     except jwt.PyJWTError as error: raise HTTPException(401, "invalid or expired management token") from error
     required = management_permission(request.method, request.url.path)
-    role = claims.get("role", "")
-    permissions = set(claims.get("permissions", [])) | ROLE_PERMISSIONS.get(role, set())
+    if claims.get("token_type") != "access": raise HTTPException(401, "invalid token type")
+    permissions = set(claims.get("permissions", []))
     if required and "*" not in permissions and required not in permissions: raise HTTPException(403, "AAA permission denied")
     claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
-    if claimed_tenant and role != "super_admin":
+    if claimed_tenant and "*" not in permissions:
         try: supplied = request.query_params.get("tenant_id") or (await request.json()).get("tenant_id")
         except (ValueError, TypeError): supplied = None
         if supplied and not secrets.compare_digest(str(claimed_tenant), str(supplied)): raise HTTPException(403, "tenant access denied")
     remote = request.client.host if request.client else "unknown"
     if not limited(f"management:{remote}:{request.url.path}", int(getenv("AAA_MANAGEMENT_RATE_LIMIT", "120")), 60): raise HTTPException(429, "rate limit exceeded")
-    request.state.aaa_principal = {"subject": claims.get("userId", claims.get("sub", "admin")), "role": role, "permissions": sorted(permissions)}
+    request.state.aaa_principal = {"subject": claims["sub"], "roles": claims.get("roles", []), "permissions": sorted(permissions)}
 
 async def internal_service_auth(request: Request) -> None:
     supplied = request.headers.get("X-AAA-Service-Key", "")

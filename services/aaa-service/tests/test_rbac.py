@@ -5,22 +5,23 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 
-def token(secret, role, tenant_id=None):
-    payload = {"sub": "admin-test", "role": role, "exp": datetime.now(timezone.utc) + timedelta(minutes=5)}
+def token(secret, permissions, tenant_id=None):
+    now = datetime.now(timezone.utc)
+    payload = {"sub": "admin-test", "roles": [], "permissions": permissions, "token_type": "access", "iss": "isp-platform", "jti": "test-jti", "iat": now, "exp": now + timedelta(minutes=5)}
     if tenant_id: payload["tenant_id"] = tenant_id
     return jwt.encode(payload, secret, algorithm="HS256")
 
 
 def test_management_jwt_enforces_permissions_and_tenant_scope(monkeypatch):
     secret = "test-management-jwt-secret-at-least-32-bytes"
-    monkeypatch.setenv("AAA_JWT_SECRET", secret)
+    monkeypatch.setenv("PLATFORM_JWT_SECRET", secret)
     service_headers = {"X-AAA-Service-Key": "test-internal-key"}
     with TestClient(app) as client:
         first = client.post("/api/aaa/tenants", json={"name": f"rbac-a-{uuid4().hex}"}, headers=service_headers).json()["id"]
         second = client.post("/api/aaa/tenants", json={"name": f"rbac-b-{uuid4().hex}"}, headers=service_headers).json()["id"]
-        billing = {"Authorization": f"Bearer {token(secret, 'billing_admin', first)}"}
+        billing = {"Authorization": f"Bearer {token(secret, ['aaa.usage.view'], first)}"}
         assert client.get(f"/api/aaa/usage?tenant_id={first}", headers=billing).status_code == 200
         assert client.get(f"/api/aaa/usage?tenant_id={second}", headers=billing).status_code == 403
         assert client.post("/api/aaa/nas", json={"tenant_id": first, "name": "denied", "source_ip": "203.0.113.201"}, headers=billing).status_code == 403
-        support = {"Authorization": f"Bearer {token(secret, 'support_admin', first)}"}
+        support = {"Authorization": f"Bearer {token(secret, ['aaa.subscriber_policy.view'], first)}"}
         assert client.post("/api/nas", json={"tenant_id": first, "name": "denied", "management_host": "10.0.0.1", "routeros_username": "u", "routeros_password": "p", "radius_source_ip": "10.0.0.1"}, headers=support).status_code == 403
