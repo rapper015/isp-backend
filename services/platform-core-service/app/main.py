@@ -14,6 +14,10 @@ from .security import bearer_claims, hash_password, issue_access_token, issue_se
 PERMISSIONS = {"platform.users.read", "platform.users.create", "platform.users.update", "platform.users.disable", "platform.roles.manage", "aaa.nas.read", "aaa.nas.manage", "aaa.subscribers.read", "aaa.subscribers.manage", "aaa.sessions.read", "aaa.sessions.disconnect", "aaa.radius.manage", "crm.leads.read", "crm.leads.manage", "crm.customers.read", "crm.customers.manage", "crm.connections.manage"}
 ROLE_PERMISSIONS = {"PLATFORM_SUPER_ADMIN": {"*"}, "TENANT_ADMIN": PERMISSIONS, "READ_ONLY": {"platform.users.read", "aaa.nas.read", "aaa.subscribers.read", "aaa.sessions.read", "crm.leads.read", "crm.customers.read"}}
 
+def utc(value):
+    """Normalize SQLite's naive timestamps and PostgreSQL's aware timestamps."""
+    return value.replace(tzinfo=timezone.utc) if value and value.tzinfo is None else value
+
 def db():
     session = SessionLocal()
     try: yield session
@@ -71,7 +75,7 @@ def login(payload: LoginIn, request: Request, session: Session = Depends(db)):
     principal = payload.username.lower()
     user = session.scalar(select(PlatformUser).where(or_(PlatformUser.username_normalized == principal, PlatformUser.email == principal)))
     now = datetime.now(timezone.utc)
-    if not user or not user.enabled or (user.locked_until and user.locked_until > now) or not verify_password(payload.password, user.password_hash):
+    if not user or not user.enabled or (user.locked_until and utc(user.locked_until) > now) or not verify_password(payload.password, user.password_hash):
         if user:
             user.failed_login_count += 1
             if user.failed_login_count >= int(getenv("PLATFORM_LOGIN_MAX_FAILURES", "5")): user.locked_until = now + timedelta(minutes=int(getenv("PLATFORM_LOGIN_LOCK_MINUTES", "15")))
@@ -82,7 +86,7 @@ def login(payload: LoginIn, request: Request, session: Session = Depends(db)):
 def refresh(payload: RefreshIn, session: Session = Depends(db)):
     row = session.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_hash(payload.refresh_token)))
     now = datetime.now(timezone.utc)
-    if not row or row.revoked_at or row.expires_at <= now: raise HTTPException(401, "invalid refresh token")
+    if not row or row.revoked_at or utc(row.expires_at) <= now: raise HTTPException(401, "invalid refresh token")
     user = session.get(PlatformUser, row.user_id)
     if not user or not user.enabled: raise HTTPException(401, "invalid refresh token")
     row.revoked_at = now; result = tokens(session, user); replacement = session.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_hash(result["refresh_token"]))); row.replaced_by_id = replacement.id; audit(session, "token.refreshed", user.id); session.commit(); return result
