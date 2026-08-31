@@ -58,6 +58,16 @@ class RefreshToken(Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     replaced_by_id: Mapped[uuid.UUID | None] = mapped_column()
 
+class ServiceAccount(Base, Timestamped):
+    __tablename__ = "platform_service_accounts"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(index=True)
+    name: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
+    key_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    permissions: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
 class SecurityAuditEvent(Base):
     __tablename__ = "platform_security_audit_events"
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
