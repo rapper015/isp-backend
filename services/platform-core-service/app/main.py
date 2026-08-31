@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from .database import SessionLocal
 from .models import Permission, PlatformUser, RefreshToken, Role, RolePermission, SecurityAuditEvent, ServiceAccount, UserRole
 from .schemas import AdminPasswordResetIn, LoginIn, PasswordChangeIn, RefreshIn, ServiceAccountCreateIn, UserCreateIn
-from .security import bearer_claims, hash_password, issue_access_token, issue_service_access_token, new_refresh_token, token_hash, verify_password
+from .security import bearer_claims, hash_password, issue_access_token, issue_service_access_token, limited, new_refresh_token, token_hash, verify_password
 
 PERMISSIONS = {"platform.users.read", "platform.users.create", "platform.users.update", "platform.users.disable", "platform.roles.manage", "aaa.nas.read", "aaa.nas.manage", "aaa.subscribers.read", "aaa.subscribers.manage", "aaa.sessions.read", "aaa.sessions.disconnect", "aaa.radius.manage", "crm.leads.read", "crm.leads.manage", "crm.customers.read", "crm.customers.manage", "crm.connections.manage"}
 ROLE_PERMISSIONS = {"PLATFORM_SUPER_ADMIN": {"*"}, "TENANT_ADMIN": PERMISSIONS, "READ_ONLY": {"platform.users.read", "aaa.nas.read", "aaa.subscribers.read", "aaa.sessions.read", "crm.leads.read", "crm.customers.read"}}
@@ -64,7 +64,10 @@ app = FastAPI(title="Platform Core", version="1.0.0", docs_url="/internal/docs",
 @app.get("/health")
 def health(): return {"status":"ok", "service":"platform-core-service"}
 @app.post("/api/v1/auth/login")
-def login(payload: LoginIn, session: Session = Depends(db)):
+def login(payload: LoginIn, request: Request, session: Session = Depends(db)):
+    remote = request.client.host if request.client else "unknown"
+    if not limited(f"platform:login:{remote}", int(getenv("PLATFORM_LOGIN_RATE_LIMIT", "20"))):
+        raise HTTPException(429, "login rate limit exceeded")
     principal = payload.username.lower()
     user = session.scalar(select(PlatformUser).where(or_(PlatformUser.username_normalized == principal, PlatformUser.email == principal)))
     now = datetime.now(timezone.utc)

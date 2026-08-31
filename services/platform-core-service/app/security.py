@@ -1,4 +1,4 @@
-import hashlib, secrets, uuid
+import hashlib, secrets, threading, time, uuid
 from datetime import datetime, timedelta, timezone
 from os import getenv
 import jwt
@@ -8,6 +8,17 @@ from fastapi import HTTPException, Request
 
 PASSWORDS = PasswordHasher()
 ISSUER = "isp-platform"
+_rate_lock = threading.Lock()
+_rate_windows: dict[str, tuple[float, int]] = {}
+def limited(key: str, limit: int, window_seconds: int = 60) -> bool:
+    """Process-local guard for auth endpoints; deploy Valkey-backed limits at edge scale."""
+    now = time.monotonic()
+    with _rate_lock:
+        started, used = _rate_windows.get(key, (now, 0))
+        if now - started >= window_seconds: started, used = now, 0
+        if used >= limit: return False
+        _rate_windows[key] = (started, used + 1)
+        return True
 def _secret():
     value = getenv("PLATFORM_JWT_SECRET", "")
     if len(value) < 32: raise RuntimeError("PLATFORM_JWT_SECRET must be at least 32 characters")
