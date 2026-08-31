@@ -87,7 +87,7 @@ services:
       <<: *domain-environment
       SERVICE_NAME: crm-service
       DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/crm
-      CRM_JWT_SECRET: ${PLATFORM_JWT_SECRET:-change-me-platform-jwt-secret-0123456789abcdef}
+      PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
       CRM_INTERNAL_API_KEYS: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
 
