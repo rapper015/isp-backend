@@ -5,7 +5,7 @@ x-domain-service: &domain-service
     context: .
     dockerfile: infrastructure/service.Dockerfile
   environment: &domain-environment
-    RABBITMQ_URL: amqp://isp:isp@rabbitmq:5672/
+    RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER in .env}:${RABBITMQ_DEFAULT_PASS:?set RABBITMQ_DEFAULT_PASS in .env}@rabbitmq:5672/
     VALKEY_URL: redis://valkey:6379/0
     LOG_LEVEL: INFO
   depends_on:
@@ -41,14 +41,14 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: isp
-      POSTGRES_USER: ${POSTGRES_USER:-isp}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-isp}
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       POSTGRES_MULTIPLE_DATABASES: aaa,platform_core
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-isp} -d isp"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?set POSTGRES_USER in .env} -d isp"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -57,8 +57,8 @@ services:
   rabbitmq:
     image: rabbitmq:4-management-alpine
     environment:
-      RABBITMQ_DEFAULT_USER: isp
-      RABBITMQ_DEFAULT_PASS: isp
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER in .env}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?set RABBITMQ_DEFAULT_PASS in .env}
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -84,9 +84,9 @@ services:
     environment:
       <<: *domain-environment
       SERVICE_NAME: aaa-service
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aaa
-      AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:-change-me-aaa-internal-key}
-      AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      DATABASE_URL: postgresql://${POSTGRES_USER:?set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/aaa
+      AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
+      AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:?set AAA_ENCRYPTION_KEY in .env}
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       AAA_INTERNAL_RATE_LIMIT: ${AAA_INTERNAL_RATE_LIMIT:-300}
       AAA_MANAGEMENT_RATE_LIMIT: ${AAA_MANAGEMENT_RATE_LIMIT:-120}
@@ -109,9 +109,9 @@ services:
     environment:
       <<: *domain-environment
       SERVICE_NAME: aaa-worker
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aaa
-      AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:-change-me-aaa-internal-key}
-      AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      DATABASE_URL: postgresql://${POSTGRES_USER:?set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/aaa
+      AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
+      AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:?set AAA_ENCRYPTION_KEY in .env}
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       AAA_SESSION_STALE_SECONDS: ${AAA_SESSION_STALE_SECONDS:-900}
       AAA_RADIUS_HEARTBEAT_SECONDS: ${AAA_RADIUS_HEARTBEAT_SECONDS:-120}
@@ -130,7 +130,7 @@ services:
     environment:
       <<: *domain-environment
       SERVICE_NAME: platform-core-service
-      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/platform_core
+      DATABASE_URL: postgresql://${POSTGRES_USER:?set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/platform_core
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       PLATFORM_BOOTSTRAP_ADMIN_USERNAME: ${PLATFORM_BOOTSTRAP_ADMIN_USERNAME:-admin}
       PLATFORM_BOOTSTRAP_ADMIN_PASSWORD: ${PLATFORM_BOOTSTRAP_ADMIN_PASSWORD:?set PLATFORM_BOOTSTRAP_ADMIN_PASSWORD in .env}
