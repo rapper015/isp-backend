@@ -42,6 +42,15 @@ IDENTITY_BOOTSTRAP_ADMIN_USERNAME=admin
 IDENTITY_BOOTSTRAP_ADMIN_PASSWORD=change-me-admin-password
 ```
 
+> **Postgres credentials (important).** The compose wires `POSTGRES_USER` /
+> `POSTGRES_PASSWORD` consistently everywhere. If you want a strong DB
+> password, set `POSTGRES_PASSWORD` in `.env` **and** run `docker compose
+> down -v` before `up` so postgres re-initializes with it (the postgres data
+> volume is only seeded on first init). If you set `POSTGRES_PASSWORD` after
+> postgres was already initialized with a different value, every service that
+> connects to the DB fails with `password authentication failed` — and
+> `identity-service` is the first to crash because it connects at startup.
+
 Then:
 
 ```bash
@@ -142,6 +151,7 @@ Other CRM endpoints (from `docs/apis/milestone-1-crm.md`):
 
 | Symptom | Cause / fix |
 |---|---|
+| `FATAL: password authentication failed for user \"isp\"` | `POSTGRES_PASSWORD`/`POSTGRES_USER` in `.env` don't match what postgres was initialized with. Either set them to `isp` (dev) or, for a custom password, run `docker compose down -v` so the volume re-initializes |
 | `401 management authentication failed` on CRM | `CRM_JWT_SECRET` overridden in `.env` to something ≠ `PLATFORM_JWT_SECRET` — remove the override |
 | `503 management authentication is not securely configured` | `PLATFORM_JWT_SECRET` < 32 chars or empty |
 | `403 CRM permission denied` | Role lacks the permission (e.g. `READ_ONLY` can only view) — set `IDENTITY_REGISTRATION_ROLE=CRM_MANAGER` |
