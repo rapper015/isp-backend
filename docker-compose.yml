@@ -43,13 +43,23 @@ services:
         condition: service_healthy
       nms-service:
         condition: service_healthy
+      ipam-service:
+        condition: service_healthy
+      siem-service:
+        condition: service_healthy
       workforce-service:
+        condition: service_healthy
+      warehouse-service:
+        condition: service_healthy
+      aiops-service:
         condition: service_healthy
       device-management-service:
         condition: service_healthy
       tenancy-service:
         condition: service_healthy
       assurance-service:
+        condition: service_healthy
+      intelligence-service:
         condition: service_healthy
     networks: [edge, platform]
 
@@ -59,7 +69,7 @@ services:
       POSTGRES_DB: isp
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
-      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,platform_core,nms,workforce,device_management,tenancy,assurance
+      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,identity,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy,assurance,intelligence
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
@@ -183,6 +193,38 @@ services:
       NMS_INTERNAL_API_KEY: ${NMS_INTERNAL_API_KEY:-change-me-nms-internal-key}
       NMS_INTERNAL_API_KEYS: ${NMS_INTERNAL_API_KEY:-change-me-nms-internal-key}
 
+  ipam-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: ipam-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: ipam-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/ipam}
+
+  siem-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: siem-service}}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: siem-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/siem
+      SIEM_JWT_SECRET: ${SIEM_JWT_SECRET:-change-me-siem-jwt-secret-0123456789abcdef}
+      SIEM_INTERNAL_API_KEY: ${SIEM_INTERNAL_API_KEY:-change-me-siem-internal-key}
+      SIEM_ENCRYPTION_KEY: ${SIEM_ENCRYPTION_KEY:-change-me-siem-encryption-key-0123456789abcdef}
+
+  siem-worker:
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: siem-service}}
+    command: ["python", "-m", "app.worker_runner"]
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: siem-worker
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/siem
+      SIEM_JWT_SECRET: ${SIEM_JWT_SECRET:-change-me-siem-jwt-secret-0123456789abcdef}
+      SIEM_INTERNAL_API_KEY: ${SIEM_INTERNAL_API_KEY:-change-me-siem-internal-key}
+      SIEM_ENCRYPTION_KEY: ${SIEM_ENCRYPTION_KEY:-change-me-siem-encryption-key-0123456789abcdef}
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      valkey: {condition: service_healthy}
+    networks: [platform]
+
   workforce-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: workforce-service}}
@@ -207,6 +249,22 @@ services:
       rabbitmq: {condition: service_healthy}
       valkey: {condition: service_healthy}
     networks: [platform]
+
+  warehouse-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: warehouse-service}}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: warehouse-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/warehouse
+      WAREHOUSE_JWT_SECRET: ${WAREHOUSE_JWT_SECRET:-change-me-warehouse-jwt-secret-0123456789abcdef}
+      WAREHOUSE_INTERNAL_API_KEY: ${WAREHOUSE_INTERNAL_API_KEY:-change-me-warehouse-internal-key}
+      WAREHOUSE_INTERNAL_API_KEYS: ${WAREHOUSE_INTERNAL_API_KEY:-change-me-warehouse-internal-key}
+
+  aiops-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aiops-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: aiops-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/aiops}
 
   device-management-service:
     <<: *domain-service
@@ -257,6 +315,43 @@ services:
       valkey: {condition: service_healthy}
     networks: [platform]
 
+  intelligence-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: intelligence-service}}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: intelligence-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/intelligence
+      REDIS_URL: redis://valkey:6379/0
+      INTELLIGENCE_JWT_SECRET: ${INTELLIGENCE_JWT_SECRET:-change-me-intelligence-jwt-secret-0123456789abcdef}
+      INTELLIGENCE_INTERNAL_API_KEY: ${INTELLIGENCE_INTERNAL_API_KEY:-change-me-intelligence-internal-key}
+      INTELLIGENCE_RATE_LIMIT: ${INTELLIGENCE_RATE_LIMIT:-120}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_JSON: ${LOG_JSON:-true}
+
+  intelligence-worker:
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: intelligence-service}}
+    command: ["python", "-m", "app.worker_runner"]
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: intelligence-worker
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/intelligence
+      REDIS_URL: redis://valkey:6379/0
+      INTELLIGENCE_JWT_SECRET: ${INTELLIGENCE_JWT_SECRET:-change-me-intelligence-jwt-secret-0123456789abcdef}
+      INTELLIGENCE_INTERNAL_API_KEY: ${INTELLIGENCE_INTERNAL_API_KEY:-change-me-intelligence-internal-key}
+      INTELLIGENCE_RATE_LIMIT: ${INTELLIGENCE_RATE_LIMIT:-120}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_JSON: ${LOG_JSON:-true}
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      valkey: {condition: service_healthy}
+    networks: [platform]
+
+  # ---- Optional observability stack (start with --profile observability) ----
+  # The assurance-service is the governance layer; metrics/logs/traces are stored
+  # by these components via the OpenTelemetry Collector (config under
+  # infrastructure/observability/).
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.112.0
     profiles: ["observability"]
