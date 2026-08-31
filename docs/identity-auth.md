@@ -1,5 +1,10 @@
 # Platform Authentication (Application Users)
 
+> **Milestone-0 deliverable.** `identity-service` ships in milestone-0 and,
+> because milestone branches are cumulative, it is present on every later
+> milestone branch (milestone-1 … milestone-10). See
+> `docs/milestone-cumulative-model.md`.
+
 The ISP platform has **two completely separate authentication domains**:
 
 | Domain | Owned by | Who | Credentials |
