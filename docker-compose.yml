@@ -31,6 +31,8 @@ services:
     volumes:
       - ./infrastructure/gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
+      crm-service:
+        condition: service_healthy
       aaa-service:
         condition: service_healthy
       identity-service:
@@ -43,7 +45,7 @@ services:
       POSTGRES_DB: isp
       POSTGRES_USER: isp
       POSTGRES_PASSWORD: isp
-      POSTGRES_MULTIPLE_DATABASES: aaa,identity
+      POSTGRES_MULTIPLE_DATABASES: crm,aaa,identity
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
@@ -77,6 +79,11 @@ services:
       timeout: 3s
       retries: 10
     networks: [platform]
+
+  crm-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: crm-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: crm-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/crm}
 
   aaa-service:
     <<: *domain-service
