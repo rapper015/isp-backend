@@ -182,7 +182,8 @@ class TicketSlaService:
         if not t:
             raise KeyError("sla timer not found")
         t.resolved_at = _now()
-        t.breached = t.resolved_at.replace(tzinfo=None) > t.deadline
+        deadline = t.deadline if t.deadline.tzinfo else t.deadline.replace(tzinfo=timezone.utc)
+        t.breached = t.resolved_at > deadline
         session.commit()
         return t
 

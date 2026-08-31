@@ -61,7 +61,10 @@ def bounded(limit: int) -> int:
 
 
 def tenant_item(session: Session, model, item_id: UUID, tenant_id: UUID, label: str):
-    item = session.scalar(select(model).where(model.id == item_id, model.tenant_id == tenant_id))
+    statement = select(model).where(model.id == item_id)
+    if model is not Tenant:
+        statement = statement.where(model.tenant_id == tenant_id)
+    item = session.scalar(statement)
     if not item:
         raise HTTPException(404, f"{label} not found")
     return item
