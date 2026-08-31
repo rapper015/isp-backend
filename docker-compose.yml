@@ -45,6 +45,8 @@ services:
         condition: service_healthy
       workforce-service:
         condition: service_healthy
+      device-management-service:
+        condition: service_healthy
     networks: [edge, platform]
 
   postgres:
@@ -53,7 +55,7 @@ services:
       POSTGRES_DB: isp
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
-      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,platform_core,nms,workforce
+      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,platform_core,nms,workforce,device_management
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
@@ -201,6 +203,25 @@ services:
       rabbitmq: {condition: service_healthy}
       valkey: {condition: service_healthy}
     networks: [platform]
+
+  device-management-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: device-management-service}}
+    environment: {<<: *domain-environment, SERVICE_NAME: device-management-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/device_management, ACS_PROVIDER: genieacs, GENIEACS_BASE_URL: http://genieacs:7557, DEVICE_FIRMWARE_DIR: /data/firmware}
+    volumes:
+      - device-firmware:/data/firmware
+
+  device-management-worker:
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: device-management-service}}
+    command: ["python", "-m", "app.worker_runner"]
+    environment: {<<: *domain-environment, SERVICE_NAME: device-management-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/device_management, ACS_PROVIDER: genieacs, GENIEACS_BASE_URL: http://genieacs:7557, DEVICE_FIRMWARE_DIR: /data/firmware}
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      valkey: {condition: service_healthy}
+    networks: [platform]
+    volumes:
+      - device-firmware:/data/firmware
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.112.0
