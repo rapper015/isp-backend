@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from .database import Base, SessionLocal, engine
 from .models import User
-from .schemas import LoginIn, UserCreateIn
+from .schemas import LoginIn, RegisterIn, UserCreateIn
 from .security import (bearer_claims, hash_password, internal_service_auth,
                        issue_access_token, platform_jwt_secret, verify_password)
 
@@ -78,6 +78,36 @@ def _do_login(session: Session, username: str, password: str) -> dict:
 @app.post("/api/auth/login")
 def login(payload: LoginIn, request: Request, session: Session = Depends(db)):
     return _do_login(session, payload.username, payload.password)
+
+
+@app.post("/api/auth/register", status_code=201)
+def register(payload: RegisterIn, session: Session = Depends(db)):
+    """Self-service signup for frontend developers.
+
+    Controlled by IDENTITY_ALLOW_REGISTRATION (default true) and the assigned
+    role comes from IDENTITY_REGISTRATION_ROLE (default READ_ONLY) so a public
+    signup can never self-escalate.
+    """
+    if getenv("IDENTITY_ALLOW_REGISTRATION", "true").strip().lower() not in ("1", "true", "yes"):
+        raise HTTPException(403, "registration is disabled")
+    normalized = payload.username.strip().lower()
+    existing = session.scalar(select(User).where(User.username_normalized == normalized))
+    if existing:
+        raise HTTPException(409, "username already exists")
+    role = getenv("IDENTITY_REGISTRATION_ROLE", "READ_ONLY").strip() or "READ_ONLY"
+    user = User(username=payload.username.strip(), username_normalized=normalized,
+                full_name=payload.full_name, email=payload.email, role=role,
+                password_hash=hash_password(payload.password), status="ACTIVE")
+    session.add(user)
+    session.commit()
+    token = issue_access_token(user.id, user.username, user.role, user.tenant_id)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "expires_in": int(getenv("IDENTITY_TOKEN_TTL_SECONDS", "43200")),
+        "user": {"id": str(user.id), "username": user.username,
+                 "full_name": user.full_name, "email": user.email, "role": user.role},
+    }
 
 
 @app.post("/admin-login")

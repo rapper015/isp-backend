@@ -20,3 +20,15 @@ class UserCreateIn(StrictModel):
 class LoginIn(StrictModel):
     username: str = Field(min_length=1, max_length=128)
     password: str = Field(min_length=1, max_length=128)
+
+
+class RegisterIn(StrictModel):
+    """Self-service signup for the frontend.
+
+    The role is assigned server-side from IDENTITY_REGISTRATION_ROLE (default
+    READ_ONLY); public callers can never escalate their own role.
+    """
+    username: str = Field(min_length=3, max_length=128)
+    password: str = Field(min_length=8, max_length=128)
+    full_name: str | None = Field(default=None, max_length=255)
+    email: str | None = Field(default=None, max_length=255)

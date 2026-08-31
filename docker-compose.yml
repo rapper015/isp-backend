@@ -107,7 +107,13 @@ services:
   crm-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: crm-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: crm-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/crm}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: crm-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/crm
+      CRM_JWT_SECRET: ${PLATFORM_JWT_SECRET:-change-me-platform-jwt-secret-0123456789abcdef}
+      CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
+      CRM_INTERNAL_API_KEYS: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
 
   bss-service:
     <<: *domain-service
@@ -130,7 +136,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aaa
       AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:-change-me-aaa-internal-key}
       AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
-      AAA_JWT_SECRET: ${AAA_JWT_SECRET:-change-me-aaa-jwt-secret-0123456789abcdef}
+      AAA_JWT_SECRET: ${PLATFORM_JWT_SECRET:-change-me-platform-jwt-secret-0123456789abcdef}
       AAA_INTERNAL_RATE_LIMIT: ${AAA_INTERNAL_RATE_LIMIT:-300}
       AAA_MANAGEMENT_RATE_LIMIT: ${AAA_MANAGEMENT_RATE_LIMIT:-120}
       AAA_REQUEST_MAX_BYTES: ${AAA_REQUEST_MAX_BYTES:-65536}
@@ -155,7 +161,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aaa
       AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:-change-me-aaa-internal-key}
       AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
-      AAA_JWT_SECRET: ${AAA_JWT_SECRET:-change-me-aaa-jwt-secret-0123456789abcdef}
+      AAA_JWT_SECRET: ${PLATFORM_JWT_SECRET:-change-me-platform-jwt-secret-0123456789abcdef}
       AAA_SESSION_STALE_SECONDS: ${AAA_SESSION_STALE_SECONDS:-900}
       AAA_RADIUS_HEARTBEAT_SECONDS: ${AAA_RADIUS_HEARTBEAT_SECONDS:-120}
       AAA_OUTBOX_BATCH_SIZE: ${AAA_OUTBOX_BATCH_SIZE:-100}
@@ -181,6 +187,8 @@ services:
       IDENTITY_INTERNAL_API_KEYS: ${IDENTITY_INTERNAL_API_KEYS:-change-me-identity-internal-key}
       IDENTITY_BOOTSTRAP_ADMIN_USERNAME: ${IDENTITY_BOOTSTRAP_ADMIN_USERNAME:-admin}
       IDENTITY_BOOTSTRAP_ADMIN_PASSWORD: ${IDENTITY_BOOTSTRAP_ADMIN_PASSWORD:-change-me-admin-password}
+      IDENTITY_ALLOW_REGISTRATION: ${IDENTITY_ALLOW_REGISTRATION:-true}
+      IDENTITY_REGISTRATION_ROLE: ${IDENTITY_REGISTRATION_ROLE:-READ_ONLY}
 
   nms-service:
     <<: *domain-service

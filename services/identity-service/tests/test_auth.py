@@ -73,3 +73,38 @@ def test_me_rejects_bad_token(client):
 def test_token_claims_carry_tenant_scope():
     token = make_token("PLATFORM_ADMIN", uuid4())
     assert token
+
+
+def test_register_creates_user_and_issues_token(client):
+    username = _username("selfreg")
+    r = client.post("/api/auth/register", json={
+        "username": username, "password": "Reg!ster123", "full_name": "Self Registered",
+        "email": f"{username}@isp.test"})
+    assert r.status_code == 201
+    body = r.json()
+    assert body["token_type"] == "bearer"
+    assert body["user"]["username"] == username
+    assert body["user"]["role"] == "READ_ONLY"  # never self-escalates
+    # token works
+    me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {body['access_token']}"})
+    assert me.status_code == 200
+    assert me.json()["username"] == username
+    # registered creds can login
+    login = client.post("/api/auth/login", json={"username": username, "password": "Reg!ster123"})
+    assert login.status_code == 200
+
+
+def test_register_cannot_set_role_or_tenant(client):
+    username = _username("norole")
+    r = client.post("/api/auth/register", json={
+        "username": username, "password": "Reg!ster123", "role": "PLATFORM_ADMIN",
+        "tenant_id": "11111111-1111-1111-1111-111111111111"})
+    assert r.status_code == 422  # extra fields forbidden
+
+
+def test_register_duplicate_conflict(client):
+    username = _username("regdup")
+    assert client.post("/api/auth/register", json={
+        "username": username, "password": "Reg!ster123"}).status_code == 201
+    assert client.post("/api/auth/register", json={
+        "username": username, "password": "Reg!ster123"}).status_code == 409
