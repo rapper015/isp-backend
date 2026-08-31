@@ -89,7 +89,10 @@ def refresh(payload: RefreshIn, session: Session = Depends(db)):
     if not row or row.revoked_at or utc(row.expires_at) <= now: raise HTTPException(401, "invalid refresh token")
     user = session.get(PlatformUser, row.user_id)
     if not user or not user.enabled: raise HTTPException(401, "invalid refresh token")
-    row.revoked_at = now; result = tokens(session, user); replacement = session.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_hash(result["refresh_token"]))); row.replaced_by_id = replacement.id; audit(session, "token.refreshed", user.id); session.commit(); return result
+    row.revoked_at = now; result = tokens(session, user); session.flush()
+    replacement = session.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_hash(result["refresh_token"])))
+    if replacement is None: raise RuntimeError("refresh token persistence failed")
+    row.replaced_by_id = replacement.id; audit(session, "token.refreshed", user.id); session.commit(); return result
 @app.post("/api/v1/auth/logout")
 def logout(payload: RefreshIn, session: Session = Depends(db)):
     row = session.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_hash(payload.refresh_token)))
