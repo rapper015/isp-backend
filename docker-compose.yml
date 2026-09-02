@@ -90,6 +90,7 @@ services:
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
       CRM_INTERNAL_API_KEYS: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}
 
   aaa-service:
     <<: *domain-service
@@ -147,6 +148,7 @@ services:
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       PLATFORM_BOOTSTRAP_ADMIN_USERNAME: ${PLATFORM_BOOTSTRAP_ADMIN_USERNAME:-admin}
       PLATFORM_BOOTSTRAP_ADMIN_PASSWORD: ${PLATFORM_BOOTSTRAP_ADMIN_PASSWORD:?set PLATFORM_BOOTSTRAP_ADMIN_PASSWORD in .env}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.112.0

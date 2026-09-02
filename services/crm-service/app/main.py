@@ -10,8 +10,11 @@ from os import getenv
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+from isp_shared.cors import cors_allowed_origins
 
 from .database import Base, SessionLocal, engine
 from .models import (AuditLog, Branch, Customer, ExperienceRecovery, ExternalReference,
@@ -46,6 +49,13 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="CRM Service", version="1.0.0", docs_url="/internal/docs", openapi_url="/internal/openapi.json", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_allowed_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def db():
