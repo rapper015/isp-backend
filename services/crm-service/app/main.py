@@ -137,6 +137,31 @@ def create_franchise(tenant_id: UUID, payload: FranchiseIn, session: Session = D
     return {"id": str(item.id), "franchise_code": item.franchise_code}
 
 
+def safe_franchise(item: Franchise) -> dict:
+    return {
+        "id": str(item.id),
+        "franchise_code": item.franchise_code,
+        "name": item.name,
+        "status": item.status,
+        "created_at": item.created_at,
+        "updated_at": item.updated_at,
+    }
+
+
+@app.get("/api/crm/franchises", dependencies=[Depends(internal_service_auth)])
+def list_franchises(tenant_id: UUID, status: str | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    statement = select(Franchise).where(Franchise.tenant_id == tenant_id)
+    if status:
+        statement = statement.where(Franchise.status.ilike(status))
+    items = session.scalars(statement.order_by(Franchise.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))
+    return [safe_franchise(item) for item in items]
+
+
+@app.get("/api/crm/franchises/{franchise_id}", dependencies=[Depends(internal_service_auth)])
+def get_franchise(franchise_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    return safe_franchise(tenant_item(session, Franchise, franchise_id, tenant_id, "franchise"))
+
+
 @app.post("/api/crm/branches", dependencies=[Depends(internal_service_auth)])
 def create_branch(tenant_id: UUID, payload: BranchIn, session: Session = Depends(db)):
     tenant_item(session, Tenant, tenant_id, tenant_id, "tenant")
@@ -145,6 +170,44 @@ def create_branch(tenant_id: UUID, payload: BranchIn, session: Session = Depends
     session.add(item)
     session.commit()
     return {"id": str(item.id), "branch_code": item.branch_code}
+
+
+def safe_branch(item: Branch, franchise: Franchise | None = None) -> dict:
+    return {
+        "id": str(item.id),
+        "branch_code": item.branch_code,
+        "name": item.name,
+        "status": item.status,
+        "franchise_id": str(item.franchise_id) if item.franchise_id else None,
+        "franchise_name": franchise.name if franchise else None,
+        "created_at": item.created_at,
+        "updated_at": item.updated_at,
+    }
+
+
+@app.get("/api/crm/branches", dependencies=[Depends(internal_service_auth)])
+def list_branches(tenant_id: UUID, franchise_id: UUID | None = None, franchiseId: UUID | None = None, status: str | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    selected_franchise = franchise_id or franchiseId
+    statement = select(Branch).where(Branch.tenant_id == tenant_id)
+    if selected_franchise:
+        tenant_item(session, Franchise, selected_franchise, tenant_id, "franchise")
+        statement = statement.where(Branch.franchise_id == selected_franchise)
+    if status:
+        statement = statement.where(Branch.status.ilike(status))
+    items = list(session.scalars(statement.order_by(Branch.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit))))
+    franchise_ids = {item.franchise_id for item in items if item.franchise_id}
+    franchises = {
+        item.id: item
+        for item in session.scalars(select(Franchise).where(Franchise.tenant_id == tenant_id, Franchise.id.in_(franchise_ids)))
+    } if franchise_ids else {}
+    return [safe_branch(item, franchises.get(item.franchise_id)) for item in items]
+
+
+@app.get("/api/crm/branches/{branch_id}", dependencies=[Depends(internal_service_auth)])
+def get_branch(branch_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    item = tenant_item(session, Branch, branch_id, tenant_id, "branch")
+    franchise = tenant_item(session, Franchise, item.franchise_id, tenant_id, "franchise") if item.franchise_id else None
+    return safe_branch(item, franchise)
 
 
 # ---------------------------------------------------------------------------
