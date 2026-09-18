@@ -20,7 +20,7 @@ from .models import (AuditLog, Branch, Customer, ExperienceRecovery, ExternalRef
                      FederationLink, Franchise, KbFeedback, KycCase, KycDocument, Lead,
                      LeadInteraction, FollowUp, LoyaltyScore, ServiceLocation, Tenant,
                      TicketSuggestion, TimelineEntry)
-from .schemas import (AddressCreate, BranchIn, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, FranchiseSettingsPatch, FranchiseUpdate, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
+from .schemas import (AddressCreate, BranchIn, BranchUpdate, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, FranchiseSettingsPatch, FranchiseUpdate, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
 from .security import internal_service_auth
 from .services import (caf_service, conversion_service, customer_360, customer_service, duplicate_service, kyc_service, lead_service, lifecycle_service, merge_service, risk_service)
 from .services.audit_service import outbox, record_audit
@@ -245,7 +245,7 @@ def evaluate_franchise_capability(franchise_id: UUID, capability: str, tenant_id
 def create_branch(tenant_id: UUID, payload: BranchIn, session: Session = Depends(db)):
     tenant_item(session, Tenant, tenant_id, tenant_id, "tenant")
     franchise = tenant_item(session, Franchise, payload.franchise_id, tenant_id, "franchise")
-    item = Branch(tenant_id=tenant_id, franchise_id=franchise.id, branch_code=payload.branch_code, name=payload.name)
+    item = Branch(tenant_id=tenant_id, franchise_id=franchise.id, branch_code=payload.branch_code, name=payload.name, profile=payload.profile.model_dump(mode="json"))
     session.add(item)
     session.commit()
     return {"id": str(item.id), "branch_code": item.branch_code}
@@ -259,6 +259,7 @@ def safe_branch(item: Branch, franchise: Franchise | None = None) -> dict:
         "status": item.status,
         "franchise_id": str(item.franchise_id) if item.franchise_id else None,
         "franchise_name": franchise.name if franchise else None,
+        "profile": item.profile or {},
         "created_at": item.created_at,
         "updated_at": item.updated_at,
     }
@@ -285,6 +286,25 @@ def list_branches(tenant_id: UUID, franchise_id: UUID | None = None, franchiseId
 @app.get("/api/crm/branches/{branch_id}", dependencies=[Depends(internal_service_auth)])
 def get_branch(branch_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     item = tenant_item(session, Branch, branch_id, tenant_id, "branch")
+    franchise = tenant_item(session, Franchise, item.franchise_id, tenant_id, "franchise") if item.franchise_id else None
+    return safe_branch(item, franchise)
+
+
+@app.patch("/api/crm/branches/{branch_id}", dependencies=[Depends(internal_service_auth)])
+def update_branch(branch_id: UUID, tenant_id: UUID, payload: BranchUpdate, request: Request, session: Session = Depends(db)):
+    item = tenant_item(session, Branch, branch_id, tenant_id, "branch")
+    before = jsonable_encoder(safe_branch(item))
+    changes = payload.model_dump(exclude_unset=True, exclude={"profile", "franchise_id"}, mode="json")
+    if payload.franchise_id is not None:
+        franchise = tenant_item(session, Franchise, payload.franchise_id, tenant_id, "franchise")
+        changes["franchise_id"] = franchise.id
+    if payload.profile is not None:
+        changes["profile"] = payload.profile.model_dump(mode="json")
+    for field, value in changes.items():
+        setattr(item, field, value)
+    record_audit(session, tenant_id, actor_of(request), "branch.updated", "branch", str(item.id), safe_after={"before": before, "after": jsonable_encoder(safe_branch(item))})
+    session.commit()
+    session.refresh(item)
     franchise = tenant_item(session, Franchise, item.franchise_id, tenant_id, "franchise") if item.franchise_id else None
     return safe_branch(item, franchise)
 

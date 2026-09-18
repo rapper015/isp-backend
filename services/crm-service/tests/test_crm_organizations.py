@@ -34,7 +34,7 @@ def test_franchise_and_branch_reads_are_tenant_scoped():
         branch = client.post(
             "/api/crm/branches",
             params={"tenant_id": tenant_a},
-            json={"franchise_id": franchise["id"], "branch_code": "B-001", "name": "Central Branch"},
+            json={"franchise_id": franchise["id"], "branch_code": "B-001", "name": "Central Branch", "profile": {"email": "branch@example.com", "mobile": "+919876543210", "landline": "040-40000000", "address": "Central office", "package_ids": ["plan-20"], "ip_pool_ids": ["pool-north"]}},
             headers=HEADERS,
         ).json()
 
@@ -101,6 +101,15 @@ def test_franchise_and_branch_reads_are_tenant_scoped():
         branch_detail = client.get(f"/api/crm/branches/{branch['id']}", params={"tenant_id": tenant_a}, headers=HEADERS)
         assert branch_detail.status_code == 200
         assert branch_detail.json()["name"] == "Central Branch"
+        assert branch_detail.json()["profile"]["package_ids"] == ["plan-20"]
+
+        branch_updated = client.patch(
+            f"/api/crm/branches/{branch['id']}", params={"tenant_id": tenant_a}, headers=HEADERS,
+            json={"status": "INACTIVE", "profile": {"email": "new@example.com", "mobile": "+919876543211", "address": "Updated office", "package_ids": ["plan-30"], "ip_pool_ids": ["pool-south"]}},
+        )
+        assert branch_updated.status_code == 200
+        assert branch_updated.json()["status"] == "INACTIVE"
+        assert branch_updated.json()["profile"]["ip_pool_ids"] == ["pool-south"]
 
         assert client.get(f"/api/crm/franchises/{franchise['id']}", params={"tenant_id": tenant_b}, headers=HEADERS).status_code == 404
         assert client.get(f"/api/crm/branches/{branch['id']}", params={"tenant_id": tenant_b}, headers=HEADERS).status_code == 404

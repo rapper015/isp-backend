@@ -25,6 +25,9 @@ def service_status():return {'service':'ipam','phase':'allocation-api'}
 @app.post('/pools',response_model=PoolOut)
 def create_pool(p:PoolIn,s:Session=Depends(db)):
  x=IPPool(**p.model_dump());s.add(x);s.commit();s.refresh(x);return x
+@app.get('/pools',response_model=list[PoolOut])
+def list_pools(s:Session=Depends(db)):
+ return list(s.scalars(select(IPPool).order_by(IPPool.pool_code)))
 @app.post('/addresses',response_model=AddressOut)
 def add_address(p:AddressIn,s:Session=Depends(db)):
  if not s.get(IPPool,p.pool_id):raise HTTPException(404,'pool not found')

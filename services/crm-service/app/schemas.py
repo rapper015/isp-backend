@@ -342,10 +342,28 @@ class FranchiseSettingsPatch(StrictModel):
     reason: str = Field(min_length=3, max_length=500)
 
 
+class BranchProfile(StrictModel):
+    email: str = Field(min_length=3, max_length=255, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+    mobile: str = Field(min_length=5, max_length=32, pattern=r"^[+0-9() -]+$")
+    landline: str | None = Field(default=None, max_length=32, pattern=r"^[+0-9() -]+$")
+    address: str = Field(min_length=3, max_length=1000)
+    package_ids: list[str] = Field(default_factory=list, max_length=500)
+    ip_pool_ids: list[str] = Field(default_factory=list, max_length=500)
+
+
 class BranchIn(StrictModel):
     franchise_id: UUID
     branch_code: str = Field(min_length=1, max_length=64)
     name: str = Field(min_length=1, max_length=255)
+    profile: BranchProfile
+
+
+class BranchUpdate(StrictModel):
+    franchise_id: UUID | None = None
+    branch_code: str | None = Field(default=None, min_length=1, max_length=64)
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    status: Literal["ACTIVE", "INACTIVE"] | None = None
+    profile: BranchProfile | None = None
 
 
 class ExternalReferenceIn(StrictModel):
