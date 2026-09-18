@@ -20,6 +20,7 @@ class Franchise(Base, Timestamped):
     franchise_code: Mapped[str] = mapped_column(String(64), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[str] = mapped_column(String(16), default="ACTIVE", nullable=False)
+    profile: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
 
 class Branch(Base, Timestamped):

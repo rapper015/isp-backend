@@ -18,7 +18,7 @@ from .models import (AuditLog, Branch, Customer, ExperienceRecovery, ExternalRef
                      FederationLink, Franchise, KbFeedback, KycCase, KycDocument, Lead,
                      LeadInteraction, FollowUp, LoyaltyScore, ServiceLocation, Tenant,
                      TicketSuggestion, TimelineEntry)
-from .schemas import (AddressCreate, BranchIn, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
+from .schemas import (AddressCreate, BranchIn, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, FranchiseUpdate, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
 from .security import internal_service_auth
 from .services import (caf_service, conversion_service, customer_360, customer_service, duplicate_service, kyc_service, lead_service, lifecycle_service, merge_service, risk_service)
 from .services.audit_service import record_audit
@@ -143,6 +143,7 @@ def safe_franchise(item: Franchise) -> dict:
         "franchise_code": item.franchise_code,
         "name": item.name,
         "status": item.status,
+        "profile": item.profile or {},
         "created_at": item.created_at,
         "updated_at": item.updated_at,
     }
@@ -160,6 +161,17 @@ def list_franchises(tenant_id: UUID, status: str | None = None, limit: int = 100
 @app.get("/api/crm/franchises/{franchise_id}", dependencies=[Depends(internal_service_auth)])
 def get_franchise(franchise_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     return safe_franchise(tenant_item(session, Franchise, franchise_id, tenant_id, "franchise"))
+
+
+@app.patch("/api/crm/franchises/{franchise_id}", dependencies=[Depends(internal_service_auth)])
+def update_franchise(franchise_id: UUID, tenant_id: UUID, payload: FranchiseUpdate, session: Session = Depends(db)):
+    item = tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
+    changes = payload.model_dump(exclude_unset=True)
+    for field, value in changes.items():
+        setattr(item, field, value)
+    session.commit()
+    session.refresh(item)
+    return safe_franchise(item)
 
 
 @app.post("/api/crm/branches", dependencies=[Depends(internal_service_auth)])

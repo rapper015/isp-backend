@@ -269,6 +269,14 @@ class TenantIn(StrictModel):
 class FranchiseIn(StrictModel):
     franchise_code: str = Field(min_length=1, max_length=64)
     name: str = Field(min_length=1, max_length=255)
+    profile: dict[str, Any] = Field(default_factory=dict)
+
+
+class FranchiseUpdate(StrictModel):
+    franchise_code: str | None = Field(default=None, min_length=1, max_length=64)
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    status: Literal["ACTIVE", "INACTIVE"] | None = None
+    profile: dict[str, Any] | None = None
 
 
 class BranchIn(StrictModel):

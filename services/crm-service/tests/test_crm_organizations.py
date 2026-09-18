@@ -22,7 +22,7 @@ def test_franchise_and_branch_reads_are_tenant_scoped():
         franchise = client.post(
             "/api/crm/franchises",
             params={"tenant_id": tenant_a},
-            json={"franchise_code": "F-001", "name": "North Franchise"},
+            json={"franchise_code": "F-001", "name": "North Franchise", "profile": {"gstin": "22ABCDE1234F1Z5", "enable_sms": True}},
             headers=HEADERS,
         ).json()
         client.post(
@@ -45,6 +45,17 @@ def test_franchise_and_branch_reads_are_tenant_scoped():
         franchise_detail = client.get(f"/api/crm/franchises/{franchise['id']}", params={"tenant_id": tenant_a}, headers=HEADERS)
         assert franchise_detail.status_code == 200
         assert franchise_detail.json()["status"] == "ACTIVE"
+        assert franchise_detail.json()["profile"]["gstin"] == "22ABCDE1234F1Z5"
+
+        updated = client.patch(
+            f"/api/crm/franchises/{franchise['id']}",
+            params={"tenant_id": tenant_a},
+            json={"name": "North Franchise Updated", "profile": {"enable_email": True}},
+            headers=HEADERS,
+        )
+        assert updated.status_code == 200
+        assert updated.json()["name"] == "North Franchise Updated"
+        assert updated.json()["profile"] == {"enable_email": True}
 
         branches = client.get(
             "/api/crm/branches",
@@ -53,7 +64,7 @@ def test_franchise_and_branch_reads_are_tenant_scoped():
         )
         assert branches.status_code == 200
         assert branches.json()[0]["branch_code"] == "B-001"
-        assert branches.json()[0]["franchise_name"] == "North Franchise"
+        assert branches.json()[0]["franchise_name"] == "North Franchise Updated"
 
         branch_detail = client.get(f"/api/crm/branches/{branch['id']}", params={"tenant_id": tenant_a}, headers=HEADERS)
         assert branch_detail.status_code == 200
