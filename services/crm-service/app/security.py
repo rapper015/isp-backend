@@ -61,6 +61,8 @@ def management_permission(method: str, path: str) -> str | None:
         return "crm.followup.manage" if method == "POST" or "/complete" in path or "/reschedule" in path else "crm.followup.manage"
     if "/leads" in path:
         return "crm.lead.view" if method == "GET" else "crm.lead.create" if method == "POST" else "crm.lead.transition"
+    if "/franchises" in path or "/branches" in path:
+        return "crm.franchise.view" if method == "GET" else "crm.franchise.manage"
     if "/audit" in path:
         return "crm.audit.view"
     if "/customers" in path or "/contacts" in path or "/addresses" in path or "/caf" in path:

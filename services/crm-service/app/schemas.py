@@ -266,17 +266,80 @@ class TenantIn(StrictModel):
     policy: dict[str, Any] = Field(default_factory=dict)
 
 
+class FranchiseProfile(StrictModel):
+    custom_url: str | None = Field(default=None, max_length=500)
+    role: str | None = Field(default=None, max_length=64)
+    reseller_type: str | None = Field(default=None, max_length=64)
+    gstin: str | None = Field(default=None, min_length=15, max_length=15, pattern=r"^[0-9A-Z]{15}$")
+    pan_number: str | None = Field(default=None, min_length=10, max_length=10, pattern=r"^[A-Z]{5}[0-9]{4}[A-Z]$")
+    gst_type: str | None = Field(default=None, max_length=32)
+    currency_symbol: str = Field(default="INR", min_length=1, max_length=8)
+    entity_code: str | None = Field(default=None, max_length=64)
+    contact_person: str | None = Field(default=None, max_length=255)
+    mobile: str | None = Field(default=None, max_length=32, pattern=r"^[+0-9() -]+$")
+    landline: str | None = Field(default=None, max_length=32, pattern=r"^[+0-9() -]+$")
+    email: str | None = Field(default=None, max_length=255, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+    account_manager: str | None = Field(default=None, max_length=255)
+    sms_gateway: str | None = Field(default=None, max_length=64)
+    address: str | None = Field(default=None, max_length=1000)
+    country: str | None = Field(default=None, max_length=64)
+    state: str | None = Field(default=None, max_length=128)
+    district: str | None = Field(default=None, max_length=128)
+    area: str | None = Field(default=None, max_length=128)
+    city: str | None = Field(default=None, max_length=128)
+    zip_code: str | None = Field(default=None, max_length=16)
+    bank_account_name: str | None = Field(default=None, max_length=255)
+    static_isp_share: Decimal = Field(default=Decimal("0"), ge=0, le=100)
+    static_reseller_share: Decimal = Field(default=Decimal("0"), ge=0, le=100)
+    reseller_wallet_offer: Decimal = Field(default=Decimal("0"), ge=0)
+    primary_pop: str | None = Field(default=None, max_length=128)
+    redundancy_pop: str | None = Field(default=None, max_length=128)
+    package_renewal_expiry_mode: str | None = Field(default=None, max_length=64)
+    ott_operator_code: str | None = Field(default=None, max_length=64)
+    comments: str | None = Field(default=None, max_length=200)
+    logo_url: str | None = Field(default=None, max_length=1000)
+    caf_template_url: str | None = Field(default=None, max_length=1000)
+    two_step_verification: bool = False
+    franchise_management: bool = False
+    custom_package_price: bool = False
+    franchise_info_on_invoice: bool = False
+    enable_ott: bool = False
+    auto_split_sharing: bool = False
+    enable_sms: bool = False
+    enable_email: bool = False
+    enable_payment_gateway: bool = False
+    enable_whatsapp: bool = False
+    custom_logo: bool = False
+    custom_settings: bool = False
+    custom_invoice_settings: bool = False
+    notification_settings: bool = False
+    sms_settings: bool = False
+    whatsapp_settings: bool = False
+    email_settings: bool = False
+    payment_gateway_settings: bool = False
+    user_portal_settings: bool = False
+    iptv_settings: bool = False
+    ott_settings: bool = False
+    own_caf_template: bool = False
+    message_templates: bool = False
+
+
 class FranchiseIn(StrictModel):
     franchise_code: str = Field(min_length=1, max_length=64)
     name: str = Field(min_length=1, max_length=255)
-    profile: dict[str, Any] = Field(default_factory=dict)
+    profile: FranchiseProfile = Field(default_factory=FranchiseProfile)
 
 
 class FranchiseUpdate(StrictModel):
     franchise_code: str | None = Field(default=None, min_length=1, max_length=64)
     name: str | None = Field(default=None, min_length=1, max_length=255)
     status: Literal["ACTIVE", "INACTIVE"] | None = None
-    profile: dict[str, Any] | None = None
+    profile: FranchiseProfile | None = None
+
+
+class FranchiseSettingsPatch(StrictModel):
+    settings: dict[str, Any] = Field(min_length=1)
+    reason: str = Field(min_length=3, max_length=500)
 
 
 class BranchIn(StrictModel):

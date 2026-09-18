@@ -10,6 +10,8 @@ from os import getenv
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
+from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -18,10 +20,10 @@ from .models import (AuditLog, Branch, Customer, ExperienceRecovery, ExternalRef
                      FederationLink, Franchise, KbFeedback, KycCase, KycDocument, Lead,
                      LeadInteraction, FollowUp, LoyaltyScore, ServiceLocation, Tenant,
                      TicketSuggestion, TimelineEntry)
-from .schemas import (AddressCreate, BranchIn, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, FranchiseUpdate, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
+from .schemas import (AddressCreate, BranchIn, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, FranchiseSettingsPatch, FranchiseUpdate, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
 from .security import internal_service_auth
 from .services import (caf_service, conversion_service, customer_360, customer_service, duplicate_service, kyc_service, lead_service, lifecycle_service, merge_service, risk_service)
-from .services.audit_service import record_audit
+from .services.audit_service import outbox, record_audit
 from .services.ecosystem_service import (
     EscalationService,
     FederationService,
@@ -46,8 +48,6 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="CRM Service", version="1.0.0", docs_url="/internal/docs", openapi_url="/internal/openapi.json", lifespan=lifespan)
-
-
 def db():
     session = SessionLocal()
     try:
@@ -131,8 +131,10 @@ def list_tenants(request: Request, limit: int = 100, offset: int = 0, session: S
 @app.post("/api/crm/franchises", dependencies=[Depends(internal_service_auth)])
 def create_franchise(tenant_id: UUID, payload: FranchiseIn, session: Session = Depends(db)):
     tenant_item(session, Tenant, tenant_id, tenant_id, "tenant")
-    item = Franchise(tenant_id=tenant_id, **payload.model_dump())
+    item = Franchise(tenant_id=tenant_id, **payload.model_dump(mode="json"))
     session.add(item)
+    session.flush()
+    record_audit(session, tenant_id, "system", "franchise.created", "franchise", str(item.id), safe_after=jsonable_encoder(safe_franchise(item)))
     session.commit()
     return {"id": str(item.id), "franchise_code": item.franchise_code}
 
@@ -164,14 +166,79 @@ def get_franchise(franchise_id: UUID, tenant_id: UUID, session: Session = Depend
 
 
 @app.patch("/api/crm/franchises/{franchise_id}", dependencies=[Depends(internal_service_auth)])
-def update_franchise(franchise_id: UUID, tenant_id: UUID, payload: FranchiseUpdate, session: Session = Depends(db)):
+def update_franchise(franchise_id: UUID, tenant_id: UUID, payload: FranchiseUpdate, request: Request, session: Session = Depends(db)):
     item = tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
-    changes = payload.model_dump(exclude_unset=True)
+    before = jsonable_encoder(safe_franchise(item))
+    changes = payload.model_dump(exclude_unset=True, exclude={"profile"}, mode="json")
+    if payload.profile is not None:
+        changes["profile"] = payload.profile.model_dump(mode="json")
     for field, value in changes.items():
         setattr(item, field, value)
+    record_audit(session, tenant_id, actor_of(request), "franchise.updated", "franchise", str(item.id), safe_after={"before": before, "after": jsonable_encoder(safe_franchise(item))})
     session.commit()
     session.refresh(item)
     return safe_franchise(item)
+
+
+FRANCHISE_CAPABILITIES = {
+    "two_factor_auth": "two_step_verification",
+    "franchise_management": "franchise_management",
+    "custom_package_price": "custom_package_price",
+    "invoice_branding": "franchise_info_on_invoice",
+    "ott": "enable_ott",
+    "automatic_revenue_split": "auto_split_sharing",
+    "sms": "enable_sms",
+    "email": "enable_email",
+    "payment_gateway": "enable_payment_gateway",
+    "whatsapp": "enable_whatsapp",
+    "custom_logo": "custom_logo",
+    "customer_portal": "user_portal_settings",
+    "iptv": "iptv_settings",
+    "caf_template": "own_caf_template",
+    "message_templates": "message_templates",
+}
+
+
+@app.get("/api/crm/franchises/{franchise_id}/settings", dependencies=[Depends(internal_service_auth)])
+def get_franchise_settings(franchise_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+    item = tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
+    return {"franchise_id": str(item.id), "status": item.status, "settings": item.profile or {}}
+
+
+@app.patch("/api/crm/franchises/{franchise_id}/settings", dependencies=[Depends(internal_service_auth)])
+def patch_franchise_settings(franchise_id: UUID, tenant_id: UUID, payload: FranchiseSettingsPatch, request: Request, session: Session = Depends(db)):
+    from .schemas import FranchiseProfile
+
+    item = tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
+    before = dict(item.profile or {})
+    merged = {**before, **payload.settings}
+    try:
+        validated = FranchiseProfile.model_validate(merged).model_dump(mode="json")
+    except PydanticValidationError as error:
+        raise HTTPException(422, jsonable_encoder(error.errors(include_url=False))) from error
+    item.profile = validated
+    record_audit(session, tenant_id, actor_of(request), "franchise.settings.updated", "franchise", str(item.id), safe_after={"changed": sorted(payload.settings), "settings": validated}, reason=payload.reason)
+    outbox(session, "crm.franchise.settings.updated.v1", tenant_id, request.headers.get("X-Correlation-Id") or "franchise-settings", {"franchise_id": str(item.id), "changed": sorted(payload.settings), "settings": validated})
+    session.commit()
+    session.refresh(item)
+    return {"franchise_id": str(item.id), "status": item.status, "settings": item.profile}
+
+
+@app.get("/api/crm/franchises/{franchise_id}/settings/history", dependencies=[Depends(internal_service_auth)])
+def franchise_settings_history(franchise_id: UUID, tenant_id: UUID, limit: int = 100, session: Session = Depends(db)):
+    tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
+    rows = session.scalars(select(AuditLog).where(AuditLog.tenant_id == tenant_id, AuditLog.aggregate_type == "franchise", AuditLog.aggregate_id == str(franchise_id), AuditLog.action == "franchise.settings.updated").order_by(AuditLog.created_at.desc()).limit(bounded(limit)))
+    return [{"action": row.action, "actor": row.actor, "reason": row.reason, "changes": row.safe_after, "created_at": row.created_at} for row in rows]
+
+
+@app.get("/internal/crm/franchises/{franchise_id}/capabilities/{capability}", dependencies=[Depends(internal_service_auth)])
+def evaluate_franchise_capability(franchise_id: UUID, capability: str, tenant_id: UUID, session: Session = Depends(db)):
+    setting = FRANCHISE_CAPABILITIES.get(capability)
+    if not setting:
+        raise HTTPException(404, "unknown franchise capability")
+    item = tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
+    enabled = item.status == "ACTIVE" and bool((item.profile or {}).get(setting, False))
+    return {"franchise_id": str(item.id), "capability": capability, "enabled": enabled, "reason": "enabled" if enabled else "franchise inactive or capability disabled"}
 
 
 @app.post("/api/crm/branches", dependencies=[Depends(internal_service_auth)])

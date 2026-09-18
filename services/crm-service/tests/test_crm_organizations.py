@@ -55,7 +55,39 @@ def test_franchise_and_branch_reads_are_tenant_scoped():
         )
         assert updated.status_code == 200
         assert updated.json()["name"] == "North Franchise Updated"
-        assert updated.json()["profile"] == {"enable_email": True}
+        assert updated.json()["profile"]["enable_email"] is True
+        assert updated.json()["profile"]["enable_sms"] is False
+
+        settings = client.patch(
+            f"/api/crm/franchises/{franchise['id']}/settings",
+            params={"tenant_id": tenant_a},
+            json={"settings": {"enable_sms": True, "static_isp_share": 30, "static_reseller_share": 70}, "reason": "Enable franchise messaging and revenue split"},
+            headers=HEADERS,
+        )
+        assert settings.status_code == 200
+        assert settings.json()["settings"]["enable_sms"] is True
+        assert settings.json()["settings"]["static_reseller_share"] == "70"
+
+        capability = client.get(
+            f"/internal/crm/franchises/{franchise['id']}/capabilities/sms",
+            params={"tenant_id": tenant_a}, headers=HEADERS,
+        )
+        assert capability.status_code == 200
+        assert capability.json()["enabled"] is True
+
+        history = client.get(
+            f"/api/crm/franchises/{franchise['id']}/settings/history",
+            params={"tenant_id": tenant_a}, headers=HEADERS,
+        )
+        assert history.status_code == 200
+        assert history.json()[0]["reason"] == "Enable franchise messaging and revenue split"
+
+        invalid_share = client.patch(
+            f"/api/crm/franchises/{franchise['id']}/settings",
+            params={"tenant_id": tenant_a},
+            json={"settings": {"static_reseller_share": 101}, "reason": "Invalid test"}, headers=HEADERS,
+        )
+        assert invalid_share.status_code == 422
 
         branches = client.get(
             "/api/crm/branches",
