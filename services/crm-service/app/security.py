@@ -93,7 +93,12 @@ async def _jwt_management_auth(request: Request) -> None:
     remote = request.client.host if request.client else "unknown"
     if not limited(f"crm:management:{remote}:{request.url.path}", int(getenv("CRM_MANAGEMENT_RATE_LIMIT", "120")), 60):
         raise HTTPException(429, "rate limit exceeded")
-    request.state.crm_principal = {"subject": claims["sub"], "roles": claims.get("roles", []), "permissions": sorted(permissions)}
+    request.state.crm_principal = {
+        "subject": claims["sub"],
+        "roles": claims.get("roles", []),
+        "permissions": sorted(permissions),
+        "tenant_id": str(claimed_tenant) if claimed_tenant else None,
+    }
 
 
 async def _json_tenant(request: Request) -> str | None:

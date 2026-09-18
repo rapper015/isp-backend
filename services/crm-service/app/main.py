@@ -103,6 +103,31 @@ def create_tenant(payload: TenantIn, session: Session = Depends(db)):
     return {"id": str(tenant.id)}
 
 
+@app.get("/api/crm/tenants", dependencies=[Depends(internal_service_auth)])
+def list_tenants(request: Request, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    """Return the CRM tenant directory visible to the authenticated caller.
+
+    Platform operators and trusted internal services can enumerate the directory;
+    tenant-bound JWTs are restricted to their own tenant regardless of query input.
+    """
+    statement = select(Tenant).order_by(Tenant.created_at.desc())
+    principal = getattr(request.state, "crm_principal", None) or {}
+    permissions = set(principal.get("permissions", []))
+    claimed_tenant = principal.get("tenant_id")
+    if claimed_tenant and "*" not in permissions:
+        statement = statement.where(Tenant.id == UUID(claimed_tenant))
+    tenants = list(session.scalars(statement.offset(max(offset, 0)).limit(bounded(limit))))
+    return [
+        {
+            "id": str(tenant.id),
+            "name": tenant.name,
+            "enabled": tenant.enabled,
+            "created_at": tenant.created_at.isoformat() if tenant.created_at else None,
+        }
+        for tenant in tenants
+    ]
+
+
 @app.post("/api/crm/franchises", dependencies=[Depends(internal_service_auth)])
 def create_franchise(tenant_id: UUID, payload: FranchiseIn, session: Session = Depends(db)):
     tenant_item(session, Tenant, tenant_id, tenant_id, "tenant")
