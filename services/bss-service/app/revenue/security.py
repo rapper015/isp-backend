@@ -97,7 +97,16 @@ async def _json_tenant(request: Request) -> str | None:
     return body.get("tenant_id") or body.get("tenantId")
 
 
-def internal_service_auth(request: Request) -> None:
+async def internal_service_auth(request: Request) -> None:
+    """Authorize trusted internal callers or edge-management JWT callers.
+
+    The revenue routers are used by both service-to-service workflows and the
+    gateway-facing management API.  Keep the internal key contract intact,
+    while allowing a Platform-issued bearer token to take the normal RBAC path.
+    """
+    if request.headers.get("Authorization", "").startswith("Bearer "):
+        await management_auth(request)
+        return
     supplied = request.headers.get("X-BSS-Service-Key", "")
     configured = getenv("BSS_INTERNAL_API_KEYS", getenv("BSS_INTERNAL_API_KEY", ""))
     expected = [value.strip() for value in configured.split(",") if value.strip()]
