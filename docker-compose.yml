@@ -123,7 +123,11 @@ services:
   oss-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: oss-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: oss-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/oss}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: oss-service
+      DATABASE_URL: postgresql://isp:isp@postgres:5432/oss
+      OSS_BSS_BASE_URL: http://bss-service:8000
 
   aaa-service:
     <<: *domain-service

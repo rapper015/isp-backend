@@ -8,6 +8,7 @@ os.environ.setdefault("OSS_JWT_SECRET", "test-jwt-secret-0123456789abcdef0123456
 os.environ.setdefault("OSS_ENCRYPTION_KEY", "K2HWufrlmhAt4fF3tP7i3VFUXupdsxhhlRP9Aw7-Ctg=")
 os.environ.setdefault("OSS_AUTO_CREATE_SCHEMA", "true")
 os.environ.setdefault("REDIS_URL", "redis://127.0.0.1:6399/0")
+os.environ.setdefault("OSS_BSS_PLAN_VALIDATION_MODE", "fake")
 
 import uuid  # noqa: E402
 

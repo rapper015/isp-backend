@@ -20,6 +20,7 @@ from ..services.saga_engine import SagaDefinition, Step, StepContext
 
 DEFAULT_ONT_SERIAL = "ONT-SN-1001"
 DEFAULT_NAS_REFERENCE = "nas-default"
+PLAN_REQUIRED_ORDER_TYPES = {"NEW_CONNECTION", "PACKAGE_UPGRADE", "PACKAGE_DOWNGRADE", "SERVICE_RENEWAL"}
 
 
 def _now() -> datetime:
@@ -68,12 +69,13 @@ def validate_and_prepare(session: Session, order_service: OrderService, order) -
             checks += customer.errors
     except AdapterError as error:
         checks.append(str(error))
-    try:
-        plan = bss.validate_plan(order.requested_plan_reference)
-        if not plan.ok:
-            checks += plan.errors
-    except AdapterError as error:
-        checks.append(str(error))
+    if order.order_type in PLAN_REQUIRED_ORDER_TYPES:
+        try:
+            plan = bss.validate_plan(order.requested_plan_reference)
+            if not plan.ok:
+                checks += plan.errors
+        except AdapterError as error:
+            checks.append(str(error))
     if checks:
         order_service.mark_validation_failed(order.id, reason="; ".join(checks), actor="validation", correlation_id=str(order.correlation_id))
         return "VALIDATION_FAILED"
