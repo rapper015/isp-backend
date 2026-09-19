@@ -38,7 +38,6 @@ class LeadCreate(StrictModel):
     lead_source: Literal["WALK_IN", "PHONE", "WEBSITE", "MOBILE_APP", "WHATSAPP", "EMAIL", "SOCIAL_MEDIA", "REFERRAL", "FRANCHISE", "FIELD_SALES", "CAMPAIGN", "IMPORT", "API", "CHATBOT", "OTHER"] = "OTHER"
     campaign_reference: str | None = Field(default=None, max_length=128)
     referrer: str | None = Field(default=None, max_length=255)
-    franchise_id: UUID | None = None
     branch_id: UUID | None = None
     area: str | None = Field(default=None, max_length=128)
     assigned_salesperson_id: str | None = Field(default=None, max_length=64)
