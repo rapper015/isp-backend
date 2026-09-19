@@ -33,6 +33,13 @@ class PlanCreate(BaseModel):
 class PlanResponse(PlanCreate):
     model_config = ConfigDict(from_attributes=True)
     id: UUID; status: str
+
+class PlanUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    monthly_fee: Decimal | None = Field(default=None, gt=0)
+    download_rate_kbps: int | None = Field(default=None, gt=0)
+    upload_rate_kbps: int | None = Field(default=None, gt=0)
+    status: str | None = Field(default=None, min_length=1, max_length=16)
 class InvoiceCreate(BaseModel):
     invoice_number: str
     customer_id: UUID
@@ -64,6 +71,22 @@ def create_plan(payload: PlanCreate, db: Session = Depends(db_session)):
     db.refresh(plan); return plan
 @app.get('/plans', response_model=list[PlanResponse])
 def list_plans(db: Session = Depends(db_session)): return list(db.scalars(select(Plan)))
+@app.get('/plans/{plan_id}', response_model=PlanResponse)
+def get_plan(plan_id: UUID, db: Session = Depends(db_session)):
+    plan = db.get(Plan, plan_id)
+    if plan is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, 'plan not found')
+    return plan
+@app.patch('/plans/{plan_id}', response_model=PlanResponse)
+def update_plan(plan_id: UUID, payload: PlanUpdate, db: Session = Depends(db_session)):
+    plan = db.get(Plan, plan_id)
+    if plan is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, 'plan not found')
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(plan, field, value)
+    db.commit()
+    db.refresh(plan)
+    return plan
 @app.post('/invoices', response_model=InvoiceResponse, status_code=status.HTTP_201_CREATED)
 def create_invoice(payload: InvoiceCreate, db: Session = Depends(db_session)):
     if db.get(Plan, payload.plan_id) is None: raise HTTPException(404, 'plan not found')
