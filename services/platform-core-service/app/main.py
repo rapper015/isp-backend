@@ -110,6 +110,22 @@ def change_password(payload: PasswordChangeIn, request: Request, session: Sessio
     user.password_hash = hash_password(payload.new_password); user.password_changed_at = datetime.now(timezone.utc)
     for token in session.scalars(select(RefreshToken).where(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None))): token.revoked_at = datetime.now(timezone.utc)
     audit(session, "password.changed", user.id); session.commit(); return {"changed": True}
+@app.get("/api/v1/platform/users")
+def list_users(request: Request, session: Session = Depends(db)):
+    claims = require_permission(request, "platform.users.read")
+    statement = select(PlatformUser).where(PlatformUser.enabled.is_(True)).order_by(PlatformUser.full_name, PlatformUser.username)
+    if claims.get("tenant_id") and "*" not in claims["permissions"]:
+        statement = statement.where(PlatformUser.tenant_id == UUID(claims["tenant_id"]))
+    return [
+        {
+            "id": str(user.id),
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "tenant_id": str(user.tenant_id) if user.tenant_id else None,
+        }
+        for user in session.scalars(statement)
+    ]
 @app.post("/api/v1/platform/users", status_code=201)
 def create_user(payload: UserCreateIn, request: Request, session: Session = Depends(db)):
     claims = require_permission(request, "platform.users.create")
