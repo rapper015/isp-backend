@@ -144,6 +144,7 @@ class CustomerUpdate(StrictModel):
     preferred_channel: str | None = None
     area: str | None = None
     account_manager_id: str | None = None
+    franchise_id: UUID | None = None
 
 
 class ContactCreate(StrictModel):

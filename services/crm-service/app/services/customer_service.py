@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..enums import ADDRESS_TYPES, CONTACT_ROLES, CONTACT_VERIFICATION
-from ..models import Address, Contact, Customer, ServiceLocation
+from ..models import Address, Contact, Customer, Franchise, ServiceLocation
 from ..validation import ValidationError, normalize_email, normalize_phone, validate_coordinates, validate_zipcode
 from .audit_service import audit, correlation, outbox, timeline
 
@@ -56,6 +56,10 @@ def create_customer(session: Session, tenant_id, payload: dict, actor: str | Non
 
 def update_customer(session: Session, tenant_id, customer_id, payload: dict, actor: str | None = None) -> Customer:
     customer = get_customer(session, tenant_id, customer_id)
+    if "franchise_id" in payload and payload["franchise_id"] is not None:
+        franchise = session.scalar(select(Franchise).where(Franchise.id == payload["franchise_id"], Franchise.tenant_id == tenant_id))
+        if franchise is None:
+            raise ValidationError("franchise not found for this tenant")
     safe = {key: value for key, value in payload.items() if key not in {"phone", "email"}}
     for key, value in payload.items():
         if key == "phone":
