@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from ..events import publish_outbox
 from ..models import ResourceInventory, ResourceReservation
+from .tenant_service import ensure_oss_tenant
 
 DEFAULT_TTL_SECONDS = 15 * 60  # 15 minutes
 
@@ -37,6 +38,7 @@ class ResourceService:
 
     # -- inventory ----------------------------------------------------------
     def register(self, tenant_id: uuid.UUID, resource_type: str, resource_key: str, metadata: dict | None = None) -> ResourceInventory:
+        ensure_oss_tenant(self.session, tenant_id)
         existing = self.session.scalar(
             select(ResourceInventory).where(
                 ResourceInventory.tenant_id == tenant_id,

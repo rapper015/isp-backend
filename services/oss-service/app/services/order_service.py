@@ -15,6 +15,7 @@ from ..events import publish_outbox
 from ..models import Order, OrderCommand, OrderStatusHistory
 from ..state_machine import ORDER_TRANSITIONS, order_transition, order_terminal
 from .order_repository import ConcurrencyConflict, OrderNotFound, OrderRepository
+from .tenant_service import ensure_oss_tenant
 
 
 def _now() -> datetime:
@@ -59,6 +60,8 @@ class OrderService:
             raise ValueError(f"invalid priority {priority!r}")
         if source_channel not in ORDER_SOURCES:
             raise ValueError(f"invalid source channel {source_channel!r}")
+
+        ensure_oss_tenant(self.session, tenant_id)
 
         def _s(value):
             return str(value) if value is not None else None
