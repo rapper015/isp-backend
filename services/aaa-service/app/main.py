@@ -14,7 +14,7 @@ from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLeas
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
-from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, NasCredentialIn, NasCredentialRotateIn, NasDesiredConfigurationIn, NasDraftIn, NasIn, NasPlanApplyIn, NasRadiusAssignmentIn, NasRadiusAssignmentUpdateIn, NasReconcileIn, NasRegistrationConfirmIn, NasRegistrationVerifyIn, NasRollbackIn, NasUpdateManagementIn, NasUpdateIn, NasVerifyIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
+from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, ManagedCredentialIn, NasCredentialIn, NasCredentialRotateIn, NasDesiredConfigurationIn, NasDraftIn, NasIn, NasPlanApplyIn, NasRadiusAssignmentIn, NasRadiusAssignmentUpdateIn, NasReconcileIn, NasRegistrationConfirmIn, NasRegistrationVerifyIn, NasRollbackIn, NasUpdateManagementIn, NasUpdateIn, NasVerifyIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
 from .security import decrypt_secret, encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
 from .services import accounting, audit, authenticate, authorize, correlation, outbox
 from .reconciliation import reconcile_nas_sessions
@@ -619,6 +619,37 @@ def create_credential(payload: CredentialIn, session: Session = Depends(db)):
     if not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
     credential = Credential(tenant_id=payload.tenant_id, subscriber_id=payload.subscriber_id, username=payload.username, username_normalized=normalize_username(payload.username), password_hash=bcrypt.hashpw(payload.password.encode(), bcrypt.gensalt()).decode(), allowed_methods=payload.allowed_methods, mac_address=normalize_mac(payload.mac_address) if payload.mac_address else None)
     session.add(credential); request_id = record_audit(session, payload.tenant_id, "credential.created", str(payload.subscriber_id), {"methods": payload.allowed_methods}); session.commit(); return {"id": str(credential.id), "correlation_id": request_id}
+
+
+@app.post("/api/aaa/subscribers/{subscriber_id}/managed-credentials", dependencies=[Depends(internal_service_auth)])
+def issue_managed_credential(subscriber_id: UUID, payload: ManagedCredentialIn, session: Session = Depends(db)):
+    """Generate an initial access password and disclose it exactly once.
+
+    Password material exists only in this TLS response. AAA persists a bcrypt
+    hash, and audit records intentionally contain only credential metadata.
+    """
+    if not session.get(Tenant, payload.tenant_id):
+        raise HTTPException(404, "tenant not found")
+    normalized = normalize_username(payload.username)
+    existing = session.scalar(select(Credential).where(Credential.tenant_id == payload.tenant_id, Credential.username_normalized == normalized))
+    if existing is not None:
+        raise HTTPException(409, "an access credential already exists for this username; use the credential rotation workflow")
+    password = secrets.token_urlsafe(24)
+    credential = Credential(
+        tenant_id=payload.tenant_id,
+        subscriber_id=subscriber_id,
+        username=payload.username,
+        username_normalized=normalized,
+        password_hash=bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
+        allowed_methods=payload.allowed_methods,
+    )
+    session.add(credential)
+    request_id = record_audit(session, payload.tenant_id, "credential.managed_issued", str(subscriber_id), {"methods": payload.allowed_methods, "username": payload.username})
+    session.commit()
+    return JSONResponse(
+        content={"credential_id": str(credential.id), "username": credential.username, "password": password, "display_once": True, "correlation_id": request_id},
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache"},
+    )
 @app.patch("/api/aaa/credentials/{credential_id}", dependencies=[Depends(internal_service_auth)])
 def update_credential(credential_id: UUID, tenant_id: UUID, payload: CredentialUpdateIn, session: Session = Depends(db)):
     item = tenant_item(session, Credential, credential_id, tenant_id, "credential")

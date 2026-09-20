@@ -114,11 +114,17 @@ services:
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
       CRM_INTERNAL_API_KEYS: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}
 
   bss-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: bss-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: bss-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/bss}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: bss-service
+      DATABASE_URL: postgresql://isp:isp@postgres:5432/bss
+      BSS_AAA_BASE_URL: http://aaa-service:8000
+      BSS_AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
 
   oss-service:
     <<: *domain-service
@@ -128,6 +134,10 @@ services:
       SERVICE_NAME: oss-service
       DATABASE_URL: postgresql://isp:isp@postgres:5432/oss
       OSS_BSS_BASE_URL: http://bss-service:8000
+      OSS_AAA_BASE_URL: http://aaa-service:8000
+      OSS_AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
+      OSS_AAA_POLICY_ASSIGNMENT_MODE: live
+      OSS_AAA_CREDENTIAL_MODE: live
 
   aaa-service:
     <<: *domain-service
@@ -185,6 +195,7 @@ services:
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       PLATFORM_BOOTSTRAP_ADMIN_USERNAME: ${PLATFORM_BOOTSTRAP_ADMIN_USERNAME:-admin}
       PLATFORM_BOOTSTRAP_ADMIN_PASSWORD: ${PLATFORM_BOOTSTRAP_ADMIN_PASSWORD:?set PLATFORM_BOOTSTRAP_ADMIN_PASSWORD in .env}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}
 
   nms-service:
     <<: *domain-service

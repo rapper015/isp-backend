@@ -69,16 +69,24 @@ def validate_and_prepare(session: Session, order_service: OrderService, order) -
             checks += customer.errors
     except AdapterError as error:
         checks.append(str(error))
+    plan_checks: dict = {}
     if order.order_type in PLAN_REQUIRED_ORDER_TYPES:
         try:
             plan = bss.validate_plan(order.requested_plan_reference)
             if not plan.ok:
                 checks += plan.errors
+            else:
+                plan_checks = plan.checks
         except AdapterError as error:
             checks.append(str(error))
     if checks:
         order_service.mark_validation_failed(order.id, reason="; ".join(checks), actor="validation", correlation_id=str(order.correlation_id))
         return "VALIDATION_FAILED"
+    # This snapshot is non-secret and ensures a fulfilled service remains
+    # auditable against the exact active AAA policy that BSS approved.
+    network_policy = plan_checks.get("network_policy")
+    if network_policy:
+        order.requested_snapshot = {**(order.requested_snapshot or {}), "network_policy": network_policy}
     try:
         payment = bss.check_payment_eligibility(str(order.customer_id), order.requested_snapshot.get("billing_account_reference"))
     except AdapterError as error:
@@ -108,6 +116,7 @@ def _step_create_subscription(ctx: StepContext) -> StepResult:
         plan_reference=order.requested_plan_reference,
         billing_account_reference=billing.get("billing_account_reference"),
         order_reference=order.order_number,
+        resource_references={"network_policy": (order.requested_snapshot or {}).get("network_policy")},
     )
     ctx.session.add(sub)
     ctx.session.flush()
@@ -211,10 +220,14 @@ def _step_configure_access(ctx: StepContext) -> StepResult:
     profile = aaa.create_subscriber_profile(ctx.tenant_id, username, order.requested_plan_reference, sub.subscription_code)
     aaa_ref = profile["aaa_subscriber_reference"]
     sub.aaa_subscriber_reference = aaa_ref
+    policy = (sub.resource_references or {}).get("network_policy")
+    if not policy or not policy.get("policy_version_id"):
+        return fail_result("NETWORK_POLICY_MISSING", "subscription has no approved AAA network policy")
+    assigned = aaa.assign_network_policy(ctx.tenant_id, sub.id, policy["policy_version_id"])
     nas_ref = order.requested_snapshot.get("nas_reference") or DEFAULT_NAS_REFERENCE
     nas_conf = nas.configure_subscriber(ctx.tenant_id, nas_ref, aaa_ref, username, order.requested_plan_reference)
     sub.nas_reference = nas_ref
-    return ok_result({"aaa_subscriber_reference": aaa_ref, "username": username, "nas_reference": nas_ref, "nas_configured": bool(nas_conf.output.get("configured"))})
+    return ok_result({"aaa_subscriber_reference": aaa_ref, "username": username, "nas_reference": nas_ref, "nas_configured": bool(nas_conf.output.get("configured")), "network_policy_version_id": policy["policy_version_id"], "network_policy_assigned": bool(assigned)})
 
 
 def _comp_configure_access(ctx: StepContext) -> StepResult:

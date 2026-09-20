@@ -42,13 +42,22 @@ class BssClient(Adapter):
 
         plan = response.json()
         active = str(plan.get("status", "")).lower() == "active"
+        network_policy = plan.get("network_policy")
+        policy_ready = bool(network_policy and network_policy.get("status") == "ACTIVE")
+        valid = active and policy_ready
+        errors = []
+        if not active:
+            errors.append("selected plan is inactive")
+        if not policy_ready:
+            errors.append("selected plan has no active AAA network policy")
         return ValidationResult(
-            ok=active,
-            errors=[] if active else ["selected plan is inactive"],
+            ok=valid,
+            errors=errors,
             checks={
-                "plan_valid": active,
+                "plan_valid": valid,
                 "plan_id": str(plan.get("id", plan_reference)),
                 "plan_code": plan.get("plan_code"),
+                "network_policy": network_policy,
             },
         )
 

@@ -5,6 +5,7 @@ from os import getenv
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -29,6 +30,7 @@ from .schemas import (
     ValidActionsResponse,
 )
 from .security import management_auth
+from .integrations.base import AdapterError, get_adapter
 from .services.activation import ProvisioningService
 from .services.order_service import OrderService, valid_actions as order_valid_actions
 from .services.resource_service import ResourceService
@@ -350,6 +352,21 @@ def get_subscription(subscription_id: UUID, session: Session = Depends(db)):
     return sub
 
 
+@app.post("/api/oss/subscriptions/{subscription_id}/access-credentials", dependencies=[Depends(management_auth)])
+def issue_subscription_access_credential(subscription_id: UUID, tenant_id: UUID = Query(...), session: Session = Depends(db)):
+    """Issue an initial PPPoE credential once, without saving its password in OSS."""
+    sub = session.get(ServiceSubscription, subscription_id)
+    if sub is None or sub.tenant_id != tenant_id:
+        raise HTTPException(404, "subscription not found")
+    if sub.status != "ACTIVE":
+        raise HTTPException(422, "access credentials can be issued after the subscription is active")
+    try:
+        result = get_adapter("aaa").issue_managed_credential(tenant_id, sub.id, sub.subscription_code)
+    except AdapterError as error:
+        raise HTTPException(502, str(error)) from error
+    return JSONResponse(content=result, headers={"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache"})
+
+
 # ===========================================================================
 # Manual interventions
 # ===========================================================================
@@ -635,4 +652,3 @@ def list_poles(tenant_id: UUID = Query(...), session: Session = Depends(db)):
              "pole_type": p.pole_type, "height_m": p.height_m,
              "status": p.status} for p in session.scalars(
         select(models.TelecomPole).where(models.TelecomPole.tenant_id == tenant_id))]
-

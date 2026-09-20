@@ -16,6 +16,26 @@ class Plan(Base):
     status: Mapped[str] = mapped_column(String(16), default="active")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+
+class PlanNetworkPolicyBinding(Base):
+    """The immutable network-policy version sold with a BSS plan.
+
+    Keeping this in a separate table makes the catalog extension additive for
+    deployed databases and, crucially, pins a plan to an approved AAA version
+    instead of relying on a policy name that may later change.
+    """
+    __tablename__ = "bss_plan_network_policy_bindings"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("plans.id"), unique=True, index=True, nullable=False)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    policy_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    policy_version_id: Mapped[uuid.UUID] = mapped_column(unique=True, index=True, nullable=False)
+    policy_code: Mapped[str] = mapped_column(String(128), nullable=False)
+    policy_version: Mapped[int] = mapped_column(nullable=False)
+    status: Mapped[str] = mapped_column(String(16), default="ACTIVE", nullable=False)
+    linked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
 class Invoice(Base):
     __tablename__ = "invoices"
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)

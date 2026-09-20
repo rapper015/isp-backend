@@ -21,6 +21,11 @@ class CredentialIn(StrictModel):
     tenant_id: UUID; subscriber_id: UUID; username: str = Field(min_length=1, max_length=128); password: str = Field(min_length=8, max_length=512)
     allowed_methods: list[Literal["pap", "chap", "mschapv2", "mac"]] = ["pap"]
     mac_address: str | None = None
+class ManagedCredentialIn(StrictModel):
+    """Credential request used by OSS; the password is generated in AAA."""
+    tenant_id: UUID
+    username: str = Field(min_length=1, max_length=128)
+    allowed_methods: list[Literal["pap", "chap", "mschapv2", "mac"]] = ["pap"]
 class NasIn(StrictModel):
     tenant_id: UUID; name: str = Field(min_length=1, max_length=128); source_ip: str; nas_identifier: str | None = Field(default=None, max_length=128)
     allowed_services: list[Literal["pppoe", "hotspot", "mac"]] = ["pppoe", "hotspot"]

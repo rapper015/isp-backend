@@ -177,6 +177,22 @@ def list_policies(tenant_id: uuid.UUID, session: Session = Depends(db)):
     ]
 
 
+@router.get("/policy-versions/{policy_version_id}")
+def get_policy_version_by_id(policy_version_id: uuid.UUID, tenant_id: uuid.UUID, session: Session = Depends(db)):
+    """Safe catalog lookup used by BSS when a plan is linked to AAA.
+
+    The response deliberately excludes implementation details such as RADIUS
+    attributes; BSS only needs the tenant-scoped, approved policy identity.
+    """
+    item = session.scalar(select(NetworkPolicyVersion).where(NetworkPolicyVersion.id == policy_version_id, NetworkPolicyVersion.tenant_id == tenant_id))
+    if item is None:
+        raise HTTPException(404, "policy version not found")
+    policy = session.get(NetworkPolicy, item.policy_id)
+    if policy is None:
+        raise HTTPException(404, "policy not found")
+    return {"id": str(item.id), "policy_id": str(item.policy_id), "policy_code": policy.code, "policy_name": policy.name, "version": item.version, "state": item.state}
+
+
 @router.post("/policies/{policy_id}/versions", status_code=201)
 def create_policy_version(policy_id: uuid.UUID, payload: PolicyVersionCreate, session: Session = Depends(db)):
     policy = _tenant_item(session, NetworkPolicy, policy_id, payload.tenant_id, "policy")
@@ -282,6 +298,8 @@ def assign_policy(subscriber_id: uuid.UUID, payload: PolicyAssign, session: Sess
     version = session.get(NetworkPolicyVersion, payload.policy_version_id)
     if version is None or version.tenant_id != payload.tenant_id:
         raise HTTPException(404, "policy version not found")
+    if version.state != "ACTIVE":
+        raise HTTPException(422, "only an active policy version can be assigned to a subscriber")
     assignment = session.scalar(select(SubscriberPolicyAssignment).where(SubscriberPolicyAssignment.tenant_id == payload.tenant_id, SubscriberPolicyAssignment.subscriber_id == subscriber_id, SubscriberPolicyAssignment.source == payload.source))
     if assignment is None:
         assignment = SubscriberPolicyAssignment(tenant_id=payload.tenant_id, subscriber_id=subscriber_id, policy_version_id=version.id, source=payload.source)
