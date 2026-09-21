@@ -60,6 +60,24 @@ def bounded(limit: int) -> int:
     return min(max(limit, 1), 100)
 
 
+def visible_tenant_filter(request: Request, tenant_id: UUID | None) -> UUID | None:
+    """Return the effective tenant filter for a directory read.
+
+    A tenant-bound operator is always pinned to its JWT tenant.  A platform
+    operator with wildcard permission may omit the filter and read the
+    cross-tenant directory.  This is intentionally used only by list routes;
+    tenant-owned mutation routes continue to require a concrete tenant.
+    """
+    principal = getattr(request.state, "crm_principal", None) or {}
+    permissions = set(principal.get("permissions", []))
+    claimed = principal.get("tenant_id")
+    if claimed and "*" not in permissions:
+        return UUID(str(claimed))
+    if tenant_id is None and principal and "*" not in permissions:
+        raise HTTPException(403, "platform-wide tenant access is not permitted")
+    return tenant_id
+
+
 def tenant_item(session: Session, model, item_id: UUID, tenant_id: UUID, label: str):
     statement = select(model).where(model.id == item_id)
     if model is not Tenant:
@@ -152,8 +170,11 @@ def safe_franchise(item: Franchise) -> dict:
 
 
 @app.get("/api/crm/franchises", dependencies=[Depends(internal_service_auth)])
-def list_franchises(tenant_id: UUID, status: str | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
-    statement = select(Franchise).where(Franchise.tenant_id == tenant_id)
+def list_franchises(request: Request, tenant_id: UUID | None = None, status: str | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    effective_tenant = visible_tenant_filter(request, tenant_id)
+    statement = select(Franchise)
+    if effective_tenant:
+        statement = statement.where(Franchise.tenant_id == effective_tenant)
     if status:
         statement = statement.where(Franchise.status.ilike(status))
     items = session.scalars(statement.order_by(Franchise.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))
@@ -266,11 +287,15 @@ def safe_branch(item: Branch, franchise: Franchise | None = None) -> dict:
 
 
 @app.get("/api/crm/branches", dependencies=[Depends(internal_service_auth)])
-def list_branches(tenant_id: UUID, franchise_id: UUID | None = None, franchiseId: UUID | None = None, status: str | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+def list_branches(request: Request, tenant_id: UUID | None = None, franchise_id: UUID | None = None, franchiseId: UUID | None = None, status: str | None = None, limit: int =100, offset: int = 0, session: Session = Depends(db)):
+    effective_tenant = visible_tenant_filter(request, tenant_id)
     selected_franchise = franchise_id or franchiseId
-    statement = select(Branch).where(Branch.tenant_id == tenant_id)
+    statement = select(Branch)
+    if effective_tenant:
+        statement = statement.where(Branch.tenant_id == effective_tenant)
     if selected_franchise:
-        tenant_item(session, Franchise, selected_franchise, tenant_id, "franchise")
+        if effective_tenant:
+            tenant_item(session, Franchise, selected_franchise, effective_tenant, "franchise")
         statement = statement.where(Branch.franchise_id == selected_franchise)
     if status:
         statement = statement.where(Branch.status.ilike(status))
@@ -278,7 +303,7 @@ def list_branches(tenant_id: UUID, franchise_id: UUID | None = None, franchiseId
     franchise_ids = {item.franchise_id for item in items if item.franchise_id}
     franchises = {
         item.id: item
-        for item in session.scalars(select(Franchise).where(Franchise.tenant_id == tenant_id, Franchise.id.in_(franchise_ids)))
+        for item in session.scalars(select(Franchise).where(Franchise.id.in_(franchise_ids)))
     } if franchise_ids else {}
     return [safe_branch(item, franchises.get(item.franchise_id)) for item in items]
 
@@ -337,8 +362,11 @@ def create_lead(payload: LeadCreate, tenant_id: UUID, request: Request, session:
 
 
 @app.get("/api/crm/leads", dependencies=[Depends(internal_service_auth)])
-def list_leads(tenant_id: UUID, stage: str | None = None, lead_source: str | None = None, assigned_to: str | None = None, q: str | None = None, sort: str = "-created_at", limit: int = 100, offset: int = 0, session: Session = Depends(db)):
-    statement = select(Lead).where(Lead.tenant_id == tenant_id)
+def list_leads(request: Request, tenant_id: UUID | None = None, stage: str | None = None, lead_source: str | None = None, assigned_to: str | None = None, q: str | None = None, sort: str = "-created_at", limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    effective_tenant = visible_tenant_filter(request, tenant_id)
+    statement = select(Lead)
+    if effective_tenant:
+        statement = statement.where(Lead.tenant_id == effective_tenant)
     if stage:
         statement = statement.where(Lead.stage == stage.upper())
     if lead_source:
@@ -483,8 +511,11 @@ def customer_followup(customer_id: UUID, tenant_id: UUID, payload: FollowUpCreat
 
 
 @app.get("/api/crm/follow-ups", dependencies=[Depends(internal_service_auth)])
-def list_followups(tenant_id: UUID, status: str | None = None, due: bool = False, overdue: bool = False, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
-    statement = select(FollowUp).where(FollowUp.tenant_id == tenant_id)
+def list_followups(request: Request, tenant_id: UUID | None = None, status: str | None = None, due: bool = False, overdue: bool = False, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    effective_tenant = visible_tenant_filter(request, tenant_id)
+    statement = select(FollowUp)
+    if effective_tenant:
+        statement = statement.where(FollowUp.tenant_id == effective_tenant)
     if status:
         statement = statement.where(FollowUp.status == status.upper())
     if due:
@@ -544,8 +575,11 @@ def create_customer(payload: CustomerCreate, tenant_id: UUID, request: Request, 
 
 
 @app.get("/api/crm/customers", dependencies=[Depends(internal_service_auth)])
-def list_customers(tenant_id: UUID, lifecycle_state: str | None = None, risk_level: str | None = None, q: str | None = None, franchise_id: UUID | None = None, sort: str = "-created_at", limit: int = 100, offset: int = 0, session: Session = Depends(db)):
-    statement = select(Customer).where(Customer.tenant_id == tenant_id)
+def list_customers(request: Request, tenant_id: UUID | None = None, lifecycle_state: str | None = None, risk_level: str | None = None, q: str | None = None, franchise_id: UUID | None = None, sort: str = "-created_at", limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    effective_tenant = visible_tenant_filter(request, tenant_id)
+    statement = select(Customer)
+    if effective_tenant:
+        statement = statement.where(Customer.tenant_id == effective_tenant)
     if lifecycle_state:
         statement = statement.where(Customer.lifecycle_state == lifecycle_state.upper())
     if risk_level:
