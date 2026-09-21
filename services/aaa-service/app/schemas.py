@@ -45,6 +45,11 @@ class NasUpdateIn(StrictModel):
     capabilities: dict[str, Any] | None = None
 class TenantIn(StrictModel):
     name: str = Field(min_length=1, max_length=128); enabled: bool = True; policy: dict[str, Any] = Field(default_factory=dict)
+class TenantSyncIn(StrictModel):
+    """Authoritative tenant projection from the platform control plane."""
+    name: str = Field(min_length=1, max_length=128)
+    enabled: bool = True
+    policy: dict[str, Any] = Field(default_factory=dict)
 class IpPoolIn(StrictModel):
     tenant_id: UUID
     name: str = Field(min_length=1, max_length=128)

@@ -14,7 +14,7 @@ from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLeas
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
-from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, ManagedCredentialIn, NasCredentialIn, NasCredentialRotateIn, NasDesiredConfigurationIn, NasDraftIn, NasIn, NasPlanApplyIn, NasRadiusAssignmentIn, NasRadiusAssignmentUpdateIn, NasReconcileIn, NasRegistrationConfirmIn, NasRegistrationVerifyIn, NasRollbackIn, NasUpdateManagementIn, NasUpdateIn, NasVerifyIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn
+from .schemas import AccountingRequest, AuthenticationRequest, AuthorizationRequest, CoAIn, CredentialIn, CredentialUpdateIn, HeartbeatIn, IpPoolIn, IpReservationIn, ManagedCredentialIn, NasCredentialIn, NasCredentialRotateIn, NasDesiredConfigurationIn, NasDraftIn, NasIn, NasPlanApplyIn, NasRadiusAssignmentIn, NasRadiusAssignmentUpdateIn, NasReconcileIn, NasRegistrationConfirmIn, NasRegistrationVerifyIn, NasRollbackIn, NasUpdateManagementIn, NasUpdateIn, NasVerifyIn, PasswordRotationIn, PolicyPreviewIn, PostAuthRequest, QuotaResetIn, RadiusResponse, RadiusServerGroupIn, RadiusServerGroupUpdateIn, RadiusServerIn, RadiusServerUpdateIn, SessionReconcileIn, TenantIn, TenantSyncIn
 from .security import decrypt_secret, encrypt_secret, hash_api_key, internal_service_auth, new_shared_secret
 from .services import accounting, audit, authenticate, authorize, correlation, outbox
 from .reconciliation import reconcile_nas_sessions
@@ -165,6 +165,27 @@ def post_auth(payload: PostAuthRequest): return RadiusResponse(outcome="OK", dec
 @app.post("/api/aaa/tenants", dependencies=[Depends(internal_service_auth)])
 def create_tenant(payload: TenantIn, session: Session = Depends(db)):
     tenant = Tenant(**payload.model_dump()); session.add(tenant); session.commit(); return {"id": str(tenant.id)}
+
+
+@app.put("/api/aaa/tenants/{tenant_id}", dependencies=[Depends(internal_service_auth)])
+def sync_tenant(tenant_id: UUID, payload: TenantSyncIn, session: Session = Depends(db)):
+    """Idempotently project the platform tenant into AAA using its real ID.
+
+    Cross-service tenant IDs must be identical: BSS plan bindings, OSS
+    subscriptions and AAA policy assignments all enforce tenant scoping.
+    """
+    tenant = session.get(Tenant, tenant_id)
+    if tenant is None:
+        tenant = Tenant(id=tenant_id, **payload.model_dump())
+        session.add(tenant)
+        action = "tenant.synced.created"
+    else:
+        for field, value in payload.model_dump().items():
+            setattr(tenant, field, value)
+        action = "tenant.synced.updated"
+    request_id = record_audit(session, tenant_id, action, str(tenant_id), {"name": payload.name})
+    session.commit()
+    return {"id": str(tenant.id), "created": action.endswith("created"), "correlation_id": request_id}
 @app.post("/api/nas", dependencies=[Depends(internal_service_auth)])
 def create_nas_draft(payload: NasDraftIn, session: Session = Depends(db)):
     if not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
