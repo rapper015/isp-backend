@@ -1,14 +1,72 @@
-# Milestone 1 — CRM Service: Customer Lifecycle API
+# Milestone 1 — Complete Frontend API Handoff
 
-Service: `crm-service`. Auth: `X-CRM-Service-Key` (internal service key) with
-management JWT fallback; all `/api/crm/*` routes are tenant-scoped.
+This is the **only Milestone 1 file a frontend developer or coding agent needs**.
+It combines authentication, setup order, screen workflows, request examples,
+and the complete CRM endpoint inventory.
+
+Service: `crm-service`. All `/api/crm/*` routes are tenant-scoped. Frontend
+clients authenticate with a Platform Core bearer token. `X-CRM-Service-Key` is
+strictly for trusted backend-to-backend traffic and must never be shipped in a
+browser application.
+
+## Access through the M1 Docker gateway
+
+Use `https://api.example.com` (local Docker: `http://localhost:4000`) and
+`Authorization: Bearer <access_token>`. Login/refresh/logout/me use the M0
+`/api/v1/auth/*` routes. Never expose CRM internal keys. The backend
+`CORS_ALLOWED_ORIGINS` must contain the exact frontend scheme, host, and port.
+
+## Frontend setup and screen map
+
+Create and retain IDs in this order: tenant → franchise → branch → lead or
+customer. Pass `tenant_id` exactly where the endpoint requires it.
+
+| Screen | Reads/actions | Required behaviour |
+| --- | --- | --- |
+| Leads | list/detail/history, assign, transition, qualify, feasibility, convert | Reload after transitions; preserve conversion idempotency key. |
+| Follow-ups | list, complete, reschedule | Use backend due/status and disable duplicate submits. |
+| Customer 360 | detail, 360, timeline, update, transition | Load sections independently; backend lifecycle is authoritative. |
+| Contacts/addresses | create/update/verify/history | Keep verification and address-version history visible. |
+| KYC/CAF | cases/documents, submit, request info, verify/approve/reject | Show controls only for current state and permission. |
+| Risk/merge | assess/override, duplicates, merge preview/merge | Always preview and confirmation-gate merge/override. |
+| Audit | audit/timeline | Read-only; show actor, time, and correlation ID. |
+
+Example lead body:
+
+```json
+{"first_name":"Asha","last_name":"Sharma","primary_mobile":"9876543210","primary_email":"asha@example.com","lead_source":"WEBSITE","branch_id":"<branch-uuid>","installation_address_draft":{"city":"Pune","state":"Maharashtra"}}
+```
+
+On 401 refresh once; on 403 show access denied; on 409 refresh state; map 422
+detail to the form; back off on 429; retain form inputs on 5xx.
+
+Use `http://<host>:4000/api/crm/*` for the CRM APIs in this document. The
+gateway also accepts `/api/v1/crm/*` as a compatibility prefix and forwards it
+to the same CRM routes. `crm-service` is not published directly.
+
+Authenticate a human operator with Platform Core first:
+
+```http
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{"username":"admin","password":"<PLATFORM_BOOTSTRAP_ADMIN_PASSWORD>"}
+```
+
+Send the returned `access_token` as `Authorization: Bearer <token>`. The
+gateway does not publish the CRM health endpoint. The frontend workflow and
+request examples are included above in this same file.
+
+Except for tenant creation, CRM requires `tenant_id` as a **query parameter**,
+including create and mutation requests. Do not put `tenant_id` inside CRM JSON
+bodies unless a future endpoint explicitly documents it.
 
 ## Health / status
 
 | Method | Path | Description |
 | --- | --- | --- |
-| GET | `/health` | Liveness probe |
-| GET | `/status` | Service phase/status |
+| GET | `/health` | Liveness probe; service-internal, not gateway-proxied |
+| GET | `/status` | Service phase/status; service-internal, not gateway-proxied |
 
 ## Tenants, franchises, branches
 
@@ -110,7 +168,10 @@ management JWT fallback; all `/api/crm/*` routes are tenant-scoped.
 | --- | --- | --- |
 | GET | `/api/crm/audit` | CRM audit log (tenant-scoped, filterable) |
 
-## Milestone-0 compatibility routes
+## Service-internal legacy compatibility routes
+
+These routes exist on `crm-service` but are not proxied by the M1 Docker
+gateway. The gateway exposes only `/api/v1/customers*` compatibility routes.
 
 | Method | Path | Description |
 | --- | --- | --- |

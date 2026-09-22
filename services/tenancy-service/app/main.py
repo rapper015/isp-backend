@@ -20,7 +20,7 @@ from . import models  # noqa: F401
 from .context import require_tenant
 from .database import Base, SessionLocal, engine
 from .domain.exceptions import TenancyError
-from .models import AuditLog, Tenant
+from .models import AuditLog, FeatureFlag, Tenant, TenantFeature
 from .schemas import (
     AdjustmentIn,
     AggregateIn,
@@ -308,6 +308,25 @@ def set_config(tenant_id: UUID, payload: ConfigIn, request: Request = None, sess
                                         actor=_actor(request))
         return {"id": str(row.id), "category": row.category, "version": row.version}
     return _run(session, fn, request)
+
+
+@app.get("/api/tenancy/tenants/{tenant_id}/features", dependencies=[Depends(management_auth)])
+def list_tenant_features(tenant_id: UUID, session: Session = Depends(db)):
+    tid = _tid(tenant_id)
+    tenant_service.get_tenant_or_404(session, tid)
+    flags = list(session.scalars(select(FeatureFlag).where(FeatureFlag.state == "ENABLED").order_by(FeatureFlag.name)))
+    overrides = {
+        row.flag_id: row
+        for row in session.scalars(select(TenantFeature).where(TenantFeature.tenant_id == tid))
+    }
+    return [{
+        "code": flag.code,
+        "name": flag.name,
+        "description": flag.description,
+        "platform_default": flag.platform_default,
+        "override": overrides[flag.id].enabled if flag.id in overrides else None,
+        "enabled": overrides[flag.id].enabled if flag.id in overrides else flag.platform_default,
+    } for flag in flags]
 
 
 @app.post("/api/tenancy/tenants/{tenant_id}/domains", status_code=status.HTTP_201_CREATED,

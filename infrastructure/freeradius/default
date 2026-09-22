@@ -1,0 +1,28 @@
+server default {
+    listen {
+        type = auth
+        ipaddr = *
+        port = 1812
+    }
+
+    listen {
+        type = acct
+        ipaddr = *
+        port = 1813
+    }
+
+    authorize {
+        backend_auth
+        if (reject) {
+            reject
+        }
+        if (fail) {
+            reject
+        }
+        accept
+    }
+
+    accounting {
+        backend_accounting
+    }
+}

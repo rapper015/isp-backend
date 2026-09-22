@@ -1,4 +1,4 @@
-# Milestone 9 — Assurance API (Observability & Service Assurance)
+# Milestone 9 — Complete Frontend API Handoff: Assurance
 
 Service: **`assurance-service`** · Base path: `/api/assurance/v1` (gateway
 `/api/v1/assurance/`) · DB prefix: `ass_` · Exchange: `assurance.events.v1`
@@ -157,3 +157,13 @@ network observations): `oss.order.*`, `billing.payment.*`, `crm.customer.*`,
 
 All envelopes carry `tenant_id`, `correlation_id`, `causation_id`,
 `idempotency_key` and the W3C `trace_context` slot.
+
+## Frontend integration handoff
+
+Use gateway `/api/v1/assurance/` (alias `/api/assurance/`) with a
+browser-compatible management bearer token. Internal ingest is backend-only.
+Show SLO/budget version, time window, freshness, and no-data state. Fetch the
+current detail/timeline before alert, incident, maintenance, postmortem, or
+approval mutations; confirm high-impact actions and refetch afterwards. On 401
+refresh once/retry once; handle 403/409/422/429 explicitly and preserve form
+data on 5xx.

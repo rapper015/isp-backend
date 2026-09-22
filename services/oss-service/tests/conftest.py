@@ -1,16 +1,25 @@
 """Hermetic test environment for the OSS service (Milestone 2)."""
 import os
 
-os.environ.setdefault("DATABASE_URL", "sqlite:///./test_oss.db")
+# Docker Compose injects the service's PostgreSQL URL into the test process.
+# Force a disposable database so the suite cannot mutate local development data.
+os.environ["DATABASE_URL"] = "sqlite:///./test_oss.db"
 os.environ.setdefault("OSS_INTERNAL_API_KEY", "test-internal-key")
 os.environ.setdefault("OSS_INTERNAL_API_KEYS", "test-internal-key")
 os.environ.setdefault("OSS_JWT_SECRET", "test-jwt-secret-0123456789abcdef0123456789abcdef")
+os.environ["PLATFORM_JWT_SECRET"] = os.environ["OSS_JWT_SECRET"]
 os.environ.setdefault("OSS_ENCRYPTION_KEY", "K2HWufrlmhAt4fF3tP7i3VFUXupdsxhhlRP9Aw7-Ctg=")
 os.environ.setdefault("OSS_AUTO_CREATE_SCHEMA", "true")
 os.environ.setdefault("REDIS_URL", "redis://127.0.0.1:6399/0")
-os.environ.setdefault("OSS_BSS_PLAN_VALIDATION_MODE", "fake")
+# Integration modes must be forced for a hermetic suite. ``setdefault`` lets
+# Docker Compose production-like values leak into tests and can make a local
+# test run call live BSS/AAA services.
+os.environ["OSS_BSS_PLAN_VALIDATION_MODE"] = "fake"
+os.environ["OSS_AAA_POLICY_ASSIGNMENT_MODE"] = "fake"
+os.environ["OSS_AAA_CREDENTIAL_MODE"] = "fake"
 
 import uuid  # noqa: E402
+from datetime import datetime, timedelta, timezone  # noqa: E402
 
 import jwt  # noqa: E402
 import pytest  # noqa: E402
@@ -74,13 +83,21 @@ def seeded_resources(session, tenant_id) -> None:
 
 
 def make_token(role: str = "OSS_MANAGER", tenant: uuid.UUID | None = None) -> str:
+    from app.security import ROLE_PERMISSIONS
+    now = datetime.now(timezone.utc)
     claims = {
-        "userId": "test-user",
+        "sub": "test-user",
         "role": role,
-        "permissions": [],
+        "roles": [role],
+        "permissions": sorted(ROLE_PERMISSIONS.get(role, set())),
         "tenant_id": str(tenant) if tenant else None,
+        "token_type": "access",
+        "jti": str(uuid.uuid4()),
+        "iat": now,
+        "exp": now + timedelta(hours=1),
+        "iss": "isp-platform",
     }
-    return jwt.encode(claims, os.environ["OSS_JWT_SECRET"], algorithm="HS256")
+    return jwt.encode(claims, os.environ["PLATFORM_JWT_SECRET"], algorithm="HS256")
 
 
 @pytest.fixture

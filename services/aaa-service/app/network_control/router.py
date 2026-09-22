@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -95,6 +95,18 @@ def _tenant(session: Session, tenant_id) -> Tenant:
     return tenant
 
 
+def _platform_scope(request: Request, tenant_id: uuid.UUID | None) -> uuid.UUID | None:
+    """Resolve list scope without forcing platform admins to choose a tenant."""
+    principal = getattr(request.state, "aaa_principal", None) or {}
+    permissions = set(principal.get("permissions", []))
+    claimed = principal.get("tenant_id")
+    if claimed and "*" not in permissions:
+        return uuid.UUID(str(claimed))
+    if tenant_id is None and principal and "*" not in permissions:
+        raise HTTPException(403, "platform-wide tenant access is not permitted")
+    return tenant_id
+
+
 def _tenant_item(session: Session, model, item_id, tenant_id, label: str):
     item = session.scalar(select(model).where(model.id == item_id, model.tenant_id == tenant_id))
     if item is None:
@@ -170,10 +182,14 @@ def create_policy(payload: PolicyCreate, session: Session = Depends(db)):
 
 
 @router.get("/policies")
-def list_policies(tenant_id: uuid.UUID, session: Session = Depends(db)):
+def list_policies(request: Request, tenant_id: uuid.UUID | None = None, session: Session = Depends(db)):
+    tenant_id = _platform_scope(request, tenant_id)
+    statement = select(NetworkPolicy)
+    if tenant_id:
+        statement = statement.where(NetworkPolicy.tenant_id == tenant_id)
     return [
-        {"id": str(item.id), "code": item.code, "name": item.name, "state": item.state, "current_version_id": str(item.current_version_id) if item.current_version_id else None}
-        for item in session.scalars(select(NetworkPolicy).where(NetworkPolicy.tenant_id == tenant_id).order_by(NetworkPolicy.created_at))
+        {"id": str(item.id), "tenant_id": str(item.tenant_id), "code": item.code, "name": item.name, "state": item.state, "current_version_id": str(item.current_version_id) if item.current_version_id else None}
+        for item in session.scalars(statement.order_by(NetworkPolicy.created_at))
     ]
 
 
@@ -453,8 +469,11 @@ def _session_tenant(session: Session, session_id, tenant_id) -> ActiveSession:
 
 
 @router.get("/network/sessions")
-def list_network_sessions(tenant_id: uuid.UUID, status: str | None = None, nas_id: uuid.UUID | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
-    stmt = select(ActiveSession).where(ActiveSession.tenant_id == tenant_id)
+def list_network_sessions(request: Request, tenant_id: uuid.UUID | None = None, status: str | None = None, nas_id: uuid.UUID | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    tenant_id = _platform_scope(request, tenant_id)
+    stmt = select(ActiveSession)
+    if tenant_id:
+        stmt = stmt.where(ActiveSession.tenant_id == tenant_id)
     if status:
         stmt = stmt.where(ActiveSession.status == status)
     if nas_id:
@@ -468,6 +487,7 @@ def list_network_sessions(tenant_id: uuid.UUID, status: str | None = None, nas_i
 def _session_json(item: ActiveSession) -> dict:
     return {
         "id": str(item.id),
+        "tenant_id": str(item.tenant_id),
         "session_id": item.session_id,
         "username": item.username,
         "status": item.status,
@@ -656,14 +676,17 @@ def create_control(payload: ControlActionCreate, session: Session = Depends(db))
 
 
 @router.get("/control-actions")
-def list_control_actions(tenant_id: uuid.UUID, status: str | None = None, action_type: str | None = None, limit: int = 100, session: Session = Depends(db)):
-    stmt = select(ControlAction).where(ControlAction.tenant_id == tenant_id)
+def list_control_actions(request: Request, tenant_id: uuid.UUID | None = None, status: str | None = None, action_type: str | None = None, limit: int = 100, session: Session = Depends(db)):
+    tenant_id = _platform_scope(request, tenant_id)
+    stmt = select(ControlAction)
+    if tenant_id:
+        stmt = stmt.where(ControlAction.tenant_id == tenant_id)
     if status:
         stmt = stmt.where(ControlAction.status == status)
     if action_type:
         stmt = stmt.where(ControlAction.action_type == action_type)
     return [
-        {"id": str(item.id), "action_type": item.action_type, "status": item.status, "strategy": item.strategy, "trigger": item.trigger, "attempts": item.attempts, "latency_ms": item.latency_ms, "correlation_id": item.correlation_id, "created_at": item.created_at}
+        {"id": str(item.id), "tenant_id": str(item.tenant_id), "action_type": item.action_type, "status": item.status, "strategy": item.strategy, "trigger": item.trigger, "attempts": item.attempts, "latency_ms": item.latency_ms, "correlation_id": item.correlation_id, "created_at": item.created_at}
         for item in session.scalars(stmt.order_by(ControlAction.created_at.desc()).limit(min(max(limit, 1), 200)))
     ]
 
@@ -954,10 +977,14 @@ def create_bandwidth_profile(payload: BandwidthProfileCreate, session: Session =
 
 
 @router.get("/bandwidth-profiles")
-def list_bandwidth_profiles(tenant_id: uuid.UUID, session: Session = Depends(db)):
+def list_bandwidth_profiles(request: Request, tenant_id: uuid.UUID | None = None, session: Session = Depends(db)):
+    tenant_id = _platform_scope(request, tenant_id)
+    stmt = select(BandwidthProfile)
+    if tenant_id:
+        stmt = stmt.where(BandwidthProfile.tenant_id == tenant_id)
     return [
-        {"id": str(item.id), "code": item.code, "name": item.name, "upload_kbps": item.upload_kbps, "download_kbps": item.download_kbps, "burst_upload_kbps": item.burst_upload_kbps, "burst_download_kbps": item.burst_download_kbps, "priority": item.priority}
-        for item in session.scalars(select(BandwidthProfile).where(BandwidthProfile.tenant_id == tenant_id).order_by(BandwidthProfile.code))
+        {"id": str(item.id), "tenant_id": str(item.tenant_id), "code": item.code, "name": item.name, "upload_kbps": item.upload_kbps, "download_kbps": item.download_kbps, "burst_upload_kbps": item.burst_upload_kbps, "burst_download_kbps": item.burst_download_kbps, "priority": item.priority}
+        for item in session.scalars(stmt.order_by(BandwidthProfile.code))
     ]
 
 
@@ -972,10 +999,14 @@ def create_traffic_class(payload: TrafficClassCreate, session: Session = Depends
 
 
 @router.get("/traffic-classes")
-def list_traffic_classes(tenant_id: uuid.UUID, session: Session = Depends(db)):
+def list_traffic_classes(request: Request, tenant_id: uuid.UUID | None = None, session: Session = Depends(db)):
+    tenant_id = _platform_scope(request, tenant_id)
+    stmt = select(TrafficClass)
+    if tenant_id:
+        stmt = stmt.where(TrafficClass.tenant_id == tenant_id)
     return [
-        {"id": str(item.id), "code": item.code, "name": item.name, "dscp": item.dscp, "protocol": item.protocol, "priority": item.priority, "packet_mark": item.packet_mark}
-        for item in session.scalars(select(TrafficClass).where(TrafficClass.tenant_id == tenant_id).order_by(TrafficClass.code))
+        {"id": str(item.id), "tenant_id": str(item.tenant_id), "code": item.code, "name": item.name, "dscp": item.dscp, "protocol": item.protocol, "priority": item.priority, "packet_mark": item.packet_mark}
+        for item in session.scalars(stmt.order_by(TrafficClass.code))
     ]
 
 
@@ -992,10 +1023,14 @@ def create_qos_profile(payload: QosProfileCreate, session: Session = Depends(db)
 
 
 @router.get("/qos-profiles")
-def list_qos_profiles(tenant_id: uuid.UUID, session: Session = Depends(db)):
+def list_qos_profiles(request: Request, tenant_id: uuid.UUID | None = None, session: Session = Depends(db)):
+    tenant_id = _platform_scope(request, tenant_id)
+    stmt = select(QosProfile)
+    if tenant_id:
+        stmt = stmt.where(QosProfile.tenant_id == tenant_id)
     return [
-        {"id": str(item.id), "code": item.code, "name": item.name, "tier": item.tier, "traffic_class_ids": item.traffic_class_ids}
-        for item in session.scalars(select(QosProfile).where(QosProfile.tenant_id == tenant_id).order_by(QosProfile.code))
+        {"id": str(item.id), "tenant_id": str(item.tenant_id), "code": item.code, "name": item.name, "tier": item.tier, "traffic_class_ids": item.traffic_class_ids}
+        for item in session.scalars(stmt.order_by(QosProfile.code))
     ]
 
 
@@ -1023,10 +1058,14 @@ def create_fup_policy(payload: FupPolicyCreate, session: Session = Depends(db)):
 
 
 @router.get("/fup-policies")
-def list_fup_policies(tenant_id: uuid.UUID, session: Session = Depends(db)):
+def list_fup_policies(request: Request, tenant_id: uuid.UUID | None = None, session: Session = Depends(db)):
+    tenant_id = _platform_scope(request, tenant_id)
+    stmt = select(FairUsagePolicy)
+    if tenant_id:
+        stmt = stmt.where(FairUsagePolicy.tenant_id == tenant_id)
     return [
-        {"id": str(item.id), "code": item.code, "name": item.name, "cycle": item.cycle, "thresholds": item.thresholds, "reset_rule": item.reset_rule, "grace_bytes": item.grace_bytes}
-        for item in session.scalars(select(FairUsagePolicy).where(FairUsagePolicy.tenant_id == tenant_id).order_by(FairUsagePolicy.code))
+        {"id": str(item.id), "tenant_id": str(item.tenant_id), "code": item.code, "name": item.name, "cycle": item.cycle, "thresholds": item.thresholds, "reset_rule": item.reset_rule, "grace_bytes": item.grace_bytes}
+        for item in session.scalars(stmt.order_by(FairUsagePolicy.code))
     ]
 
 

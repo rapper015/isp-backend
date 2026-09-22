@@ -1,5 +1,8 @@
 # Cumulative Milestone Model
 
+For the production upgrade procedure from an already deployed Milestone 1,
+see [VPS deployment guide: Milestone 1 to Milestone 10](deployment/milestone-1-to-10-vps-upgrade.md).
+
 The platform is delivered in milestones **0–10**. Every milestone branch is
 **cumulative**: milestone-N contains *everything* from milestones 0..N, plus
 that milestone's own deliverables.

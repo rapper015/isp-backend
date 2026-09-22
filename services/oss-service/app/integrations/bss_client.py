@@ -25,7 +25,21 @@ class BssClient(Adapter):
         # of a running BSS container. Deployments use the live BSS service.
         if getenv("OSS_BSS_PLAN_VALIDATION_MODE", "live").lower() == "fake":
             if plan_reference in VALID_PLANS:
-                return ValidationResult(ok=True, checks={"plan_valid": True, "source": "test-double"})
+                # Keep the test-double contract aligned with live BSS. A plan
+                # is fulfilment-ready only when it pins an active AAA policy
+                # version; otherwise the saga would pass validation and then
+                # compensate during access configuration.
+                return ValidationResult(
+                    ok=True,
+                    checks={
+                        "plan_valid": True,
+                        "source": "test-double",
+                        "network_policy": {
+                            "policy_version_id": "00000000-0000-4000-8000-000000000201",
+                            "status": "ACTIVE",
+                        },
+                    },
+                )
             return ValidationResult(ok=False, errors=["selected plan is not available"], checks={"plan_valid": False})
 
         base_url = getenv("OSS_BSS_BASE_URL", "http://bss-service:8000").rstrip("/")

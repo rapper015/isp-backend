@@ -224,10 +224,14 @@ def redact(value: dict) -> dict:
 
 
 def normalize_radius_entry(raw: dict) -> dict:
+    # routeros-api cleans the wire key ``.id`` to ``id``. Normalize RouterOS'
+    # vendor term ``ppp`` back to the platform's ``pppoe`` vocabulary so
+    # desired-state comparison remains stable after an apply.
+    service_names = {"ppp": "pppoe"}
     return {
-        "remote_id": _str(raw.get(".id")),
+        "remote_id": _str(raw.get(".id") or raw.get("id")),
         "address": _str(raw.get("address")),
-        "service": _services(raw.get("service")),
+        "service": [service_names.get(item.casefold(), item) for item in _services(raw.get("service"))],
         "src_address": _str(raw.get("src-address")) or None,
         "authentication_port": _int(raw.get("authentication-port"), 1812),
         "accounting_port": _int(raw.get("accounting-port"), 1813),
@@ -500,6 +504,8 @@ class RouterOSApiAdapter(RouterOSAdapter):
     # -- connection ---------------------------------------------------------
 
     def connect(self) -> None:
+        if self._api is not None:
+            return
         from routeros_api import RouterOsApiPool
         from routeros_api import exceptions as router_exceptions
         try:
@@ -560,7 +566,7 @@ class RouterOSApiAdapter(RouterOSAdapter):
 
     def _resource(self, path: str):
         if self._api is None:
-            raise RouterOSConnectionError(code="CONNECTION_FAILED", message="adapter is not connected")
+            self.connect()
         return self._api.get_resource(path)
 
     def _call(self, path: str, command: str, arguments: dict[str, Any] | None = None,
@@ -572,6 +578,12 @@ class RouterOSApiAdapter(RouterOSAdapter):
             try:
                 return resource.call(command, arguments=arguments or {}, queries=queries or {})
             except Exception as error:  # noqa: BLE001 - mapped below
+                # RouterOS 7.23+ emits ``!empty`` for a successful print with
+                # no rows. Older routeros_api releases do not recognize that
+                # reply type and raise a parsing error instead.
+                words = [word for arg in getattr(error, "args", ()) if isinstance(arg, list) for word in arg]
+                if b"!empty" in words:
+                    return []
                 self._map_command_error(error)
 
         return run()
@@ -735,7 +747,12 @@ class RouterOSApiAdapter(RouterOSAdapter):
             arguments["secret"] = str(entry["secret"])
         services = entry.get("services", entry.get("service"))
         if services:
-            arguments["service"] = ",".join(str(item) for item in services)
+            # The platform models the access technology as ``pppoe`` while
+            # RouterOS groups PPPoE under its RADIUS ``ppp`` service.
+            service_names = {"pppoe": "ppp"}
+            arguments["service"] = ",".join(
+                service_names.get(str(item).casefold(), str(item)) for item in services
+            )
         if entry.get("src_address"):
             arguments["src-address"] = str(entry["src_address"])
         auth_port = entry.get("auth_port", entry.get("authentication_port"))
@@ -745,7 +762,10 @@ class RouterOSApiAdapter(RouterOSAdapter):
         if accounting_port is not None:
             arguments["accounting-port"] = str(accounting_port)
         if entry.get("timeout") is not None:
-            arguments["timeout"] = str(entry["timeout"])
+            # Platform timeout values are milliseconds. RouterOS expects an
+            # interval and treats an unqualified integer as seconds.
+            timeout = entry["timeout"]
+            arguments["timeout"] = f"{int(timeout)}ms" if isinstance(timeout, (int, float)) or str(timeout).isdigit() else str(timeout)
         if entry.get("realm"):
             arguments["realm"] = str(entry["realm"])
         if entry.get("domain"):

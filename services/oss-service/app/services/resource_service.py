@@ -66,8 +66,10 @@ class ResourceService:
             count += 1
         return count
 
-    def capacity(self, tenant_id: uuid.UUID, resource_type: str | None = None) -> dict:
-        stmt = select(ResourceInventory.status, ResourceInventory.resource_type).where(ResourceInventory.tenant_id == tenant_id)
+    def capacity(self, tenant_id: uuid.UUID | None = None, resource_type: str | None = None) -> dict:
+        stmt = select(ResourceInventory.status, ResourceInventory.resource_type)
+        if tenant_id:
+            stmt = stmt.where(ResourceInventory.tenant_id == tenant_id)
         if resource_type:
             stmt = stmt.where(ResourceInventory.resource_type == resource_type)
         counts: dict[str, dict[str, int]] = {}

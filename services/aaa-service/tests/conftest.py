@@ -7,13 +7,13 @@ so the suite never accumulates state across runs.
 """
 import os
 
-os.environ.setdefault("DATABASE_URL", "sqlite:///./test_aaa.db")
-os.environ.setdefault("AAA_INTERNAL_API_KEY", "test-internal-key")
-os.environ.setdefault("AAA_INTERNAL_API_KEYS", "test-internal-key")
-os.environ.setdefault("AAA_ENCRYPTION_KEY", "K2HWufrlmhAt4fF3tP7i3VFUXupdsxhhlRP9Aw7-Ctg=")
-os.environ.setdefault("NAS_APPROVED_NETWORKS", "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,10.50.0.0/16,198.51.100.0/24,2001:db8::/32")
-os.environ.setdefault("AAA_AUTO_CREATE_SCHEMA", "true")
-os.environ.setdefault("AAA_ROUTEROS_ADAPTER", "fake")
+os.environ["DATABASE_URL"] = "sqlite:///./test_aaa.db"
+os.environ["AAA_INTERNAL_API_KEY"] = "test-internal-key"
+os.environ["AAA_INTERNAL_API_KEYS"] = "test-internal-key"
+os.environ["AAA_ENCRYPTION_KEY"] = "K2HWufrlmhAt4fF3tP7i3VFUXupdsxhhlRP9Aw7-Ctg="
+os.environ["NAS_APPROVED_NETWORKS"] = "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,10.50.0.0/16,198.51.100.0/24,2001:db8::/32"
+os.environ["AAA_AUTO_CREATE_SCHEMA"] = "true"
+os.environ["AAA_ROUTEROS_ADAPTER"] = "fake"
 
 import pytest  # noqa: E402
 

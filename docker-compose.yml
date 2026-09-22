@@ -133,6 +133,7 @@ services:
       <<: *domain-environment
       SERVICE_NAME: oss-service
       DATABASE_URL: postgresql://isp:isp@postgres:5432/oss
+      PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       OSS_BSS_BASE_URL: http://bss-service:8000
       OSS_AAA_BASE_URL: http://aaa-service:8000
       OSS_AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
@@ -163,6 +164,7 @@ services:
       AAA_OUTBOX_BATCH_SIZE: ${AAA_OUTBOX_BATCH_SIZE:-100}
       AAA_COMMAND_MAX_ATTEMPTS: ${AAA_COMMAND_MAX_ATTEMPTS:-3}
       AAA_WORKER_INTERVAL_SECONDS: ${AAA_WORKER_INTERVAL_SECONDS:-5}
+    networks: [platform, nas-management]
 
   aaa-worker:
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
@@ -183,7 +185,28 @@ services:
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
       valkey: {condition: service_healthy}
-    networks: [platform]
+    networks: [platform, nas-management]
+
+  freeradius:
+    build:
+      context: .
+      dockerfile: infrastructure/freeradius/Dockerfile
+    environment:
+      AAA_BASE_URL: http://aaa-service:8000
+      AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
+      FREERADIUS_CLIENT_SECRET: ${FREERADIUS_CLIENT_SECRET:?set FREERADIUS_CLIENT_SECRET in .env}
+    depends_on:
+      aaa-service:
+        condition: service_healthy
+    ports:
+      - "${RADIUS_BIND_ADDRESS:-0.0.0.0}:1812:1812/udp"
+      - "${RADIUS_BIND_ADDRESS:-0.0.0.0}:1813:1813/udp"
+    healthcheck:
+      test: ["CMD", "/opt/sbin/radiusd", "-XC"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [platform, nas-management]
 
   platform-core-service:
     <<: *domain-service
@@ -303,12 +326,20 @@ services:
   tenancy-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: tenancy-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: tenancy-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/tenancy}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: tenancy-service
+      DATABASE_URL: postgresql://isp:isp@postgres:5432/tenancy
+      TENANCY_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
 
   tenancy-worker:
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: tenancy-service}}
     command: ["python", "-m", "app.worker_runner"]
-    environment: {<<: *domain-environment, SERVICE_NAME: tenancy-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/tenancy}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: tenancy-worker
+      DATABASE_URL: postgresql://isp:isp@postgres:5432/tenancy
+      TENANCY_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
     depends_on:
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
@@ -430,6 +461,7 @@ services:
 
 networks:
   edge:
+  nas-management:
   platform:
     internal: true
 

@@ -4,8 +4,10 @@ from datetime import datetime, timedelta, timezone
 from os import getenv
 from uuid import UUID
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
+from isp_shared.cors import cors_allowed_origins
 from .database import SessionLocal
 from .models import Permission, PlatformUser, RefreshToken, Role, RolePermission, SecurityAuditEvent, ServiceAccount, UserRole
 from .schemas import AdminPasswordResetIn, LoginIn, PasswordChangeIn, RefreshIn, ServiceAccountCreateIn, UserCreateIn
@@ -65,6 +67,13 @@ async def lifespan(_):
         session.commit()
     yield
 app = FastAPI(title="Platform Core", version="1.0.0", docs_url="/internal/docs", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_allowed_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 @app.get("/health")
 def health(): return {"status":"ok", "service":"platform-core-service"}
 @app.post("/api/v1/auth/login")

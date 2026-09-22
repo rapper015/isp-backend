@@ -95,7 +95,7 @@ async def _jwt_management_auth(request: Request) -> None:
         if supplied and not secrets.compare_digest(str(claimed_tenant), str(supplied)): raise HTTPException(403, "tenant access denied")
     remote = request.client.host if request.client else "unknown"
     if not limited(f"management:{remote}:{request.url.path}", int(getenv("AAA_MANAGEMENT_RATE_LIMIT", "120")), 60): raise HTTPException(429, "rate limit exceeded")
-    request.state.aaa_principal = {"subject": claims["sub"], "roles": claims.get("roles", []), "permissions": sorted(permissions)}
+    request.state.aaa_principal = {"subject": claims["sub"], "tenant_id": claimed_tenant, "roles": claims.get("roles", []), "permissions": sorted(permissions)}
 
 async def internal_service_auth(request: Request) -> None:
     supplied = request.headers.get("X-AAA-Service-Key", "")
@@ -113,3 +113,4 @@ async def internal_service_auth(request: Request) -> None:
     if mtls_identities and request.headers.get("X-Client-Certificate-Identity", "") not in mtls_identities: raise HTTPException(401, "mTLS identity not allowed")
     remote = request.client.host if request.client else "unknown"
     if not limited(f"internal:{remote}:{request.url.path}", int(getenv("AAA_INTERNAL_RATE_LIMIT", "300")), 60): raise HTTPException(429, "rate limit exceeded")
+    request.state.aaa_principal = {"subject": "internal-service", "roles": ["SERVICE"], "permissions": ["*"]}

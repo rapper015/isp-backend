@@ -10,7 +10,7 @@ def test_live_plan_validation_uses_bss_service(monkeypatch):
 
     def fake_get(url, timeout):
         requested_urls.append((url, timeout))
-        return httpx.Response(200, json={"id": "plan-1", "plan_code": "HOME-100", "status": "active"})
+        return httpx.Response(200, json={"id": "plan-1", "plan_code": "HOME-100", "status": "active", "network_policy": {"policy_version_id": "policy-version-1", "status": "ACTIVE"}})
 
     monkeypatch.setattr("app.integrations.bss_client.httpx.get", fake_get)
     result = BssClient().validate_plan("plan-1")
@@ -29,7 +29,7 @@ def test_live_plan_validation_reports_missing_or_inactive_plan(monkeypatch):
     assert missing.ok is False
     assert missing.errors == ["selected plan was not found in BSS"]
 
-    monkeypatch.setattr("app.integrations.bss_client.httpx.get", lambda *_args, **_kwargs: httpx.Response(200, json={"status": "inactive"}))
+    monkeypatch.setattr("app.integrations.bss_client.httpx.get", lambda *_args, **_kwargs: httpx.Response(200, json={"status": "inactive", "network_policy": {"policy_version_id": "policy-version-1", "status": "ACTIVE"}}))
     inactive = BssClient().validate_plan("inactive")
     assert inactive.ok is False
     assert inactive.errors == ["selected plan is inactive"]

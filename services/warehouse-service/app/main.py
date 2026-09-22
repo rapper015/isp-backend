@@ -31,6 +31,7 @@ def _tid(request: Request):
 svc = AnalyticsService()
 
 
+@app.get("/health")
 @app.get("/api/warehouse/health")
 def health():
     return {"status": "ok", "service": getenv("SERVICE_NAME", "warehouse-service")}

@@ -1,12 +1,12 @@
 """Hermetic test environment for the CRM service."""
 import os
 
-os.environ.setdefault("DATABASE_URL", "sqlite:///./test_crm.db")
-os.environ.setdefault("CRM_INTERNAL_API_KEY", "test-internal-key")
-os.environ.setdefault("CRM_INTERNAL_API_KEYS", "test-internal-key")
-os.environ.setdefault("CRM_ENCRYPTION_KEY", "K2HWufrlmhAt4fF3tP7i3VFUXupdsxhhlRP9Aw7-Ctg=")
-os.environ.setdefault("CRM_AUTO_CREATE_SCHEMA", "true")
-os.environ.setdefault("VALKEY_URL", "redis://127.0.0.1:6379/0")
+os.environ["DATABASE_URL"] = "sqlite:///./test_crm.db"
+os.environ["CRM_INTERNAL_API_KEY"] = "test-internal-key"
+os.environ["CRM_INTERNAL_API_KEYS"] = "test-internal-key"
+os.environ["CRM_ENCRYPTION_KEY"] = "K2HWufrlmhAt4fF3tP7i3VFUXupdsxhhlRP9Aw7-Ctg="
+os.environ["CRM_AUTO_CREATE_SCHEMA"] = "true"
+os.environ["VALKEY_URL"] = "redis://127.0.0.1:6379/0"
 
 import pytest  # noqa: E402
 

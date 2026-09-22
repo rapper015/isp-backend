@@ -55,12 +55,15 @@ def build_adapter(nas: Nas, credential: NasCredential | None) -> RouterOSAdapter
     try:
         parsed = parse_routeros_version(version or "")
         if parsed and parsed[0] in (6, 7):
-            return adapter_for_version(version, host=host, username=username, password=password, port=port, use_ssl=nas.management_protocol == "api_ssl", tls_verify=bool(tls.get("verify", nas.tls_verify)), verify_hostname=bool(tls.get("verify_hostname", True)), connection_timeout=float(getenv("AAA_ROUTEROS_CONNECT_TIMEOUT", "5")), command_timeout=float(getenv("AAA_ROUTEROS_COMMAND_TIMEOUT", "10")))
+            options = {"host": host, "username": username, "password": password, "port": port, "use_ssl": nas.management_protocol == "api_ssl", "tls_verify": bool(tls.get("verify", nas.tls_verify)), "verify_hostname": bool(tls.get("verify_hostname", True)), "connection_timeout": float(getenv("AAA_ROUTEROS_CONNECT_TIMEOUT", "5")), "command_timeout": float(getenv("AAA_ROUTEROS_COMMAND_TIMEOUT", "10"))}
+            if parsed[0] == 7:
+                options["plaintext_login"] = nas.api_mode != "legacy"
+            return adapter_for_version(version, **options)
         return adapter_for_version(version, host=host, username=username, password=password, port=port, use_ssl=nas.management_protocol == "api_ssl", tls_verify=bool(tls.get("verify", nas.tls_verify)), verify_hostname=bool(tls.get("verify_hostname", True)))
     except RouterOSUnsupportedVersion:
         # A version may not be known yet; attempt a generic adapter.
         from .routeros import RouterOSApiAdapter
-        return RouterOSApiAdapter(host=host, username=username, password=password, port=port, use_ssl=nas.management_protocol == "api_ssl", tls_verify=bool(tls.get("verify", nas.tls_verify)), verify_hostname=bool(tls.get("verify_hostname", True)))
+        return RouterOSApiAdapter(host=host, username=username, password=password, port=port, use_ssl=nas.management_protocol == "api_ssl", tls_verify=bool(tls.get("verify", nas.tls_verify)), verify_hostname=bool(tls.get("verify_hostname", True)), plaintext_login=nas.api_mode != "legacy")
 
 
 def safe_routeros_error(error: RouterOSError) -> str:

@@ -40,6 +40,9 @@ IDENTITY_REGISTRATION_ROLE=CRM_MANAGER
 # First admin (also created at startup).
 IDENTITY_BOOTSTRAP_ADMIN_USERNAME=admin
 IDENTITY_BOOTSTRAP_ADMIN_PASSWORD=change-me-admin-password
+
+# Comma-separated frontend origins permitted by the browser API.
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 ```
 
 > **Postgres credentials (important).** The compose wires `POSTGRES_USER` /

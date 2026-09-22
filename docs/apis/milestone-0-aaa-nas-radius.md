@@ -1,14 +1,59 @@
-# Milestone 0 — AAA Service: NAS & RADIUS API
+# Milestone 0 — Complete Frontend API Handoff
+
+This is the **only Milestone 0 file a frontend developer or coding agent needs**.
+It combines operator authentication, platform administration, AAA/NAS screens,
+route reachability, state workflows, and the complete endpoint inventory.
+
+## Frontend base URL and security
+
+Use the gateway base URL, for example `https://api.example.com` or local
+`http://localhost:4000`. Never call Docker service names or `/internal/*` from
+the browser. Never expose internal service keys, NAS credentials, RADIUS shared
+secrets, or database secrets. Protected requests use
+`Authorization: Bearer <access_token>`.
+
+## Operator authentication and platform administration
+
+| Method | Public path | Auth/permission | Frontend purpose |
+| --- | --- | --- | --- |
+| POST | `/api/v1/auth/login` | Public | Send username/password; retain token pair and expiry. |
+| POST | `/api/v1/auth/refresh` | Refresh-token body | Rotate tokens; retry the original request at most once. |
+| POST | `/api/v1/auth/logout` | Refresh-token body | Revoke refresh token and clear session. |
+| GET | `/api/v1/auth/me` | Bearer | Load identity, roles, and permissions. |
+| POST | `/api/v1/auth/change-password` | Bearer | Change password and treat older sessions as invalid. |
+| POST | `/api/v1/platform/users` | `platform.users.create` | Create an operator and assign valid roles. |
+| POST | `/api/v1/platform/users/{user_id}/reset-password` | `platform.users.update` | Reset password and revoke refresh sessions. |
+| POST | `/api/v1/platform/service-accounts` | `platform.roles.manage` | Secret is returned once; never persist it in browser storage. |
+
+## Standard frontend failures
+
+| Status | Required behaviour |
+| --- | --- |
+| 401 | Refresh once, retry once, otherwise sign out. |
+| 403 | Show access/tenant denial; do not change tenant automatically. |
+| 404 | Return to list and show resource unavailable. |
+| 409 | Refresh state; retain the idempotency key for the same intent. |
+| 422 | Keep inputs and render validation detail. |
+| 429 | Respect retry delay and back off. |
+| 5xx | Keep form data and report the correlation ID. |
 
 Service: `aaa-service`. Base docs: `/internal/docs`. Auth: `X-AAA-Service-Key`
 (internal service key) unless noted.
+
+## Access through the M0/M1 Docker gateway
+
+The service is not published directly. For an externally reachable API use
+`http://<host>:4000/api/aaa/*`. For example, the canonical in-service
+`/api/nas/{nas_id}` API is available through the gateway as
+`/api/aaa/nas/{nas_id}`. `/api/nas/*`, `/health`, `/status`, and `/internal/*`
+are service-internal paths.
 
 ## Health / status
 
 | Method | Path | Description |
 | --- | --- | --- |
-| GET | `/health` | Liveness probe |
-| GET | `/status` | Service phase/status |
+| GET | `/health` | Liveness probe; service-internal, not gateway-proxied |
+| GET | `/status` | Service phase/status; service-internal, not gateway-proxied |
 
 ## Internal RADIUS (used by the RADIUS server / FreeRADIUS integration)
 
@@ -162,7 +207,10 @@ Service: `aaa-service`. Base docs: `/internal/docs`. Auth: `X-AAA-Service-Key`
 | POST | `/api/aaa/usage/subscribers/{subscriber_id}/reset` | Reset quota/FUP for a period |
 | GET | `/api/aaa/audit` | Audit log (tenant-scoped, filterable) |
 
-## Legacy alias routes (temporary compatibility)
+## Gateway aliases
 
-`/api/aaa/nas*` mirrors `/api/nas*` (same semantics). See the canonical routes
-above for details.
+`/api/aaa/nas*` mirrors `/api/nas*` and is the externally reachable form in
+the Docker deployment. See the canonical routes above for payload semantics.
+
+Only `/api/aaa/*`, `/api/v1/auth/*`, and `/api/v1/platform/*` are browser
+gateway paths. Service health/status and `/internal/radius/*` remain internal.

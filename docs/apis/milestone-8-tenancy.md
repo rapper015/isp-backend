@@ -1,4 +1,4 @@
-# Milestone 8 — Tenancy Service: Franchise & Multi-Tenant Management API
+# Milestone 8 — Complete Frontend API Handoff: Tenancy & Franchise
 
 Service: `tenancy-service`. Auth: management JWT (`TENANCY_JWT_SECRET`) with RBAC for all `/api/tenancy/*`; `X-Internal-API-Key` for inbound event ingestion. Tenant-owned operations require a validated `TenantContext` — `tenant_id` query parameters are reconciled against the authenticated JWT principal and any conflict is rejected (missing context fails closed).
 
@@ -145,3 +145,13 @@ settlement.paid, wallet.entry, customer.transferred, ownership.changed.
 Consumed (idempotent, tenant-validated): `billing.payment.captured.v1`,
 `billing.payment.refunded.v1`, `billing.invoice.issued.v1`,
 `crm.customer.activated.v1`, `oss.order.activated.v1`.
+
+## Frontend integration handoff
+
+Use gateway base `/api/tenancy/` (or `/api/v1/tenancy/`) with a management
+bearer token. A selected tenant never grants access; backend tenant mismatch is
+authoritative. Confirm reparenting, transfers, permission changes, payouts,
+locks, reversals, and impersonation; refetch state after every action. Secrets,
+API credentials, and service-account secrets are copy-once values—never persist
+or log them in the browser. Ledger, commission, and settlement records are
+immutable; use their adjustment/reversal workflows rather than edit/delete.

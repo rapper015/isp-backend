@@ -1,0 +1,9 @@
+exec backend_accounting {
+    wait = yes
+    program = "/usr/local/bin/aaa_adapter.py accounting \"%{User-Name}\" \"%{NAS-IP-Address}\" \"%{NAS-Identifier}\" \"%{Acct-Session-Id}\" \"%{Acct-Status-Type}\" \"%{Acct-Input-Octets}\" \"%{Acct-Input-Gigawords}\" \"%{Acct-Output-Octets}\" \"%{Acct-Output-Gigawords}\" \"%{Framed-IP-Address}\""
+    input_pairs = request
+    output_pairs = reply
+    shell_escape = yes
+    timeout = 4
+}
+

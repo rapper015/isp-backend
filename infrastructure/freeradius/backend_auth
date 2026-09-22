@@ -1,0 +1,9 @@
+exec backend_auth {
+    wait = yes
+    program = "/usr/local/bin/aaa_adapter.py auth \"%{User-Name}\" \"%{User-Password}\" \"%{NAS-IP-Address}\" \"%{NAS-Identifier}\" \"%{Calling-Station-Id}\""
+    input_pairs = request
+    output_pairs = reply
+    shell_escape = yes
+    timeout = 4
+}
+

@@ -1,7 +1,10 @@
 """Adapter tests against the in-memory fake router and pure capability logic."""
+from types import SimpleNamespace
+
 import pytest
 
-from app.routeros import (FakeRouterOSAdapter, RouterOSAuthenticationError, RouterOSCommandError, RouterOSPermissionError, adapter_for_version, detect_capability_flags, parse_routeros_version, redact)
+from app.nas_service import build_adapter
+from app.routeros import (FakeRouterOSAdapter, RouterOSApiAdapter, RouterOSAuthenticationError, RouterOSCommandError, RouterOSPermissionError, adapter_for_version, detect_capability_flags, normalize_radius_entry, parse_routeros_version, redact)
 
 
 def test_connection_test_returns_normalized_result():
@@ -122,3 +125,55 @@ def test_active_sessions_are_normalized():
     adapter.active_ppp.append({"name": "user1", "address": "10.0.0.5", "service": "pppoe", "uptime": "1m"})
     assert adapter.get_active_ppp_sessions()[0]["name"] == "user1"
     assert adapter.get_active_hotspot_sessions() == []
+
+
+def test_routeros_7_auto_mode_uses_modern_plaintext_login(monkeypatch):
+    monkeypatch.setattr("app.nas_service.decrypt_secret", lambda value: value)
+    monkeypatch.delenv("AAA_ROUTEROS_ADAPTER", raising=False)
+    nas = SimpleNamespace(
+        management_host="10.0.0.1", source_ip="10.0.0.1", management_port=8728,
+        management_protocol="api", tls_verify=False, routeros_version=None,
+        api_mode="auto",
+    )
+    credential = SimpleNamespace(
+        username_ciphertext="api-user", secret_ciphertext="api-password",
+        api_port=8728, tls_settings={},
+    )
+
+    adapter = build_adapter(nas, credential)
+
+    assert isinstance(adapter, RouterOSApiAdapter)
+    assert adapter.plaintext_login is True
+
+
+def test_radius_entry_translates_pppoe_to_routeros_ppp():
+    adapter = RouterOSApiAdapter("router.example", "admin", "password")
+
+    arguments = adapter._radius_entry_arguments(
+        {"address": "192.0.2.10", "services": ["pppoe", "login"], "timeout": 3000}
+    )
+
+    assert arguments["service"] == "ppp,login"
+    assert arguments["timeout"] == "3000ms"
+
+
+def test_radius_entry_normalizes_routeros_ppp_and_cleaned_id():
+    entry = normalize_radius_entry(
+        {"id": "*1", "address": "192.0.2.10", "service": "ppp,login"}
+    )
+
+    assert entry["remote_id"] == "*1"
+    assert entry["service"] == ["pppoe", "login"]
+
+
+def test_routeros_723_empty_reply_is_an_empty_result(monkeypatch):
+    adapter = RouterOSApiAdapter("10.0.0.1", "user", "password", use_ssl=False)
+    adapter._api = object()
+
+    class EmptyResource:
+        def call(self, *_args, **_kwargs):
+            raise Exception("Malformed sentence", [b"!empty", b".tag=1"])
+
+    monkeypatch.setattr(adapter, "_resource", lambda _path: EmptyResource())
+
+    assert adapter._call("/radius", "print") == []

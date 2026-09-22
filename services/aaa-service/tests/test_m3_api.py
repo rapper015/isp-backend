@@ -25,6 +25,17 @@ def _policy_payload(tenant_id):
     }
 
 
+def test_platform_admin_lists_network_inventory_without_tenant_filter(client, tenant_id):
+    created = client.post("/api/aaa/policies", json=_policy_payload(tenant_id), headers=AUTH)
+    assert created.status_code == 201
+    policies = client.get("/api/aaa/policies", headers=AUTH)
+    sessions = client.get("/api/aaa/network/sessions", headers=AUTH)
+    controls = client.get("/api/aaa/control-actions", headers=AUTH)
+    bandwidth = client.get("/api/aaa/bandwidth-profiles", headers=AUTH)
+    assert policies.status_code == sessions.status_code == controls.status_code == bandwidth.status_code == 200
+    assert any(item["tenant_id"] == str(tenant_id) for item in policies.json())
+
+
 def test_policy_lifecycle_end_to_end(client, tenant_id):
     created = client.post("/api/aaa/policies", json=_policy_payload(tenant_id), headers=AUTH)
     assert created.status_code == 201

@@ -58,6 +58,11 @@ _ASSIGNMENT_NEW_COLUMNS = (
 def upgrade() -> None:
     bind = op.get_bind()
     inspector = sa.inspect(bind)
+
+    def create_table_if_missing(name: str, *columns, **kwargs) -> None:
+        if not sa.inspect(bind).has_table(name):
+            op.create_table(name, *columns, **kwargs)
+
     existing_nas = {column["name"] for column in inspector.get_columns("aaa_nas")}
     for column in _NAS_NEW_COLUMNS:
         if column.name not in existing_nas:
@@ -70,7 +75,7 @@ def upgrade() -> None:
     for column in _ASSIGNMENT_NEW_COLUMNS:
         if column.name not in existing_assignments:
             op.add_column("nas_radius_assignments", column)
-    op.create_table(
+    create_table_if_missing(
         "nas_capabilities",
         sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column("nas_id", sa.Uuid(), sa.ForeignKey("aaa_nas.id"), index=True, nullable=False),
@@ -82,7 +87,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.UniqueConstraint("nas_id", "version", name="uq_nas_capability_version"),
     )
-    op.create_table(
+    create_table_if_missing(
         "nas_health_checks",
         sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column("nas_id", sa.Uuid(), sa.ForeignKey("aaa_nas.id"), index=True, nullable=False),
@@ -94,7 +99,7 @@ def upgrade() -> None:
         sa.Column("diagnostic", sa.JSON(), nullable=False),
         sa.Column("failure_reason", sa.String(500), nullable=True),
     )
-    op.create_table(
+    create_table_if_missing(
         "nas_remote_objects",
         sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column("nas_id", sa.Uuid(), sa.ForeignKey("aaa_nas.id"), index=True, nullable=False),
@@ -108,7 +113,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.UniqueConstraint("nas_id", "object_type", "remote_object_id", name="uq_nas_remote_object"),
     )
-    op.create_table(
+    create_table_if_missing(
         "nas_operation_locks",
         sa.Column("nas_id", sa.Uuid(), primary_key=True),
         sa.Column("owner", sa.String(64), nullable=False),
@@ -121,7 +126,7 @@ def upgrade() -> None:
         op.add_column(reveal_table, sa.Column("rotation_id", sa.Uuid(), sa.ForeignKey("nas_secret_rotations.id"), nullable=True))
     if "secret_ciphertext" not in reveal_columns:
         op.add_column(reveal_table, sa.Column("secret_ciphertext", sa.Text(), nullable=True))
-    op.create_table(
+    create_table_if_missing(
         "nas_secret_rotations",
         sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column("nas_id", sa.Uuid(), sa.ForeignKey("aaa_nas.id"), index=True, nullable=False),

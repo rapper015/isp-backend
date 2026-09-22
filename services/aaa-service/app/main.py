@@ -65,8 +65,21 @@ def attrs(payload):
     try: return normalize_attributes(payload.attributes)
     except AttributeValidationError as error: raise HTTPException(422, detail=str(error)) from error
 def bounded(limit: int) -> int: return min(max(limit, 1), 100)
-def tenant_item(session: Session, model, item_id: UUID, tenant_id: UUID, label: str):
-    item = session.scalar(select(model).where(model.id == item_id, model.tenant_id == tenant_id))
+def visible_tenant(request: Request, tenant_id: UUID | None) -> UUID | None:
+    principal = getattr(request.state, "aaa_principal", None) or {}
+    permissions = set(principal.get("permissions", []))
+    claimed = principal.get("tenant_id")
+    if claimed and "*" not in permissions:
+        return UUID(str(claimed))
+    if tenant_id is None and principal and "*" not in permissions:
+        raise HTTPException(403, "platform-wide tenant access is not permitted")
+    return tenant_id
+
+def tenant_item(session: Session, model, item_id: UUID, tenant_id: UUID | None, label: str):
+    statement = select(model).where(model.id == item_id)
+    if tenant_id is not None:
+        statement = statement.where(model.tenant_id == tenant_id)
+    item = session.scalar(statement)
     if not item: raise HTTPException(404, f"{label} not found")
     return item
 def record_audit(session: Session, tenant_id: UUID | None, action: str, target: str, detail: dict) -> str:
@@ -199,8 +212,11 @@ def create_nas_draft(payload: NasDraftIn, session: Session = Depends(db)):
     session.commit(); return {"id": str(nas.id), "lifecycle_status": "DRAFT", "connection_status": "UNKNOWN", "correlation_id": request_id}
 
 @app.get("/api/nas", dependencies=[Depends(internal_service_auth)])
-def list_managed_nas(tenant_id: UUID, lifecycle_status: str | None = None, enabled: bool | None = None, health: str | None = None, q: str | None = None, sort: str = "name", limit: int = 100, offset: int = 0, session: Session = Depends(db)):
-    statement = select(Nas).where(Nas.tenant_id == tenant_id)
+def list_managed_nas(request: Request, tenant_id: UUID | None = None, lifecycle_status: str | None = None, enabled: bool | None = None, health: str | None = None, q: str | None = None, sort: str = "name", limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    effective_tenant = visible_tenant(request, tenant_id)
+    statement = select(Nas)
+    if effective_tenant:
+        statement = statement.where(Nas.tenant_id == effective_tenant)
     if lifecycle_status: statement = statement.where(Nas.lifecycle_status == lifecycle_status.upper())
     if enabled is not None: statement = statement.where(Nas.enabled.is_(enabled))
     if health: statement = statement.where(Nas.health == health)
@@ -210,8 +226,8 @@ def list_managed_nas(tenant_id: UUID, lifecycle_status: str | None = None, enabl
     return [safe_nas(item) for item in items]
 
 @app.get("/api/nas/{nas_id}", dependencies=[Depends(internal_service_auth)])
-def get_managed_nas(nas_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
-    return safe_nas(tenant_item(session, Nas, nas_id, tenant_id, "NAS"))
+def get_managed_nas(nas_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    return safe_nas(tenant_item(session, Nas, nas_id, visible_tenant(request, tenant_id), "NAS"))
 
 @app.patch("/api/nas/{nas_id}", dependencies=[Depends(internal_service_auth)])
 def update_managed_nas(nas_id: UUID, tenant_id: UUID, payload: NasUpdateManagementIn, session: Session = Depends(db)):
@@ -514,7 +530,7 @@ def get_nas_plan(nas_id: UUID, plan_id: UUID, tenant_id: UUID, session: Session 
     return safe_plan(plan)
 
 @app.post("/api/nas/{nas_id}/plans/{plan_id}/approve", dependencies=[Depends(internal_service_auth)])
-def approve_nas_plan(nas_id: UUID, plan_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+def approve_nas_plan(nas_id: UUID, plan_id: UUID, tenant_id: UUID, request: Request, session: Session = Depends(db)):
     tenant_item(session, Nas, nas_id, tenant_id, "NAS")
     plan = session.scalar(select(NasChangePlan).where(NasChangePlan.id == plan_id, NasChangePlan.nas_id == nas_id))
     if not plan or not plan.validation.get("valid"): raise HTTPException(422, "valid NAS plan not found")
@@ -690,15 +706,22 @@ def create_nas(payload: NasIn, session: Session = Depends(db)):
     if not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
     nas = Nas(**payload.model_dump()); session.add(nas); request_id = record_audit(session, payload.tenant_id, "nas.created", str(nas.id), {"source_ip": nas.source_ip}); session.commit(); return {"id": str(nas.id), "secret_displayed": False, "correlation_id": request_id}
 @app.get("/api/aaa/nas", dependencies=[Depends(internal_service_auth)])
-def list_nas(tenant_id: UUID, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
-    return [{"id": str(n.id), "name": n.name, "source_ip": n.source_ip, "enabled": n.enabled, "health": n.health} for n in session.scalars(select(Nas).where(Nas.tenant_id == tenant_id).order_by(Nas.name).offset(max(offset, 0)).limit(bounded(limit)))]
+def list_nas(request: Request, tenant_id: UUID | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    effective_tenant = visible_tenant(request, tenant_id)
+    statement = select(Nas)
+    if effective_tenant:
+        statement = statement.where(Nas.tenant_id == effective_tenant)
+    return [{"id": str(n.id), "tenant_id": str(n.tenant_id), "name": n.name, "source_ip": n.source_ip, "enabled": n.enabled, "health": n.health} for n in session.scalars(statement.order_by(Nas.name).offset(max(offset, 0)).limit(bounded(limit)))]
 @app.get("/api/aaa/sessions", dependencies=[Depends(internal_service_auth)])
-def list_sessions(tenant_id: UUID, username: str | None = None, framed_ip: str | None = None, status: str | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
-    statement = select(ActiveSession).where(ActiveSession.tenant_id == tenant_id)
+def list_sessions(request: Request, tenant_id: UUID | None = None, username: str | None = None, framed_ip: str | None = None, status: str | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    effective_tenant = visible_tenant(request, tenant_id)
+    statement = select(ActiveSession)
+    if effective_tenant:
+        statement = statement.where(ActiveSession.tenant_id == effective_tenant)
     if username: statement = statement.where(ActiveSession.username == normalize_username(username))
     if framed_ip: statement = statement.where(ActiveSession.framed_ip == framed_ip)
     if status: statement = statement.where(ActiveSession.status == status)
-    return [{"id": str(item.id), "session_id": item.session_id, "status": item.status, "username": item.username, "framed_ip": item.framed_ip, "input_octets": item.input_octets, "output_octets": item.output_octets} for item in session.scalars(statement.order_by(ActiveSession.started_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))]
+    return [{"id": str(item.id), "tenant_id": str(item.tenant_id), "session_id": item.session_id, "status": item.status, "username": item.username, "framed_ip": item.framed_ip, "input_octets": item.input_octets, "output_octets": item.output_octets} for item in session.scalars(statement.order_by(ActiveSession.started_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))]
 @app.get("/api/aaa/sessions/{session_id}", dependencies=[Depends(internal_service_auth)])
 def get_session(session_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     item = tenant_item(session, ActiveSession, session_id, tenant_id, "session")
@@ -788,9 +811,13 @@ def reconcile_sessions(tenant_id: UUID, payload: SessionReconcileIn, session: Se
     session.commit()
     return {"nas_id": str(nas.id), **plan, "simulation": True, "correlation_id": request_id}
 @app.get("/api/aaa/accounting-events", dependencies=[Depends(internal_service_auth)])
-def list_accounting(tenant_id: UUID, limit: int = 100, session: Session = Depends(db)):
+def list_accounting(request: Request, tenant_id: UUID | None = None, limit: int = 100, session: Session = Depends(db)):
     limit = min(max(limit, 1), 100)
-    return [{"id": str(item.id), "session_id": item.session_id, "event_type": item.event_type, "received_at": item.received_at} for item in session.scalars(select(AccountingEvent).where(AccountingEvent.tenant_id == tenant_id).order_by(AccountingEvent.received_at.desc()).limit(limit))]
+    effective_tenant = visible_tenant(request, tenant_id)
+    statement = select(AccountingEvent)
+    if effective_tenant:
+        statement = statement.where(AccountingEvent.tenant_id == effective_tenant)
+    return [{"id": str(item.id), "tenant_id": str(item.tenant_id), "session_id": item.session_id, "event_type": item.event_type, "received_at": item.received_at} for item in session.scalars(statement.order_by(AccountingEvent.received_at.desc()).limit(limit))]
 @app.post("/api/aaa/accounting-events/{event_id}/replay", dependencies=[Depends(internal_service_auth)])
 def replay_accounting(event_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     event = session.scalar(select(AccountingEvent).where(AccountingEvent.id == event_id, AccountingEvent.tenant_id == tenant_id))
@@ -807,8 +834,12 @@ def create_ip_pool(payload: IpPoolIn, session: Session = Depends(db)):
     item = IpPool(**payload.model_dump(exclude={"cidr"}), cidr=cidr); session.add(item); session.commit()
     return {"id": str(item.id), "cidr": item.cidr}
 @app.get("/api/aaa/ip-pools", dependencies=[Depends(internal_service_auth)])
-def list_ip_pools(tenant_id: UUID, session: Session = Depends(db)):
-    return [{"id": str(item.id), "name": item.name, "cidr": item.cidr, "family": item.address_family, "enabled": item.enabled} for item in session.scalars(select(IpPool).where(IpPool.tenant_id == tenant_id).limit(100))]
+def list_ip_pools(request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    effective_tenant = visible_tenant(request, tenant_id)
+    statement = select(IpPool)
+    if effective_tenant:
+        statement = statement.where(IpPool.tenant_id == effective_tenant)
+    return [{"id": str(item.id), "tenant_id": str(item.tenant_id), "name": item.name, "cidr": item.cidr, "family": item.address_family, "enabled": item.enabled} for item in session.scalars(statement.limit(100))]
 @app.get("/api/aaa/ip-pools/{pool_id}/leases", dependencies=[Depends(internal_service_auth)])
 def list_ip_leases(pool_id: UUID, tenant_id: UUID, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
     tenant_item(session, IpPool, pool_id, tenant_id, "IP pool")

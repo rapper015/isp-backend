@@ -11,9 +11,12 @@ from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+from isp_shared.cors import cors_allowed_origins
 
 from .database import Base, SessionLocal, engine
 from .models import (AuditLog, Branch, Customer, ExperienceRecovery, ExternalReference,
@@ -48,6 +51,15 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="CRM Service", version="1.0.0", docs_url="/internal/docs", openapi_url="/internal/openapi.json", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_allowed_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 def db():
     session = SessionLocal()
     try:
@@ -78,14 +90,19 @@ def visible_tenant_filter(request: Request, tenant_id: UUID | None) -> UUID | No
     return tenant_id
 
 
-def tenant_item(session: Session, model, item_id: UUID, tenant_id: UUID, label: str):
+def tenant_item(session: Session, model, item_id: UUID, tenant_id: UUID | None, label: str):
     statement = select(model).where(model.id == item_id)
-    if model is not Tenant:
+    if model is not Tenant and tenant_id is not None:
         statement = statement.where(model.tenant_id == tenant_id)
     item = session.scalar(statement)
     if not item:
         raise HTTPException(404, f"{label} not found")
     return item
+
+
+def visible_item(session: Session, request: Request, model, item_id: UUID, tenant_id: UUID | None, label: str):
+    """Resolve a globally unique record within the caller's allowed scope."""
+    return tenant_item(session, model, item_id, visible_tenant_filter(request, tenant_id), label)
 
 
 def actor_of(request: Request) -> str:
@@ -182,8 +199,8 @@ def list_franchises(request: Request, tenant_id: UUID | None = None, status: str
 
 
 @app.get("/api/crm/franchises/{franchise_id}", dependencies=[Depends(internal_service_auth)])
-def get_franchise(franchise_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
-    return safe_franchise(tenant_item(session, Franchise, franchise_id, tenant_id, "franchise"))
+def get_franchise(franchise_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    return safe_franchise(visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise"))
 
 
 @app.patch("/api/crm/franchises/{franchise_id}", dependencies=[Depends(internal_service_auth)])
@@ -221,8 +238,8 @@ FRANCHISE_CAPABILITIES = {
 
 
 @app.get("/api/crm/franchises/{franchise_id}/settings", dependencies=[Depends(internal_service_auth)])
-def get_franchise_settings(franchise_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
-    item = tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
+def get_franchise_settings(franchise_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    item = visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise")
     return {"franchise_id": str(item.id), "status": item.status, "settings": item.profile or {}}
 
 
@@ -246,9 +263,9 @@ def patch_franchise_settings(franchise_id: UUID, tenant_id: UUID, payload: Franc
 
 
 @app.get("/api/crm/franchises/{franchise_id}/settings/history", dependencies=[Depends(internal_service_auth)])
-def franchise_settings_history(franchise_id: UUID, tenant_id: UUID, limit: int = 100, session: Session = Depends(db)):
-    tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
-    rows = session.scalars(select(AuditLog).where(AuditLog.tenant_id == tenant_id, AuditLog.aggregate_type == "franchise", AuditLog.aggregate_id == str(franchise_id), AuditLog.action == "franchise.settings.updated").order_by(AuditLog.created_at.desc()).limit(bounded(limit)))
+def franchise_settings_history(franchise_id: UUID, request: Request, tenant_id: UUID | None = None, limit: int = 100, session: Session = Depends(db)):
+    item = visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise")
+    rows = session.scalars(select(AuditLog).where(AuditLog.tenant_id == item.tenant_id, AuditLog.aggregate_type == "franchise", AuditLog.aggregate_id == str(franchise_id), AuditLog.action == "franchise.settings.updated").order_by(AuditLog.created_at.desc()).limit(bounded(limit)))
     return [{"action": row.action, "actor": row.actor, "reason": row.reason, "changes": row.safe_after, "created_at": row.created_at} for row in rows]
 
 
@@ -309,9 +326,9 @@ def list_branches(request: Request, tenant_id: UUID | None = None, franchise_id:
 
 
 @app.get("/api/crm/branches/{branch_id}", dependencies=[Depends(internal_service_auth)])
-def get_branch(branch_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
-    item = tenant_item(session, Branch, branch_id, tenant_id, "branch")
-    franchise = tenant_item(session, Franchise, item.franchise_id, tenant_id, "franchise") if item.franchise_id else None
+def get_branch(branch_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    item = visible_item(session, request, Branch, branch_id, tenant_id, "branch")
+    franchise = tenant_item(session, Franchise, item.franchise_id, item.tenant_id, "franchise") if item.franchise_id else None
     return safe_branch(item, franchise)
 
 
@@ -382,8 +399,8 @@ def list_leads(request: Request, tenant_id: UUID | None = None, stage: str | Non
 
 
 @app.get("/api/crm/leads/{lead_id}", dependencies=[Depends(internal_service_auth)])
-def get_lead(lead_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
-    item = tenant_item(session, Lead, lead_id, tenant_id, "lead")
+def get_lead(lead_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    item = visible_item(session, request, Lead, lead_id, tenant_id, "lead")
     return safe_lead(item)
 
 
@@ -478,9 +495,10 @@ def reopen_lead(lead_id: UUID, tenant_id: UUID, request: Request, session: Sessi
 
 
 @app.get("/api/crm/leads/{lead_id}/history", dependencies=[Depends(internal_service_auth)])
-def lead_history(lead_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+def lead_history(lead_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
     try:
-        history = lead_service.lead_history(session, tenant_id, lead_id)
+        lead = visible_item(session, request, Lead, lead_id, tenant_id, "lead")
+        history = lead_service.lead_history(session, lead.tenant_id, lead_id)
     except Exception as error:
         raise _raise(error) from error
     return [{"from_stage": item.from_stage, "to_stage": item.to_stage, "actor": item.actor, "reason": item.reason, "created_at": item.created_at} for item in history]
@@ -595,8 +613,8 @@ def list_customers(request: Request, tenant_id: UUID | None = None, lifecycle_st
 
 
 @app.get("/api/crm/customers/{customer_id}", dependencies=[Depends(internal_service_auth)])
-def get_customer(customer_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
-    item = tenant_item(session, Customer, customer_id, tenant_id, "customer")
+def get_customer(customer_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    item = visible_item(session, request, Customer, customer_id, tenant_id, "customer")
     return safe_customer(item)
 
 
@@ -612,17 +630,18 @@ def update_customer(customer_id: UUID, tenant_id: UUID, payload: CustomerUpdate,
 
 
 @app.get("/api/crm/customers/{customer_id}/360", dependencies=[Depends(internal_service_auth)])
-def customer_360_view(customer_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+def customer_360_view(customer_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
     try:
-        return customer_360.customer_360(session, tenant_id, customer_id)
+        customer = visible_item(session, request, Customer, customer_id, tenant_id, "customer")
+        return customer_360.customer_360(session, customer.tenant_id, customer_id)
     except Exception as error:
         raise _raise(error) from error
 
 
 @app.get("/api/crm/customers/{customer_id}/timeline", dependencies=[Depends(internal_service_auth)])
-def customer_timeline(customer_id: UUID, tenant_id: UUID, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
-    tenant_item(session, Customer, customer_id, tenant_id, "customer")
-    return [{"id": str(item.id), "category": item.category, "safe_summary": item.safe_summary, "actor": item.actor, "external_type": item.external_type, "external_id": item.external_id, "occurred_at": item.occurred_at} for item in session.scalars(select(TimelineEntry).where(TimelineEntry.tenant_id == tenant_id, TimelineEntry.customer_id == customer_id).order_by(TimelineEntry.occurred_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))]
+def customer_timeline(customer_id: UUID, request: Request, tenant_id: UUID | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    customer = visible_item(session, request, Customer, customer_id, tenant_id, "customer")
+    return [{"id": str(item.id), "category": item.category, "safe_summary": item.safe_summary, "actor": item.actor, "external_type": item.external_type, "external_id": item.external_id, "occurred_at": item.occurred_at} for item in session.scalars(select(TimelineEntry).where(TimelineEntry.tenant_id == customer.tenant_id, TimelineEntry.customer_id == customer_id).order_by(TimelineEntry.occurred_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))]
 
 
 @app.post("/api/crm/customers/{customer_id}/transition", dependencies=[Depends(internal_service_auth)])
@@ -657,9 +676,9 @@ def merge_customer(customer_id: UUID, tenant_id: UUID, payload: MergeIn, request
 
 
 @app.get("/api/crm/customers/{customer_id}/external-references", dependencies=[Depends(internal_service_auth)])
-def external_references(customer_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
-    tenant_item(session, Customer, customer_id, tenant_id, "customer")
-    return [{"id": str(item.id), "service_name": item.service_name, "external_type": item.external_type, "external_id": item.external_id, "external_status": item.external_status, "last_synced_at": item.last_synced_at} for item in session.scalars(select(ExternalReference).where(ExternalReference.tenant_id == tenant_id, ExternalReference.customer_id == customer_id))]
+def external_references(customer_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    customer = visible_item(session, request, Customer, customer_id, tenant_id, "customer")
+    return [{"id": str(item.id), "service_name": item.service_name, "external_type": item.external_type, "external_id": item.external_id, "external_status": item.external_status, "last_synced_at": item.last_synced_at} for item in session.scalars(select(ExternalReference).where(ExternalReference.tenant_id == customer.tenant_id, ExternalReference.customer_id == customer_id))]
 
 
 # ---------------------------------------------------------------------------
@@ -719,9 +738,10 @@ def update_address(customer_id: UUID, address_id: UUID, tenant_id: UUID, payload
 
 
 @app.get("/api/crm/customers/{customer_id}/addresses/history", dependencies=[Depends(internal_service_auth)])
-def address_history(customer_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
+def address_history(customer_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
     try:
-        return [{"id": str(item.id), "address_type": item.address_type, "city": item.city, "version": item.version, "valid_from": item.valid_from, "valid_to": item.valid_to} for item in customer_service.address_history(session, tenant_id, customer_id)]
+        customer = visible_item(session, request, Customer, customer_id, tenant_id, "customer")
+        return [{"id": str(item.id), "address_type": item.address_type, "city": item.city, "version": item.version, "valid_from": item.valid_from, "valid_to": item.valid_to} for item in customer_service.address_history(session, customer.tenant_id, customer_id)]
     except Exception as error:
         raise _raise(error) from error
 
@@ -752,9 +772,9 @@ def create_kyc(customer_id: UUID, tenant_id: UUID, payload: KycCreateIn, request
 
 
 @app.get("/api/crm/customers/{customer_id}/kyc", dependencies=[Depends(internal_service_auth)])
-def list_kyc(customer_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
-    tenant_item(session, Customer, customer_id, tenant_id, "customer")
-    return [{"id": str(item.id), "kyc_type": item.kyc_type, "status": item.status, "verification_method": item.verification_method, "verified_at": item.verified_at} for item in session.scalars(select(KycCase).where(KycCase.tenant_id == tenant_id, KycCase.customer_id == customer_id))]
+def list_kyc(customer_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    customer = visible_item(session, request, Customer, customer_id, tenant_id, "customer")
+    return [{"id": str(item.id), "kyc_type": item.kyc_type, "status": item.status, "verification_method": item.verification_method, "verified_at": item.verified_at} for item in session.scalars(select(KycCase).where(KycCase.tenant_id == customer.tenant_id, KycCase.customer_id == customer_id))]
 
 
 @app.post("/api/crm/kyc/{case_id}/submit", dependencies=[Depends(internal_service_auth)])
@@ -892,9 +912,9 @@ def override_risk(customer_id: UUID, tenant_id: UUID, payload: RiskOverrideIn, r
 
 
 @app.get("/api/crm/customers/{customer_id}/risk", dependencies=[Depends(internal_service_auth)])
-def risk_history(customer_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
-    tenant_item(session, Customer, customer_id, tenant_id, "customer")
-    return [{"id": str(item.id), "level": item.level, "source": item.source, "reason": item.reason, "effective_level": item.effective_level, "override_level": item.override_level, "created_at": item.created_at} for item in risk_service.risk_history(session, tenant_id, customer_id)]
+def risk_history(customer_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    customer = visible_item(session, request, Customer, customer_id, tenant_id, "customer")
+    return [{"id": str(item.id), "level": item.level, "source": item.source, "reason": item.reason, "effective_level": item.effective_level, "override_level": item.override_level, "created_at": item.created_at} for item in risk_service.risk_history(session, customer.tenant_id, customer_id)]
 
 
 # ---------------------------------------------------------------------------
@@ -916,14 +936,17 @@ def duplicate_search(tenant_id: UUID, phone: str | None = None, email: str | Non
 
 
 @app.get("/api/crm/customers/{customer_id}/audit", dependencies=[Depends(internal_service_auth)])
-def customer_audit(customer_id: UUID, tenant_id: UUID, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
-    tenant_item(session, Customer, customer_id, tenant_id, "customer")
-    return [{"id": str(item.id), "action": item.action, "actor": item.actor, "safe_before": item.safe_before, "safe_after": item.safe_after, "reason": item.reason, "correlation_id": item.correlation_id, "created_at": item.created_at} for item in session.scalars(select(AuditLog).where(AuditLog.tenant_id == tenant_id, AuditLog.aggregate_id == str(customer_id)).order_by(AuditLog.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))]
+def customer_audit(customer_id: UUID, request: Request, tenant_id: UUID | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    customer = visible_item(session, request, Customer, customer_id, tenant_id, "customer")
+    return [{"id": str(item.id), "action": item.action, "actor": item.actor, "safe_before": item.safe_before, "safe_after": item.safe_after, "reason": item.reason, "correlation_id": item.correlation_id, "created_at": item.created_at} for item in session.scalars(select(AuditLog).where(AuditLog.tenant_id == customer.tenant_id, AuditLog.aggregate_id == str(customer_id)).order_by(AuditLog.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))]
 
 
 @app.get("/api/crm/audit", dependencies=[Depends(internal_service_auth)])
-def audit_log(tenant_id: UUID, action: str | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
-    statement = select(AuditLog).where(AuditLog.tenant_id == tenant_id)
+def audit_log(request: Request, tenant_id: UUID | None = None, action: str | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    effective_tenant = visible_tenant_filter(request, tenant_id)
+    statement = select(AuditLog)
+    if effective_tenant:
+        statement = statement.where(AuditLog.tenant_id == effective_tenant)
     if action:
         statement = statement.where(AuditLog.action == action)
     return [{"id": str(item.id), "action": item.action, "actor": item.actor, "aggregate_type": item.aggregate_type, "aggregate_id": item.aggregate_id, "reason": item.reason, "correlation_id": item.correlation_id, "created_at": item.created_at} for item in session.scalars(statement.order_by(AuditLog.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))]

@@ -1,4 +1,4 @@
-# Milestone 7 — Device Management Service: CPE Control Plane API
+# Milestone 7 — Complete Frontend API Handoff: Device Management
 
 Service: `device-management-service`. Auth: management JWT (`DEVICE_MANAGEMENT_JWT_SECRET`) with RBAC for all `/api/device-management/*` routes; internal-service key (`X-Internal-API-Key`) for inbound cross-service ingestion. All routes are tenant-scoped (`tenant_id` query parameter is validated against the authenticated principal).
 
@@ -132,3 +132,13 @@ Consumed (idempotent): `inventory.device_reserved.v1`,
 `work_order.device_installed.v1`, `order.cpe_provisioning_requested.v1`,
 `service.activated.v1`, `service.plan_changed.v1`,
 `ticket.device_diagnostic_requested.v1`, `nms.device_investigation_requested.v1`.
+
+## Frontend integration handoff
+
+Use gateway base `/api/device-management/` (or `/api/v1/device-management/`)
+with a management bearer token and tenant context. Never call GenieACS or an
+internal callback from the browser. Configuration jobs follow create → approve
+when required → queue → execute → verify. Queued/dispatched is not success:
+poll job detail until verified or a terminal fault/cancel state. Apply the same
+rule to controlled actions, diagnostics, and firmware deployments. Firmware
+requires approved compatible artifacts and backend-confirmed rollout status.

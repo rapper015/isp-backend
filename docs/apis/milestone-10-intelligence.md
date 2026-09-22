@@ -1,4 +1,4 @@
-# Milestone 10 — Intelligence API (AI & Intelligence Layer)
+# Milestone 10 — Complete Frontend API Handoff: Intelligence
 
 Service: **`intelligence-service`** · Base path: `/api/intelligence/v1`
 (gateway `/api/v1/intelligence/`) · DB prefix: `ai_` · Exchange:
@@ -129,3 +129,13 @@ policy evaluation + approval to the authoritative service.
 `assurance.incident_*.v1`, `assurance.customer_impact_detected.v1`,
 `assurance.slo_*.v1`. Envelopes carry `tenant_id`, `correlation_id`,
 `causation_id`, `idempotency_key` and the W3C `trace_context` slot.
+
+## Frontend integration handoff
+
+Use gateway `/api/v1/intelligence/` (alias `/api/intelligence/`) with a
+browser-compatible management bearer token. Internal ingestion is backend-only.
+Show dataset/feature/model version, quality/confidence, evidence, time, actor,
+and state. Training, deployment, rollback, remediation, and kill-switch actions
+are asynchronous: poll their resource to a terminal outcome. Never present a
+recommendation as executed. On 401 refresh once/retry once; handle
+403/409/422/429 explicitly and preserve form data on 5xx.

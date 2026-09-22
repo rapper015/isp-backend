@@ -10,8 +10,12 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("crm_branches", sa.Column("profile", sa.JSON(), nullable=False, server_default=sa.text("'{}'")))
+    columns = {column["name"] for column in sa.inspect(op.get_bind()).get_columns("crm_branches")}
+    if "profile" not in columns:
+        op.add_column("crm_branches", sa.Column("profile", sa.JSON(), nullable=False, server_default=sa.text("'{}'")))
 
 
 def downgrade() -> None:
-    op.drop_column("crm_branches", "profile")
+    columns = {column["name"] for column in sa.inspect(op.get_bind()).get_columns("crm_branches")}
+    if "profile" in columns:
+        op.drop_column("crm_branches", "profile")

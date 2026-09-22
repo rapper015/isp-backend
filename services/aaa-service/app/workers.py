@@ -54,6 +54,7 @@ def ensure_event_topology() -> None:
     asyncio.run(declare_topology())
 
 def _advance_lifecycle(nas: Nas, target: str) -> None:
+    adapter = None
     try:
         nas.lifecycle_status = transition(nas.lifecycle_status, target)
     except ValueError:
@@ -118,6 +119,8 @@ def process_nas_job(session: Session, job_id) -> str | None:
             session.commit()
         return "FAILED"
     finally:
+        if adapter is not None:
+            adapter.disconnect()
         try:
             release_nas_lock(session, nas.id, owner)
         except Exception:  # noqa: BLE001 - release is best effort

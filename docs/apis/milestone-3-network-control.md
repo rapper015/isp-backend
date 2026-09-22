@@ -1,4 +1,4 @@
-# Milestone 3 — Network Control API (mounted on `aaa-service`)
+# Milestone 3 — Complete Frontend API Handoff: Network Control
 
 Service: `aaa-service` (`/api/aaa/...`, network-control router). Auth:
 `X-AAA-Service-Key` (internal) with management JWT RBAC fallback; all routes are
@@ -97,3 +97,16 @@ below.
 | GET | `/api/aaa/ip-identity/search` | Search identity (IP/username/MAC/session/NAS) |
 | GET | `/api/aaa/ip-identity/{ip_address}/history` | IP ownership history |
 | GET | `/api/aaa/ip-identity/{ip_address}/regulatory` | Authorized regulatory lookup (audited) |
+
+## Frontend integration handoff
+
+Browser base is `/api/aaa/` with a management bearer token; `X-AAA-Service-Key`,
+NAS credentials, RADIUS secrets, and `/internal/radius/*` are backend-only.
+Policy authoring is a state workflow: create version → validate → preview →
+submit → approve → schedule/activate. Published bodies are immutable.
+
+For session controls, refresh the exact session detail immediately before
+disconnect, reapply, or force re-authentication. A created control action is
+only queued; poll its detail until ACK/NAK/timeout/cancelled. Confirm bulk
+disconnects and RouterOS apply actions, show the server-produced diff first,
+and never manage non-platform-owned router objects from the UI.

@@ -28,16 +28,32 @@ def _redis_key(nas_id) -> str:
 def acquire_nas_lock(session: Session, nas_id, owner: str | None = None, ttl_seconds: int = 90) -> tuple[bool, str]:
     """Acquire the per-NAS lock. Returns (acquired, owner)."""
     owner = owner or uuid4().hex
-    if _redis_acquire(nas_id, owner, ttl_seconds):
-        return True, owner
+    redis_result = _redis_acquire(nas_id, owner, ttl_seconds)
+    if redis_result is not None:
+        return redis_result, owner
     return _db_acquire(session, nas_id, owner, ttl_seconds)
 
 
-def _redis_acquire(nas_id, owner: str, ttl_seconds: int) -> bool:
+def _redis_acquire(nas_id, owner: str, ttl_seconds: int) -> bool | None:
+    """Return ``None`` only when Redis is unavailable.
+
+    A ``False`` SET-NX result means another worker owns the Redis lock. It
+    must not fall through to the database fallback, otherwise two workers can
+    each acquire a different lock store for the same NAS.
+    """
     try:
-        return bool(client().set(_redis_key(nas_id), owner, nx=True, ex=ttl_seconds))
-    except redis.RedisError:
+        connection = client()
+        key = _redis_key(nas_id)
+        if connection.set(key, owner, nx=True, ex=ttl_seconds):
+            return True
+        # Locks are re-entrant for the same worker. Refreshing the lease is
+        # safe only when the stored owner still matches.
+        if connection.get(key) == owner:
+            connection.expire(key, ttl_seconds)
+            return True
         return False
+    except redis.RedisError:
+        return None
 
 
 def _db_acquire(session: Session, nas_id, owner: str, ttl_seconds: int) -> tuple[bool, str]:

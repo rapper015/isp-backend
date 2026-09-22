@@ -102,22 +102,31 @@ async def _json_tenant(request: Request) -> str | None:
 
 async def management_auth(request: Request) -> None:
     header = request.headers.get("Authorization", "")
-    secret = getenv("OSS_JWT_SECRET", "")
+    secret = getenv("PLATFORM_JWT_SECRET", getenv("OSS_JWT_SECRET", ""))
     if not header.startswith("Bearer ") or not secret:
         raise HTTPException(401, "management authentication failed")
     if len(secret) < 32:
         raise HTTPException(503, "management authentication is not securely configured")
     try:
-        claims = jwt.decode(header[7:], secret, algorithms=["HS256"])
+        claims = jwt.decode(
+            header[7:],
+            secret,
+            algorithms=["HS256"],
+            issuer="isp-platform",
+            options={"require": ["sub", "exp", "iat", "iss", "jti"]},
+        )
     except jwt.PyJWTError as error:
         raise HTTPException(401, "invalid or expired management token") from error
     required = management_permission(request.method, request.url.path)
-    role = claims.get("role", "")
-    permissions = set(claims.get("permissions", [])) | ROLE_PERMISSIONS.get(role, set())
+    if claims.get("token_type") != "access":
+        raise HTTPException(401, "invalid token type")
+    roles = claims.get("roles", [])
+    legacy_role = claims.get("role", "")
+    permissions = set(claims.get("permissions", [])) | ROLE_PERMISSIONS.get(legacy_role, set())
     if required and "*" not in permissions and required not in permissions:
         raise HTTPException(403, "OSS permission denied")
     claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
-    if claimed_tenant and role not in {"PLATFORM_ADMIN", "ISP_OWNER", "ISP_ADMIN", "super_admin"}:
+    if claimed_tenant and "*" not in permissions:
         supplied = request.query_params.get("tenant_id") or (await _json_tenant(request))
         if supplied and not secrets.compare_digest(str(claimed_tenant), str(supplied)):
             raise HTTPException(403, "tenant access denied")
@@ -125,8 +134,8 @@ async def management_auth(request: Request) -> None:
     if not limited(f"oss:management:{remote}:{request.url.path}", int(getenv("OSS_MANAGEMENT_RATE_LIMIT", "120")), 60):
         raise HTTPException(429, "rate limit exceeded")
     request.state.oss_principal = {
-        "subject": claims.get("userId", claims.get("sub", "admin")),
-        "role": role,
+        "subject": claims["sub"],
+        "roles": roles or ([legacy_role] if legacy_role else []),
         "permissions": sorted(permissions),
     }
 

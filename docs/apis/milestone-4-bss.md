@@ -1,4 +1,4 @@
-# Milestone 4 — BSS Service: Billing & Payments API
+# Milestone 4 — Complete Frontend API Handoff: Billing & Payments
 
 Service: `bss-service`. Auth: `X-BSS-Service-Key` (internal) for `/api/bss/*`;
 management JWT RBAC also supported. All `/api/bss/*` routes are tenant-scoped.
@@ -136,3 +136,18 @@ management JWT RBAC also supported. All `/api/bss/*` routes are tenant-scoped.
 | GET | `/invoices` | Legacy list invoices |
 | POST | `/payments` | Legacy record payment |
 | GET | `/payments` | Legacy list payments |
+
+## Frontend integration handoff
+
+Browser base is `/api/bss/` (or `/api/v1/bss/`) using a browser-compatible BSS
+management bearer token. The browser must never send gateway credentials,
+signature data, webhook events, or authoritative money amounts. Load invoice
+and outstanding balance from the backend, create one idempotent payment intent,
+then use only backend-created hosted checkout instructions. On return, poll
+payment/intents; the gateway webhook is authoritative.
+
+Treat refunds, manual payments, reconciliation, dunning, ledger, and settlement
+actions as state machines. Confirm financial mutations, honor maker-checker
+approval, refresh invoices/payments after every mutation, and download receipts
+as blobs rather than JSON. Amounts, allocations, balance, and status are always
+server-calculated.

@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from os import getenv
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -318,13 +318,19 @@ def register_resource(payload: ResourceRegister, session: Session = Depends(db))
 
 
 @app.get("/api/oss/resources/capacity", response_model=CapacityResponse, dependencies=[Depends(management_auth)])
-def resource_capacity(tenant_id: UUID = Query(...), resource_type: str | None = Query(default=None), session: Session = Depends(db)):
+def resource_capacity(request: Request, tenant_id: UUID | None = Query(default=None), resource_type: str | None = Query(default=None), session: Session = Depends(db)):
+    if tenant_id is None and "*" not in request.state.oss_principal.get("permissions", []):
+        raise HTTPException(403, "global resource capacity requires platform access")
     return CapacityResponse(capacity=ResourceService(session).capacity(tenant_id, resource_type))
 
 
 @app.get("/api/oss/resources/reservations", response_model=list[ReservationResponse], dependencies=[Depends(management_auth)])
-def list_reservations(tenant_id: UUID = Query(...), order_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    stmt = select(ResourceReservation).where(ResourceReservation.tenant_id == tenant_id).order_by(ResourceReservation.reserved_at.desc())
+def list_reservations(request: Request, tenant_id: UUID | None = Query(default=None), order_id: UUID | None = Query(default=None), session: Session = Depends(db)):
+    if tenant_id is None and "*" not in request.state.oss_principal.get("permissions", []):
+        raise HTTPException(403, "global reservations require platform access")
+    stmt = select(ResourceReservation).order_by(ResourceReservation.reserved_at.desc())
+    if tenant_id:
+        stmt = stmt.where(ResourceReservation.tenant_id == tenant_id)
     if order_id:
         stmt = stmt.where(ResourceReservation.order_id == order_id)
     return list(session.scalars(stmt))
