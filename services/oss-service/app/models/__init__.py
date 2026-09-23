@@ -10,6 +10,7 @@ from .saga import (
     ManualIntervention,
 )
 from .subscriber import ServiceSubscription
+from .imports import SubscriberImportBatch, SubscriberImportRow
 from .assets import (
     Vendor,
     NetworkAsset,
@@ -49,6 +50,8 @@ __all__ = [
     "WorkflowEvent",
     "ManualIntervention",
     "ServiceSubscription",
+    "SubscriberImportBatch",
+    "SubscriberImportRow",
     "Vendor",
     "NetworkAsset",
     "FirmwareLog",

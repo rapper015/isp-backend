@@ -123,8 +123,11 @@ services:
       <<: *domain-environment
       SERVICE_NAME: bss-service
       DATABASE_URL: postgresql://isp:isp@postgres:5432/bss
+      BSS_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       BSS_AAA_BASE_URL: http://aaa-service:8000
       BSS_AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
+      BSS_CRM_BASE_URL: http://crm-service:8000
+      BSS_CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
 
   oss-service:
     <<: *domain-service
@@ -135,6 +138,8 @@ services:
       DATABASE_URL: postgresql://isp:isp@postgres:5432/oss
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       OSS_BSS_BASE_URL: http://bss-service:8000
+      OSS_CRM_BASE_URL: http://crm-service:8000
+      OSS_CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
       OSS_AAA_BASE_URL: http://aaa-service:8000
       OSS_AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
       OSS_AAA_POLICY_ASSIGNMENT_MODE: live

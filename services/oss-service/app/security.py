@@ -71,6 +71,8 @@ def management_permission(method: str, path: str) -> str | None:
         return "oss.resource.manage" if method in ("POST", "PUT", "DELETE") else "oss.resource.view"
     if "/subscriptions" in path:
         return "oss.subscription.manage" if method in ("POST", "PUT", "DELETE") else "oss.subscription.view"
+    if "/subscriber-imports" in path:
+        return "oss.subscription.view" if method == "GET" else "oss.subscription.manage"
     if "/workflows" in path:
         return "oss.workflow.view"
     if "/assets" in path or "/splitters" in path or "/firmware" in path:

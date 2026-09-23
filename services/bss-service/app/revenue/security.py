@@ -60,6 +60,8 @@ def management_permission(method: str, path: str) -> str | None:
         return "bss.payment.capture" if method == "POST" and "capture" in path else "bss.payment.manage" if method == "POST" else "bss.payment.view"
     if "/invoices" in path:
         return "bss.invoice.view" if method == "GET" else "bss.invoice.manage"
+    if "/invoice-imports" in path:
+        return "bss.invoice.view" if method == "GET" else "bss.invoice.manage"
     if "/audit" in path:
         return "bss.audit.view"
     return "bss.invoice.view"

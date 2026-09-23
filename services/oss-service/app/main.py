@@ -47,6 +47,7 @@ from .services.assets_service import (
     TrafficService,
     VendorService,
 )
+from .subscriber_imports import router as subscriber_import_router
 
 
 @asynccontextmanager
@@ -56,6 +57,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="OSS Service", version="2.0.0", lifespan=lifespan)
+app.include_router(subscriber_import_router)
 
 
 def db():

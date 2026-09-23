@@ -177,6 +177,7 @@ def create_franchise(tenant_id: UUID, payload: FranchiseIn, session: Session = D
 def safe_franchise(item: Franchise) -> dict:
     return {
         "id": str(item.id),
+        "tenant_id": str(item.tenant_id),
         "franchise_code": item.franchise_code,
         "name": item.name,
         "status": item.status,
