@@ -1,17 +1,19 @@
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from os import getenv
 from uuid import UUID
 from fastapi import Depends, FastAPI, HTTPException, status
-from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import select
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import Invoice, Payment, Plan, PlanNetworkPolicyBinding
+from .models import BillingSchedule, Invoice, Payment, Plan, PlanNetworkPolicyBinding
+from .billing_cycles import refresh_overdue_invoices, run_due_billing
 from .revenue.router import router as revenue_router
 from .revenue.catalog_router import router as catalog_router
 from .invoice_imports import router as invoice_import_router
+from .revenue.security import internal_service_auth
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -27,11 +29,14 @@ def db_session():
     finally: db.close()
 
 class PlanCreate(BaseModel):
+    tenant_id: UUID | None = None
     plan_code: str = Field(min_length=1, max_length=64)
     name: str
+    description: str = ""
     monthly_fee: Decimal = Field(gt=0)
     download_rate_kbps: int = Field(gt=0)
     upload_rate_kbps: int = Field(gt=0)
+    billing_cycle_days: int = Field(default=30, ge=1, le=366)
 class PlanResponse(PlanCreate):
     model_config = ConfigDict(from_attributes=True)
     id: UUID; status: str
@@ -43,21 +48,86 @@ class PlanNetworkPolicyBindingIn(BaseModel):
     policy_version_id: UUID
 
 class PlanUpdate(BaseModel):
+    description: str | None = None
     name: str | None = Field(default=None, min_length=1, max_length=255)
     monthly_fee: Decimal | None = Field(default=None, gt=0)
     download_rate_kbps: int | None = Field(default=None, gt=0)
     upload_rate_kbps: int | None = Field(default=None, gt=0)
+    billing_cycle_days: int | None = Field(default=None, ge=1, le=366)
     status: str | None = Field(default=None, min_length=1, max_length=16)
 class InvoiceCreate(BaseModel):
-    invoice_number: str
+    model_config = ConfigDict(populate_by_name=True)
+    tenant_id: UUID | None = None
+    invoice_number: str | None = None
     customer_id: UUID
     subscriber_id: UUID | None = None
     plan_id: UUID
-    amount: Decimal = Field(gt=0)
+    subtotal: Decimal | None = Field(default=None, ge=0)
+    tax_amount: Decimal = Field(default=Decimal("0"), ge=0)
+    amount: Decimal | None = Field(default=None, gt=0)
     due_date: datetime
-class InvoiceResponse(InvoiceCreate):
+    billing_period_start: datetime | None = None
+    billing_period_end: datetime | None = None
+    line_items: list[dict] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_totals(self):
+        subtotal = self.subtotal
+        if subtotal is None and self.amount is not None:
+            subtotal = self.amount - self.tax_amount
+        if subtotal is None:
+            raise ValueError("subtotal or amount is required")
+        total = subtotal + self.tax_amount
+        if total <= 0:
+            raise ValueError("invoice total must be greater than zero")
+        if self.amount is not None and self.amount != total:
+            raise ValueError("amount must equal subtotal plus tax_amount")
+        self.subtotal = subtotal
+        self.amount = total
+        if self.billing_period_start and self.billing_period_end and self.billing_period_end < self.billing_period_start:
+            raise ValueError("billing period end must not precede its start")
+        return self
+
+class InvoiceResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    id: UUID; balance_due: Decimal; status: str
+    id: UUID
+    tenant_id: UUID | None
+    invoice_number: str
+    customer_id: UUID
+    subscriber_id: UUID | None
+    plan_id: UUID
+    subtotal: Decimal
+    tax_amount: Decimal
+    amount: Decimal
+    balance_due: Decimal
+    status: str
+    due_date: datetime
+    billing_period_start: datetime | None
+    billing_period_end: datetime | None
+    line_items: list[dict]
+    created_at: datetime
+    updated_at: datetime | None
+
+class InvoiceUpdate(BaseModel):
+    status: str
+
+class BillingScheduleCreate(BaseModel):
+    tenant_id: UUID
+    customer_id: UUID
+    subscriber_id: UUID | None = None
+    plan_id: UUID
+    account_code: str | None = None
+    currency: str = Field(default="INR", min_length=3, max_length=3)
+    cycle_days: int | None = Field(default=None, ge=1, le=366)
+    due_days: int = Field(default=7, ge=0, le=90)
+    tax_percent: Decimal = Field(default=Decimal("0"), ge=0, le=100)
+    custom_amount: Decimal | None = Field(default=None, gt=0)
+    next_invoice_at: datetime | None = None
+    auto_invoice: bool = True
+
+class BillingPlanUpdate(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    plan_id: UUID = Field(validation_alias=AliasChoices("plan_id", "planId"))
 class PaymentCreate(BaseModel):
     payment_reference: str
     invoice_id: UUID
@@ -90,12 +160,29 @@ def _plan_response(plan: Plan, db: Session) -> dict:
     return {
         "id": plan.id,
         "plan_code": plan.plan_code,
+        "tenant_id": plan.tenant_id,
         "name": plan.name,
+        "description": plan.description,
         "monthly_fee": plan.monthly_fee,
         "download_rate_kbps": plan.download_rate_kbps,
         "upload_rate_kbps": plan.upload_rate_kbps,
+        "billing_cycle_days": plan.billing_cycle_days,
         "status": plan.status,
         "network_policy": _network_policy_response(binding),
+    }
+
+def _schedule_response(item: BillingSchedule, db: Session) -> dict:
+    outstanding = db.scalar(select(func.coalesce(func.sum(Invoice.balance_due), 0)).where(
+        Invoice.tenant_id == item.tenant_id, Invoice.customer_id == item.customer_id,
+    ))
+    return {
+        "id": str(item.id), "tenant_id": str(item.tenant_id), "customer_id": str(item.customer_id),
+        "subscriber_id": str(item.subscriber_id) if item.subscriber_id else None, "plan_id": str(item.plan_id),
+        "account_code": item.account_code, "currency": item.currency, "cycle_day": item.next_invoice_at.day,
+        "cycle_days": item.cycle_days, "due_days": item.due_days, "tax_percent": str(item.tax_percent),
+        "custom_amount": str(item.custom_amount) if item.custom_amount is not None else None,
+        "last_invoice_at": item.last_invoice_at, "next_invoice_at": item.next_invoice_at,
+        "outstanding_balance": str(outstanding), "status": item.status, "auto_invoice": item.auto_invoice,
     }
 
 
@@ -130,21 +217,27 @@ def _active_policy_version(tenant_id: UUID, policy_version_id: UUID) -> dict:
     return policy
 
 
-@app.post('/plans', response_model=PlanResponse, status_code=status.HTTP_201_CREATED)
-def create_plan(payload: PlanCreate, db: Session = Depends(db_session)):
-    plan = Plan(**payload.model_dump()); db.add(plan)
+@app.post('/plans', response_model=PlanResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(internal_service_auth)])
+def create_plan(payload: PlanCreate, tenant_id: UUID | None = None, db: Session = Depends(db_session)):
+    values = payload.model_dump()
+    values["tenant_id"] = payload.tenant_id or tenant_id
+    plan = Plan(**values); db.add(plan)
     try: db.commit()
     except Exception as exc: db.rollback(); raise HTTPException(409, 'plan_code already exists') from exc
     db.refresh(plan); return _plan_response(plan, db)
-@app.get('/plans', response_model=list[PlanResponse])
-def list_plans(db: Session = Depends(db_session)): return [_plan_response(plan, db) for plan in db.scalars(select(Plan))]
-@app.get('/plans/{plan_id}', response_model=PlanResponse)
+@app.get('/plans', response_model=list[PlanResponse], dependencies=[Depends(internal_service_auth)])
+def list_plans(tenant_id: UUID | None = None, db: Session = Depends(db_session)):
+    statement = select(Plan)
+    if tenant_id is not None:
+        statement = statement.where((Plan.tenant_id == tenant_id) | (Plan.tenant_id.is_(None)))
+    return [_plan_response(plan, db) for plan in db.scalars(statement.order_by(Plan.created_at.desc()))]
+@app.get('/plans/{plan_id}', response_model=PlanResponse, dependencies=[Depends(internal_service_auth)])
 def get_plan(plan_id: UUID, db: Session = Depends(db_session)):
     plan = db.get(Plan, plan_id)
     if plan is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, 'plan not found')
     return _plan_response(plan, db)
-@app.patch('/plans/{plan_id}', response_model=PlanResponse)
+@app.patch('/plans/{plan_id}', response_model=PlanResponse, dependencies=[Depends(internal_service_auth)])
 def update_plan(plan_id: UUID, payload: PlanUpdate, db: Session = Depends(db_session)):
     plan = db.get(Plan, plan_id)
     if plan is None:
@@ -156,7 +249,7 @@ def update_plan(plan_id: UUID, payload: PlanUpdate, db: Session = Depends(db_ses
     return _plan_response(plan, db)
 
 
-@app.get('/plans/{plan_id}/network-policy')
+@app.get('/plans/{plan_id}/network-policy', dependencies=[Depends(internal_service_auth)])
 def get_plan_network_policy(plan_id: UUID, db: Session = Depends(db_session)):
     if db.get(Plan, plan_id) is None:
         raise HTTPException(404, 'plan not found')
@@ -166,7 +259,7 @@ def get_plan_network_policy(plan_id: UUID, db: Session = Depends(db_session)):
     return _network_policy_response(binding)
 
 
-@app.put('/plans/{plan_id}/network-policy')
+@app.put('/plans/{plan_id}/network-policy', dependencies=[Depends(internal_service_auth)])
 def attach_plan_network_policy(plan_id: UUID, payload: PlanNetworkPolicyBindingIn, db: Session = Depends(db_session)):
     if db.get(Plan, plan_id) is None:
         raise HTTPException(404, 'plan not found')
@@ -189,11 +282,71 @@ def attach_plan_network_policy(plan_id: UUID, payload: PlanNetworkPolicyBindingI
     db.commit()
     db.refresh(binding)
     return _network_policy_response(binding)
-@app.post('/invoices', response_model=InvoiceResponse, status_code=status.HTTP_201_CREATED)
-def create_invoice(payload: InvoiceCreate, db: Session = Depends(db_session)):
-    if db.get(Plan, payload.plan_id) is None: raise HTTPException(404, 'plan not found')
-    invoice = Invoice(**payload.model_dump(), balance_due=payload.amount); db.add(invoice); db.commit(); db.refresh(invoice); return invoice
-@app.post('/payments', response_model=PaymentResponse, status_code=status.HTTP_201_CREATED)
+@app.post('/invoices', response_model=InvoiceResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(internal_service_auth)])
+def create_invoice(payload: InvoiceCreate, tenant_id: UUID | None = None, db: Session = Depends(db_session)):
+    effective_tenant = payload.tenant_id or tenant_id
+    plan = db.get(Plan, payload.plan_id)
+    if plan is None: raise HTTPException(404, 'plan not found')
+    if effective_tenant and plan.tenant_id and effective_tenant != plan.tenant_id:
+        raise HTTPException(422, 'plan belongs to a different tenant')
+    values = payload.model_dump()
+    values["tenant_id"] = effective_tenant
+    values["invoice_number"] = payload.invoice_number or f"INV-{datetime.now(timezone.utc):%Y%m%d%H%M%S%f}"
+    values["line_items"] = payload.line_items or [{"description": plan.name, "quantity": 1, "unit_price": str(payload.subtotal), "total": str(payload.subtotal)}]
+    invoice = Invoice(**values, balance_due=payload.amount)
+    db.add(invoice)
+    if effective_tenant and payload.billing_period_end:
+        schedule = db.scalar(select(BillingSchedule).where(
+            BillingSchedule.tenant_id == effective_tenant,
+            BillingSchedule.customer_id == payload.customer_id,
+            BillingSchedule.status == "active",
+        ))
+        if schedule is None:
+            db.add(BillingSchedule(
+                tenant_id=effective_tenant, customer_id=payload.customer_id, subscriber_id=payload.subscriber_id,
+                plan_id=payload.plan_id, account_code=f"BA-{str(payload.customer_id).replace('-', '')[-12:].upper()}",
+                cycle_days=plan.billing_cycle_days, next_invoice_at=payload.billing_period_end + timedelta(seconds=1),
+            ))
+    try: db.commit()
+    except Exception as exc: db.rollback(); raise HTTPException(409, 'invoice number already exists') from exc
+    db.refresh(invoice); return invoice
+
+@app.post('/billing/accounts', status_code=status.HTTP_201_CREATED, dependencies=[Depends(internal_service_auth)])
+def create_billing_schedule(payload: BillingScheduleCreate, db: Session = Depends(db_session)):
+    plan = db.get(Plan, payload.plan_id)
+    if plan is None: raise HTTPException(404, 'plan not found')
+    if plan.tenant_id and plan.tenant_id != payload.tenant_id: raise HTTPException(422, 'plan belongs to a different tenant')
+    existing = db.scalar(select(BillingSchedule).where(BillingSchedule.tenant_id == payload.tenant_id, BillingSchedule.customer_id == payload.customer_id, BillingSchedule.status == 'active'))
+    if existing: return _schedule_response(existing, db)
+    account_code = payload.account_code or f"BA-{str(payload.customer_id).replace('-', '')[-12:].upper()}"
+    schedule = BillingSchedule(
+        tenant_id=payload.tenant_id, customer_id=payload.customer_id, subscriber_id=payload.subscriber_id,
+        plan_id=payload.plan_id, account_code=account_code, currency=payload.currency.upper(),
+        cycle_days=payload.cycle_days or plan.billing_cycle_days, due_days=payload.due_days,
+        tax_percent=payload.tax_percent, custom_amount=payload.custom_amount,
+        next_invoice_at=payload.next_invoice_at or datetime.now(timezone.utc), auto_invoice=payload.auto_invoice,
+    )
+    db.add(schedule)
+    try: db.commit()
+    except Exception as exc: db.rollback(); raise HTTPException(409, 'billing account code already exists') from exc
+    db.refresh(schedule); return _schedule_response(schedule, db)
+
+@app.get('/billing/accounts', dependencies=[Depends(internal_service_auth)])
+def list_billing_schedules(tenant_id: UUID | None = None, db: Session = Depends(db_session)):
+    statement = select(BillingSchedule)
+    if tenant_id is not None: statement = statement.where(BillingSchedule.tenant_id == tenant_id)
+    return [_schedule_response(item, db) for item in db.scalars(statement.order_by(BillingSchedule.created_at.desc()))]
+
+@app.put('/billing/accounts/{account_id}/plan', dependencies=[Depends(internal_service_auth)])
+def update_billing_plan(account_id: UUID, payload: BillingPlanUpdate, db: Session = Depends(db_session)):
+    schedule = db.get(BillingSchedule, account_id)
+    plan = db.get(Plan, payload.plan_id)
+    if schedule is None: raise HTTPException(404, 'billing account not found')
+    if plan is None: raise HTTPException(404, 'plan not found')
+    if plan.tenant_id and plan.tenant_id != schedule.tenant_id: raise HTTPException(422, 'plan belongs to a different tenant')
+    schedule.plan_id = plan.id; schedule.cycle_days = plan.billing_cycle_days
+    db.commit(); db.refresh(schedule); return _schedule_response(schedule, db)
+@app.post('/payments', response_model=PaymentResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(internal_service_auth)])
 def record_payment(payload: PaymentCreate, db: Session = Depends(db_session)):
     invoice = db.get(Invoice, payload.invoice_id)
     if invoice is None: raise HTTPException(404, 'invoice not found')
@@ -201,7 +354,35 @@ def record_payment(payload: PaymentCreate, db: Session = Depends(db_session)):
     payment = Payment(**payload.model_dump()); invoice.balance_due -= payload.amount
     invoice.status = 'paid' if invoice.balance_due == 0 else 'partially_paid'
     db.add(payment); db.commit(); db.refresh(payment); return payment
-@app.get('/invoices', response_model=list[InvoiceResponse])
-def list_invoices(db: Session = Depends(db_session)): return list(db.scalars(select(Invoice)))
-@app.get('/payments', response_model=list[PaymentResponse])
+@app.get('/invoices', response_model=list[InvoiceResponse], dependencies=[Depends(internal_service_auth)])
+def list_invoices(tenant_id: UUID | None = None, db: Session = Depends(db_session)):
+    statement = select(Invoice)
+    if tenant_id is not None: statement = statement.where(Invoice.tenant_id == tenant_id)
+    return list(db.scalars(statement.order_by(Invoice.created_at.desc())))
+
+@app.post('/invoices/refresh-overdue', dependencies=[Depends(internal_service_auth)])
+def refresh_overdue(tenant_id: UUID | None = None, db: Session = Depends(db_session)):
+    return {"updated": refresh_overdue_invoices(db, tenant_id=tenant_id)}
+
+@app.post('/invoices/generate-due', dependencies=[Depends(internal_service_auth)])
+def generate_due_invoices(tenant_id: UUID | None = None, db: Session = Depends(db_session)):
+    return run_due_billing(db, tenant_id=tenant_id)
+
+@app.get('/invoices/{invoice_id}', response_model=InvoiceResponse, dependencies=[Depends(internal_service_auth)])
+def get_invoice(invoice_id: UUID, tenant_id: UUID | None = None, db: Session = Depends(db_session)):
+    invoice = db.get(Invoice, invoice_id)
+    if invoice is None or (tenant_id and invoice.tenant_id != tenant_id): raise HTTPException(404, 'invoice not found')
+    return invoice
+
+@app.patch('/invoices/{invoice_id}', response_model=InvoiceResponse, dependencies=[Depends(internal_service_auth)])
+def update_invoice(invoice_id: UUID, payload: InvoiceUpdate, db: Session = Depends(db_session)):
+    invoice = db.get(Invoice, invoice_id)
+    if invoice is None: raise HTTPException(404, 'invoice not found')
+    target = payload.status.lower()
+    transitions = {"draft": {"issued"}, "issued": {"overdue", "void"}, "partially_paid": {"paid", "overdue"}, "overdue": {"partially_paid", "paid", "void"}}
+    if target == invoice.status: return invoice
+    if target not in transitions.get(invoice.status, set()): raise HTTPException(422, f"cannot transition invoice from {invoice.status} to {target}")
+    invoice.status = target; db.commit(); db.refresh(invoice); return invoice
+
+@app.get('/payments', response_model=list[PaymentResponse], dependencies=[Depends(internal_service_auth)])
 def list_payments(db: Session = Depends(db_session)): return list(db.scalars(select(Payment)))

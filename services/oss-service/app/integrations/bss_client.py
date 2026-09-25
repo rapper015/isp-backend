@@ -44,8 +44,9 @@ class BssClient(Adapter):
 
         base_url = getenv("OSS_BSS_BASE_URL", "http://bss-service:8000").rstrip("/")
         url = f"{base_url}/plans/{quote(str(plan_reference), safe='')}"
+        headers = {"X-BSS-Service-Key": getenv("OSS_BSS_INTERNAL_API_KEY", "")}
         try:
-            response = httpx.get(url, timeout=5.0)
+            response = httpx.get(url, headers=headers, timeout=5.0)
         except httpx.HTTPError as error:
             raise AdapterError("BSS plan validation is temporarily unavailable") from error
 
@@ -84,7 +85,21 @@ class BssClient(Adapter):
         )
 
     def create_billing_account(self, tenant_id, customer_id, plan_reference) -> dict:
-        return {"billing_account_reference": f"bacc-{customer_id}"}
+        base_url = getenv("OSS_BSS_BASE_URL", "http://bss-service:8000").rstrip("/")
+        headers = {"X-BSS-Service-Key": getenv("OSS_BSS_INTERNAL_API_KEY", "")}
+        try:
+            response = httpx.post(
+                f"{base_url}/billing/accounts",
+                headers=headers,
+                json={"tenant_id": str(tenant_id), "customer_id": str(customer_id), "plan_id": str(plan_reference)},
+                timeout=5.0,
+            )
+        except httpx.HTTPError as error:
+            raise AdapterError("BSS billing account creation is temporarily unavailable") from error
+        if response.status_code >= 400:
+            raise AdapterError(f"BSS rejected billing account creation ({response.status_code})")
+        account = response.json()
+        return {"billing_account_reference": str(account["id"]), "account_code": account.get("account_code")}
 
     def suspend_billing(self, tenant_id, billing_account_reference) -> dict:
         return {"billing_account_reference": billing_account_reference, "suspended": True}

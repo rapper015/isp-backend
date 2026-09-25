@@ -7,6 +7,7 @@ from fastapi import HTTPException, Request
 
 
 ROLE_PERMISSIONS = {
+    "PLATFORM_SUPER_ADMIN": {"*"},
     "PLATFORM_ADMIN": {"*"},
     "ISP_OWNER": {"*"},
     "ISP_ADMIN": {"*"},
@@ -32,6 +33,12 @@ ROLE_PERMISSIONS = {
 
 
 def management_permission(method: str, path: str) -> str | None:
+    if path.startswith("/plans"):
+        return "bss.invoice.view" if method == "GET" else "bss.invoice.manage"
+    if path.startswith("/invoices"):
+        return "bss.invoice.view" if method == "GET" else "bss.invoice.manage"
+    if path.startswith("/payments"):
+        return "bss.payment.view" if method == "GET" else "bss.payment.manage"
     if not path.startswith("/api/bss"):
         return None
     if "/gateway-accounts" in path:

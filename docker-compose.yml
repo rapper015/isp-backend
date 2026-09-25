@@ -128,6 +128,21 @@ services:
       BSS_AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
       BSS_CRM_BASE_URL: http://crm-service:8000
       BSS_CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
+      BSS_INTERNAL_API_KEY: ${BSS_INTERNAL_API_KEY:-local-development-bss-service-key-change-in-production}
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+
+  billing-scheduler:
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: bss-service}}
+    command: ["sh", "-c", "alembic upgrade head && python -m app.scheduler"]
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: billing-scheduler
+      DATABASE_URL: postgresql://isp:isp@postgres:5432/bss
+      BSS_BILLING_INTERVAL_SECONDS: ${BSS_BILLING_INTERVAL_SECONDS:-300}
+    depends_on:
+      bss-service:
+        condition: service_healthy
+    networks: [platform]
 
   oss-service:
     <<: *domain-service
@@ -138,6 +153,7 @@ services:
       DATABASE_URL: postgresql://isp:isp@postgres:5432/oss
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       OSS_BSS_BASE_URL: http://bss-service:8000
+      OSS_BSS_INTERNAL_API_KEY: ${BSS_INTERNAL_API_KEY:-local-development-bss-service-key-change-in-production}
       OSS_CRM_BASE_URL: http://crm-service:8000
       OSS_CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
       OSS_AAA_BASE_URL: http://aaa-service:8000

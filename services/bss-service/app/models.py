@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import DateTime, ForeignKey, Integer, JSON, Numeric, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON, Numeric, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 from .database import Base
 
@@ -10,9 +10,12 @@ class Plan(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     plan_code: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(255))
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True, index=True)
+    description: Mapped[str] = mapped_column(Text, default="")
     monthly_fee: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     download_rate_kbps: Mapped[int] = mapped_column()
     upload_rate_kbps: Mapped[int] = mapped_column()
+    billing_cycle_days: Mapped[int] = mapped_column(Integer, default=30)
     status: Mapped[str] = mapped_column(String(16), default="active")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -43,11 +46,50 @@ class Invoice(Base):
     customer_id: Mapped[uuid.UUID] = mapped_column(index=True)  # CRM external reference
     subscriber_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True, index=True)  # OSS external reference
     plan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("plans.id"))
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True, index=True)
+    billing_period_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    billing_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    subtotal: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=0)
+    tax_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=0)
+    line_items: Mapped[list] = mapped_column(JSON, default=list)
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     balance_due: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     status: Mapped[str] = mapped_column(String(16), default="issued", index=True)
     due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class BillingSchedule(Base):
+    __tablename__ = "billing_schedules"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    customer_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    subscriber_id: Mapped[uuid.UUID | None] = mapped_column(index=True, nullable=True)
+    plan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("plans.id"), index=True, nullable=False)
+    account_code: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    currency: Mapped[str] = mapped_column(String(3), default="INR")
+    cycle_days: Mapped[int] = mapped_column(Integer, default=30)
+    due_days: Mapped[int] = mapped_column(Integer, default=7)
+    tax_percent: Mapped[Decimal] = mapped_column(Numeric(6, 3), default=0)
+    custom_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    next_invoice_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    last_invoice_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="active", index=True)
+    auto_invoice: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class BillingRun(Base):
+    __tablename__ = "billing_runs"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="running")
+    generated_count: Mapped[int] = mapped_column(Integer, default=0)
+    failed_count: Mapped[int] = mapped_column(Integer, default=0)
+    detail: Mapped[dict] = mapped_column(JSON, default=dict)
 
 class Payment(Base):
     __tablename__ = "payments"
