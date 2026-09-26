@@ -61,6 +61,8 @@ services:
         condition: service_healthy
       intelligence-service:
         condition: service_healthy
+      support-service:
+        condition: service_healthy
     networks: [edge, platform]
 
   postgres:
@@ -69,7 +71,7 @@ services:
       POSTGRES_DB: isp
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
-      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,identity,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy,assurance,intelligence
+      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,identity,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy,assurance,intelligence,support
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
@@ -112,9 +114,24 @@ services:
       SERVICE_NAME: crm-service
       DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/crm
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
+      CUSTOMER_PORTAL_JWT_SECRET: ${CUSTOMER_PORTAL_JWT_SECRET:-${PLATFORM_JWT_SECRET}}
+      CUSTOMER_PORTAL_ACCESS_MINUTES: ${CUSTOMER_PORTAL_ACCESS_MINUTES:-30}
       CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
       CRM_INTERNAL_API_KEYS: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+
+  support-service:
+    <<: *domain-service
+    build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: support-service}}
+    environment:
+      <<: *domain-environment
+      SERVICE_NAME: support-service
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/support
+      PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
+      SUPPORT_CUSTOMER_JWT_SECRET: ${CUSTOMER_PORTAL_JWT_SECRET:-${PLATFORM_JWT_SECRET}}
+      SUPPORT_INTERNAL_API_KEY: ${SUPPORT_INTERNAL_API_KEY:-change-me-support-internal-key}
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
 
   bss-service:
     <<: *domain-service
@@ -124,6 +141,7 @@ services:
       SERVICE_NAME: bss-service
       DATABASE_URL: postgresql://isp:isp@postgres:5432/bss
       BSS_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
+      CUSTOMER_PORTAL_JWT_SECRET: ${CUSTOMER_PORTAL_JWT_SECRET:-${PLATFORM_JWT_SECRET}}
       BSS_AAA_BASE_URL: http://aaa-service:8000
       BSS_AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
       BSS_CRM_BASE_URL: http://crm-service:8000
@@ -152,6 +170,7 @@ services:
       SERVICE_NAME: oss-service
       DATABASE_URL: postgresql://isp:isp@postgres:5432/oss
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
+      CUSTOMER_PORTAL_JWT_SECRET: ${CUSTOMER_PORTAL_JWT_SECRET:-${PLATFORM_JWT_SECRET}}
       OSS_BSS_BASE_URL: http://bss-service:8000
       OSS_BSS_INTERNAL_API_KEY: ${BSS_INTERNAL_API_KEY:-local-development-bss-service-key-change-in-production}
       OSS_CRM_BASE_URL: http://crm-service:8000

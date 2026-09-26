@@ -6,9 +6,12 @@ All routes are tenant-scoped, permission-checked, validated, audited and
 idempotent where applicable.
 """
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 from os import getenv
 from uuid import UUID
 
+import bcrypt
+import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,11 +22,11 @@ from sqlalchemy.orm import Session
 from isp_shared.cors import cors_allowed_origins
 
 from .database import Base, SessionLocal, engine
-from .models import (AuditLog, Branch, Customer, ExperienceRecovery, ExternalReference,
+from .models import (AuditLog, Branch, Customer, CustomerPortalIdentity, ExperienceRecovery, ExternalReference,
                      FederationLink, Franchise, KbFeedback, KycCase, KycDocument, Lead,
                      LeadInteraction, FollowUp, LoyaltyScore, ServiceLocation, Tenant,
                      TicketSuggestion, TimelineEntry)
-from .schemas import (AddressCreate, BranchIn, BranchUpdate, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, FranchiseSettingsPatch, FranchiseUpdate, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
+from .schemas import (AddressCreate, BranchIn, BranchUpdate, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, FranchiseSettingsPatch, FranchiseUpdate, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, PortalIdentityCreate, PortalLogin, PortalPasswordChange, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
 from .security import internal_service_auth
 from .services import (caf_service, conversion_service, customer_360, customer_service, duplicate_service, kyc_service, lead_service, lifecycle_service, merge_service, risk_service)
 from .services.audit_service import outbox, record_audit
@@ -66,6 +69,37 @@ def db():
         yield session
     finally:
         session.close()
+
+
+def _portal_secret() -> str:
+    secret = getenv("CUSTOMER_PORTAL_JWT_SECRET", getenv("PLATFORM_JWT_SECRET", ""))
+    if len(secret) < 32:
+        raise HTTPException(503, "customer portal authentication is not securely configured")
+    return secret
+
+
+def _password_hash(value: str) -> str:
+    return bcrypt.hashpw(value.encode(), bcrypt.gensalt(rounds=12)).decode()
+
+
+def _password_valid(value: str, hashed: str) -> bool:
+    try:
+        return bcrypt.checkpw(value.encode(), hashed.encode())
+    except ValueError:
+        return False
+
+
+def _portal_principal(request: Request) -> dict:
+    header = request.headers.get("Authorization", "")
+    if not header.startswith("Bearer "):
+        raise HTTPException(401, "customer portal authentication required")
+    try:
+        claims = jwt.decode(header[7:], _portal_secret(), algorithms=["HS256"], issuer="isp-customer-portal", options={"require": ["sub", "customer_id", "tenant_id", "exp", "iat", "iss"]})
+    except jwt.PyJWTError as error:
+        raise HTTPException(401, "invalid or expired customer portal session") from error
+    if claims.get("token_type") != "customer_portal":
+        raise HTTPException(401, "invalid customer portal token")
+    return claims
 
 
 def bounded(limit: int) -> int:
@@ -571,7 +605,7 @@ def reschedule_followup(followup_id: UUID, tenant_id: UUID, payload: FollowUpRes
 
 def safe_customer(item: Customer) -> dict:
     return {
-        "id": str(item.id), "customer_number": item.customer_number, "customer_code": item.customer_code,
+        "id": str(item.id), "tenant_id": str(item.tenant_id), "customer_number": item.customer_number, "customer_code": item.customer_code,
         "caf_number": item.caf_number, "customer_type": item.customer_type, "full_name": item.full_name,
         "legal_name": item.legal_name, "first_name": item.first_name, "last_name": item.last_name,
         "company_trading_name": item.company_trading_name, "gstin": item.gstin, "phone": item.phone, "email": item.email,
@@ -617,6 +651,91 @@ def list_customers(request: Request, tenant_id: UUID | None = None, lifecycle_st
 def get_customer(customer_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
     item = visible_item(session, request, Customer, customer_id, tenant_id, "customer")
     return safe_customer(item)
+
+
+@app.get("/api/crm/customers/{customer_id}/portal-identity", dependencies=[Depends(internal_service_auth)])
+def get_portal_identity(customer_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    customer = visible_item(session, request, Customer, customer_id, tenant_id, "customer")
+    identity = session.scalar(select(CustomerPortalIdentity).where(CustomerPortalIdentity.tenant_id == customer.tenant_id, CustomerPortalIdentity.customer_id == customer.id))
+    if identity is None:
+        return {"configured": False, "customer_id": str(customer.id), "customer_number": customer.customer_number}
+    return {"configured": True, "id": str(identity.id), "customer_id": str(customer.id), "customer_number": customer.customer_number,
+            "status": identity.status, "must_change_password": identity.must_change_password,
+            "last_login_at": identity.last_login_at, "locked_until": identity.locked_until}
+
+
+@app.put("/api/crm/customers/{customer_id}/portal-identity", dependencies=[Depends(internal_service_auth)])
+def provision_portal_identity(customer_id: UUID, tenant_id: UUID, payload: PortalIdentityCreate, request: Request, session: Session = Depends(db)):
+    customer = tenant_item(session, Customer, customer_id, tenant_id, "customer")
+    portal_login_id = customer.customer_number.strip().upper()
+    identity = session.scalar(select(CustomerPortalIdentity).where(CustomerPortalIdentity.tenant_id == tenant_id, CustomerPortalIdentity.customer_id == customer.id))
+    collision = session.scalar(select(CustomerPortalIdentity).where(CustomerPortalIdentity.username == portal_login_id, CustomerPortalIdentity.customer_id != customer.id))
+    if collision:
+        raise HTTPException(409, "customer ID is already in use")
+    if identity is None:
+        identity = CustomerPortalIdentity(tenant_id=tenant_id, customer_id=customer.id, username=portal_login_id, password_hash=_password_hash(payload.temporary_password))
+        session.add(identity)
+    else:
+        identity.username = portal_login_id; identity.password_hash = _password_hash(payload.temporary_password)
+        identity.status = "ACTIVE"; identity.must_change_password = True; identity.failed_attempts = 0; identity.locked_until = None
+    session.commit(); session.refresh(identity)
+    record_audit(session, tenant_id, actor_of(request), "crm.customer.portal_identity.provisioned", "customer", customer.id, {"customer_number": portal_login_id})
+    session.commit()
+    return {"configured": True, "id": str(identity.id), "customer_id": str(customer.id), "customer_number": customer.customer_number,
+            "status": identity.status, "must_change_password": identity.must_change_password}
+
+
+@app.delete("/api/crm/customers/{customer_id}/portal-identity", dependencies=[Depends(internal_service_auth)])
+def disable_portal_identity(customer_id: UUID, tenant_id: UUID, request: Request, session: Session = Depends(db)):
+    tenant_item(session, Customer, customer_id, tenant_id, "customer")
+    identity = session.scalar(select(CustomerPortalIdentity).where(CustomerPortalIdentity.tenant_id == tenant_id, CustomerPortalIdentity.customer_id == customer_id))
+    if identity is None: raise HTTPException(404, "portal identity is not configured")
+    identity.status = "DISABLED"; identity.locked_until = None; session.commit()
+    record_audit(session, tenant_id, actor_of(request), "crm.customer.portal_identity.disabled", "customer", customer_id, {"username": identity.username}); session.commit()
+    return {"configured": True, "status": identity.status}
+
+
+@app.post("/api/crm/portal/auth/login")
+def portal_login(payload: PortalLogin, session: Session = Depends(db)):
+    now = datetime.now(timezone.utc)
+    customer_number = payload.customer_id.strip().upper()
+    identity = session.scalar(select(CustomerPortalIdentity).join(Customer, Customer.id == CustomerPortalIdentity.customer_id).where(Customer.customer_number == customer_number))
+    valid = identity is not None and identity.status == "ACTIVE" and not (identity.locked_until and identity.locked_until > now) and _password_valid(payload.password, identity.password_hash)
+    if not valid:
+        if identity is not None:
+            identity.failed_attempts += 1
+            if identity.failed_attempts >= 5:
+                identity.locked_until = now + timedelta(minutes=15); identity.failed_attempts = 0
+            session.commit()
+        raise HTTPException(401, "invalid portal credentials")
+    identity.failed_attempts = 0; identity.locked_until = None; identity.last_login_at = now; session.commit()
+    expires = now + timedelta(minutes=int(getenv("CUSTOMER_PORTAL_ACCESS_MINUTES", "30")))
+    token = jwt.encode({"sub": str(identity.id), "tenant_id": str(identity.tenant_id), "customer_id": str(identity.customer_id),
+                        "token_type": "customer_portal", "must_change_password": identity.must_change_password,
+                        "iat": now, "exp": expires, "iss": "isp-customer-portal"}, _portal_secret(), algorithm="HS256")
+    return {"access_token": token, "token_type": "bearer", "expires_at": expires, "must_change_password": identity.must_change_password}
+
+
+@app.get("/api/crm/portal/me")
+def portal_me(request: Request, session: Session = Depends(db)):
+    principal = _portal_principal(request)
+    customer = session.get(Customer, UUID(principal["customer_id"]))
+    if customer is None or str(customer.tenant_id) != principal["tenant_id"]:
+        raise HTTPException(404, "customer account not found")
+    return {"customer_id": str(customer.id), "customer_number": customer.customer_number, "name": customer.full_name,
+            "phone": customer.phone, "email": customer.email, "status": customer.status,
+            "must_change_password": bool(principal.get("must_change_password"))}
+
+
+@app.post("/api/crm/portal/password")
+def portal_change_password(payload: PortalPasswordChange, request: Request, session: Session = Depends(db)):
+    principal = _portal_principal(request)
+    identity = session.get(CustomerPortalIdentity, UUID(principal["sub"]))
+    if identity is None or not _password_valid(payload.current_password, identity.password_hash):
+        raise HTTPException(401, "current password is incorrect")
+    identity.password_hash = _password_hash(payload.new_password); identity.must_change_password = False
+    identity.password_changed_at = datetime.now(timezone.utc); session.commit()
+    return {"status": "password_changed"}
 
 
 @app.patch("/api/crm/customers/{customer_id}", dependencies=[Depends(internal_service_auth)])

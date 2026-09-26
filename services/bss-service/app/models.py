@@ -44,6 +44,7 @@ class Invoice(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     invoice_number: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     customer_id: Mapped[uuid.UUID] = mapped_column(index=True)  # CRM external reference
+    billing_account_id: Mapped[uuid.UUID | None] = mapped_column(index=True, nullable=True)
     subscriber_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True, index=True)  # OSS external reference
     plan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("plans.id"))
     tenant_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True, index=True)
@@ -90,6 +91,44 @@ class BillingRun(Base):
     generated_count: Mapped[int] = mapped_column(Integer, default=0)
     failed_count: Mapped[int] = mapped_column(Integer, default=0)
     detail: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class BillingAccount(Base):
+    """Customer-owned financial account. One account can aggregate many services."""
+    __tablename__ = "billing_accounts"
+    __table_args__ = (UniqueConstraint("tenant_id", "customer_id", name="uq_billing_account_customer"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    customer_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    account_number: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    currency: Mapped[str] = mapped_column(String(3), default="INR")
+    cycle_days: Mapped[int] = mapped_column(Integer, default=30)
+    due_days: Mapped[int] = mapped_column(Integer, default=7)
+    tax_percent: Mapped[Decimal] = mapped_column(Numeric(6, 3), default=0)
+    next_invoice_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    last_invoice_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="active", index=True)
+    auto_invoice: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class BillingAccountItem(Base):
+    """A billable subscriber connection attached to its customer's account."""
+    __tablename__ = "billing_account_items"
+    __table_args__ = (UniqueConstraint("billing_account_id", "subscriber_id", name="uq_billing_item_subscriber"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    billing_account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("billing_accounts.id", ondelete="CASCADE"), index=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    customer_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    subscriber_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    plan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("plans.id"), index=True, nullable=False)
+    description: Mapped[str] = mapped_column(String(255), default="Internet service")
+    custom_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="active", index=True)
+    effective_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    effective_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 class Payment(Base):
     __tablename__ = "payments"

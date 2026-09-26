@@ -3,12 +3,13 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from os import getenv
 from uuid import UUID
-from fastapi import Depends, FastAPI, HTTPException, status
+import jwt
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import BillingSchedule, Invoice, Payment, Plan, PlanNetworkPolicyBinding
+from .models import BillingAccount, BillingAccountItem, Invoice, Payment, Plan, PlanNetworkPolicyBinding
 from .billing_cycles import refresh_overdue_invoices, run_due_billing
 from .revenue.router import router as revenue_router
 from .revenue.catalog_router import router as catalog_router
@@ -27,6 +28,18 @@ def db_session():
     db = SessionLocal()
     try: yield db
     finally: db.close()
+
+def portal_principal(request: Request) -> dict:
+    header = request.headers.get("Authorization", "")
+    secret = getenv("CUSTOMER_PORTAL_JWT_SECRET", getenv("BSS_JWT_SECRET", ""))
+    if not header.startswith("Bearer ") or len(secret) < 32:
+        raise HTTPException(401, "customer portal authentication required")
+    try:
+        claims = jwt.decode(header[7:], secret, algorithms=["HS256"], issuer="isp-customer-portal", options={"require": ["customer_id", "tenant_id", "exp", "iat", "iss"]})
+    except jwt.PyJWTError as error:
+        raise HTTPException(401, "invalid or expired customer portal session") from error
+    if claims.get("token_type") != "customer_portal": raise HTTPException(401, "invalid customer portal token")
+    return claims
 
 class PlanCreate(BaseModel):
     tenant_id: UUID | None = None
@@ -94,6 +107,7 @@ class InvoiceResponse(BaseModel):
     tenant_id: UUID | None
     invoice_number: str
     customer_id: UUID
+    billing_account_id: UUID | None
     subscriber_id: UUID | None
     plan_id: UUID
     subtotal: Decimal
@@ -128,6 +142,12 @@ class BillingScheduleCreate(BaseModel):
 class BillingPlanUpdate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     plan_id: UUID = Field(validation_alias=AliasChoices("plan_id", "planId"))
+
+class BillingItemCreate(BaseModel):
+    subscriber_id: UUID
+    plan_id: UUID
+    description: str = Field(default="Internet service", max_length=255)
+    custom_amount: Decimal | None = Field(default=None, gt=0)
 class PaymentCreate(BaseModel):
     payment_reference: str
     invoice_id: UUID
@@ -171,19 +191,26 @@ def _plan_response(plan: Plan, db: Session) -> dict:
         "network_policy": _network_policy_response(binding),
     }
 
-def _schedule_response(item: BillingSchedule, db: Session) -> dict:
+def _schedule_response(item: BillingAccount, db: Session) -> dict:
     outstanding = db.scalar(select(func.coalesce(func.sum(Invoice.balance_due), 0)).where(
         Invoice.tenant_id == item.tenant_id, Invoice.customer_id == item.customer_id,
     ))
     return {
         "id": str(item.id), "tenant_id": str(item.tenant_id), "customer_id": str(item.customer_id),
-        "subscriber_id": str(item.subscriber_id) if item.subscriber_id else None, "plan_id": str(item.plan_id),
-        "account_code": item.account_code, "currency": item.currency, "cycle_day": item.next_invoice_at.day,
+        "account_number": item.account_number, "account_code": item.account_number,
+        "currency": item.currency, "cycle_day": item.next_invoice_at.day,
         "cycle_days": item.cycle_days, "due_days": item.due_days, "tax_percent": str(item.tax_percent),
-        "custom_amount": str(item.custom_amount) if item.custom_amount is not None else None,
         "last_invoice_at": item.last_invoice_at, "next_invoice_at": item.next_invoice_at,
         "outstanding_balance": str(outstanding), "status": item.status, "auto_invoice": item.auto_invoice,
+        "items": [_billing_item_response(value) for value in db.scalars(select(BillingAccountItem).where(BillingAccountItem.billing_account_id == item.id).order_by(BillingAccountItem.created_at))],
     }
+
+
+def _billing_item_response(item: BillingAccountItem) -> dict:
+    return {"id": str(item.id), "billing_account_id": str(item.billing_account_id), "customer_id": str(item.customer_id),
+            "subscriber_id": str(item.subscriber_id), "plan_id": str(item.plan_id), "description": item.description,
+            "custom_amount": str(item.custom_amount) if item.custom_amount is not None else None, "status": item.status,
+            "effective_from": item.effective_from, "effective_until": item.effective_until}
 
 
 def _active_policy_version(tenant_id: UUID, policy_version_id: UUID) -> dict:
@@ -293,20 +320,24 @@ def create_invoice(payload: InvoiceCreate, tenant_id: UUID | None = None, db: Se
     values["tenant_id"] = effective_tenant
     values["invoice_number"] = payload.invoice_number or f"INV-{datetime.now(timezone.utc):%Y%m%d%H%M%S%f}"
     values["line_items"] = payload.line_items or [{"description": plan.name, "quantity": 1, "unit_price": str(payload.subtotal), "total": str(payload.subtotal)}]
-    invoice = Invoice(**values, balance_due=payload.amount)
-    db.add(invoice)
     if effective_tenant and payload.billing_period_end:
-        schedule = db.scalar(select(BillingSchedule).where(
-            BillingSchedule.tenant_id == effective_tenant,
-            BillingSchedule.customer_id == payload.customer_id,
-            BillingSchedule.status == "active",
+        schedule = db.scalar(select(BillingAccount).where(
+            BillingAccount.tenant_id == effective_tenant,
+            BillingAccount.customer_id == payload.customer_id,
+            BillingAccount.status == "active",
         ))
         if schedule is None:
-            db.add(BillingSchedule(
-                tenant_id=effective_tenant, customer_id=payload.customer_id, subscriber_id=payload.subscriber_id,
-                plan_id=payload.plan_id, account_code=f"BA-{str(payload.customer_id).replace('-', '')[-12:].upper()}",
+            schedule = BillingAccount(
+                tenant_id=effective_tenant, customer_id=payload.customer_id,
+                account_number=f"BA-{str(payload.customer_id).replace('-', '')[-12:].upper()}",
                 cycle_days=plan.billing_cycle_days, next_invoice_at=payload.billing_period_end + timedelta(seconds=1),
-            ))
+            )
+            db.add(schedule); db.flush()
+        if payload.subscriber_id and not db.scalar(select(BillingAccountItem.id).where(BillingAccountItem.billing_account_id == schedule.id, BillingAccountItem.subscriber_id == payload.subscriber_id)):
+            db.add(BillingAccountItem(billing_account_id=schedule.id, tenant_id=effective_tenant, customer_id=payload.customer_id, subscriber_id=payload.subscriber_id, plan_id=payload.plan_id, description=plan.name))
+        values["billing_account_id"] = schedule.id
+    invoice = Invoice(**values, balance_due=payload.amount)
+    db.add(invoice)
     try: db.commit()
     except Exception as exc: db.rollback(); raise HTTPException(409, 'invoice number already exists') from exc
     db.refresh(invoice); return invoice
@@ -316,36 +347,69 @@ def create_billing_schedule(payload: BillingScheduleCreate, db: Session = Depend
     plan = db.get(Plan, payload.plan_id)
     if plan is None: raise HTTPException(404, 'plan not found')
     if plan.tenant_id and plan.tenant_id != payload.tenant_id: raise HTTPException(422, 'plan belongs to a different tenant')
-    existing = db.scalar(select(BillingSchedule).where(BillingSchedule.tenant_id == payload.tenant_id, BillingSchedule.customer_id == payload.customer_id, BillingSchedule.status == 'active'))
-    if existing: return _schedule_response(existing, db)
+    existing = db.scalar(select(BillingAccount).where(BillingAccount.tenant_id == payload.tenant_id, BillingAccount.customer_id == payload.customer_id))
+    if existing:
+        if payload.subscriber_id:
+            current = db.scalar(select(BillingAccountItem).where(BillingAccountItem.billing_account_id == existing.id, BillingAccountItem.subscriber_id == payload.subscriber_id))
+            if current:
+                current.plan_id = payload.plan_id; current.custom_amount = payload.custom_amount; current.status = "active"
+            else:
+                db.add(BillingAccountItem(billing_account_id=existing.id, tenant_id=payload.tenant_id, customer_id=payload.customer_id, subscriber_id=payload.subscriber_id, plan_id=payload.plan_id, description=plan.name, custom_amount=payload.custom_amount))
+            db.commit()
+        return _schedule_response(existing, db)
     account_code = payload.account_code or f"BA-{str(payload.customer_id).replace('-', '')[-12:].upper()}"
-    schedule = BillingSchedule(
-        tenant_id=payload.tenant_id, customer_id=payload.customer_id, subscriber_id=payload.subscriber_id,
-        plan_id=payload.plan_id, account_code=account_code, currency=payload.currency.upper(),
+    schedule = BillingAccount(
+        tenant_id=payload.tenant_id, customer_id=payload.customer_id,
+        account_number=account_code, currency=payload.currency.upper(),
         cycle_days=payload.cycle_days or plan.billing_cycle_days, due_days=payload.due_days,
-        tax_percent=payload.tax_percent, custom_amount=payload.custom_amount,
+        tax_percent=payload.tax_percent,
         next_invoice_at=payload.next_invoice_at or datetime.now(timezone.utc), auto_invoice=payload.auto_invoice,
     )
-    db.add(schedule)
+    db.add(schedule); db.flush()
+    if payload.subscriber_id:
+        db.add(BillingAccountItem(billing_account_id=schedule.id, tenant_id=payload.tenant_id, customer_id=payload.customer_id, subscriber_id=payload.subscriber_id, plan_id=payload.plan_id, description=plan.name, custom_amount=payload.custom_amount))
     try: db.commit()
     except Exception as exc: db.rollback(); raise HTTPException(409, 'billing account code already exists') from exc
     db.refresh(schedule); return _schedule_response(schedule, db)
 
 @app.get('/billing/accounts', dependencies=[Depends(internal_service_auth)])
 def list_billing_schedules(tenant_id: UUID | None = None, db: Session = Depends(db_session)):
-    statement = select(BillingSchedule)
-    if tenant_id is not None: statement = statement.where(BillingSchedule.tenant_id == tenant_id)
-    return [_schedule_response(item, db) for item in db.scalars(statement.order_by(BillingSchedule.created_at.desc()))]
+    statement = select(BillingAccount)
+    if tenant_id is not None: statement = statement.where(BillingAccount.tenant_id == tenant_id)
+    return [_schedule_response(item, db) for item in db.scalars(statement.order_by(BillingAccount.created_at.desc()))]
 
 @app.put('/billing/accounts/{account_id}/plan', dependencies=[Depends(internal_service_auth)])
 def update_billing_plan(account_id: UUID, payload: BillingPlanUpdate, db: Session = Depends(db_session)):
-    schedule = db.get(BillingSchedule, account_id)
+    schedule = db.get(BillingAccount, account_id)
     plan = db.get(Plan, payload.plan_id)
     if schedule is None: raise HTTPException(404, 'billing account not found')
     if plan is None: raise HTTPException(404, 'plan not found')
     if plan.tenant_id and plan.tenant_id != schedule.tenant_id: raise HTTPException(422, 'plan belongs to a different tenant')
-    schedule.plan_id = plan.id; schedule.cycle_days = plan.billing_cycle_days
+    item = db.scalar(select(BillingAccountItem).where(BillingAccountItem.billing_account_id == account_id, BillingAccountItem.status == "active").order_by(BillingAccountItem.created_at))
+    if item is None: raise HTTPException(404, 'billing account has no active connection')
+    item.plan_id = plan.id
     db.commit(); db.refresh(schedule); return _schedule_response(schedule, db)
+
+@app.post('/billing/accounts/{account_id}/items', status_code=status.HTTP_201_CREATED, dependencies=[Depends(internal_service_auth)])
+def add_billing_item(account_id: UUID, payload: BillingItemCreate, db: Session = Depends(db_session)):
+    account = db.get(BillingAccount, account_id)
+    plan = db.get(Plan, payload.plan_id)
+    if account is None: raise HTTPException(404, 'billing account not found')
+    if plan is None: raise HTTPException(404, 'plan not found')
+    if plan.tenant_id and plan.tenant_id != account.tenant_id: raise HTTPException(422, 'plan belongs to a different tenant')
+    item = db.scalar(select(BillingAccountItem).where(BillingAccountItem.billing_account_id == account.id, BillingAccountItem.subscriber_id == payload.subscriber_id))
+    if item is None:
+        item = BillingAccountItem(billing_account_id=account.id, tenant_id=account.tenant_id, customer_id=account.customer_id, **payload.model_dump())
+        db.add(item)
+    else:
+        item.plan_id = payload.plan_id; item.description = payload.description; item.custom_amount = payload.custom_amount; item.status = 'active'; item.effective_until = None
+    db.commit(); db.refresh(item); return _billing_item_response(item)
+
+@app.delete('/billing/accounts/{account_id}/items/{subscriber_id}', status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(internal_service_auth)])
+def remove_billing_item(account_id: UUID, subscriber_id: UUID, db: Session = Depends(db_session)):
+    item = db.scalar(select(BillingAccountItem).where(BillingAccountItem.billing_account_id == account_id, BillingAccountItem.subscriber_id == subscriber_id))
+    if item is None: raise HTTPException(404, 'billing connection not found')
+    item.status = 'inactive'; item.effective_until = datetime.now(timezone.utc); db.commit()
 @app.post('/payments', response_model=PaymentResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(internal_service_auth)])
 def record_payment(payload: PaymentCreate, db: Session = Depends(db_session)):
     invoice = db.get(Invoice, payload.invoice_id)
@@ -373,6 +437,15 @@ def get_invoice(invoice_id: UUID, tenant_id: UUID | None = None, db: Session = D
     invoice = db.get(Invoice, invoice_id)
     if invoice is None or (tenant_id and invoice.tenant_id != tenant_id): raise HTTPException(404, 'invoice not found')
     return invoice
+
+@app.get('/api/bss/portal/billing')
+def customer_portal_billing(request: Request, db: Session = Depends(db_session)):
+    principal = portal_principal(request)
+    tenant_id, customer_id = UUID(principal['tenant_id']), UUID(principal['customer_id'])
+    account = db.scalar(select(BillingAccount).where(BillingAccount.tenant_id == tenant_id, BillingAccount.customer_id == customer_id))
+    invoices = list(db.scalars(select(Invoice).where(Invoice.tenant_id == tenant_id, Invoice.customer_id == customer_id).order_by(Invoice.created_at.desc())))
+    return {"account": _schedule_response(account, db) if account else None,
+            "invoices": [InvoiceResponse.model_validate(invoice).model_dump(mode="json") for invoice in invoices]}
 
 @app.patch('/invoices/{invoice_id}', response_model=InvoiceResponse, dependencies=[Depends(internal_service_auth)])
 def update_invoice(invoice_id: UUID, payload: InvoiceUpdate, db: Session = Depends(db_session)):

@@ -146,6 +146,21 @@ class CustomerUpdate(StrictModel):
     franchise_id: UUID | None = None
 
 
+class PortalIdentityCreate(StrictModel):
+    username: str | None = Field(default=None, min_length=3, max_length=255)
+    temporary_password: str = Field(min_length=10, max_length=128)
+
+
+class PortalLogin(StrictModel):
+    customer_id: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=1, max_length=128)
+
+
+class PortalPasswordChange(StrictModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=10, max_length=128)
+
+
 class ContactCreate(StrictModel):
     role: Literal["CONTACT_PERSON", "AUTHORIZED_REPRESENTATIVE", "TECHNICAL", "BILLING", "EMERGENCY"] = "CONTACT_PERSON"
     contact_person_name: str | None = Field(default=None, max_length=255)

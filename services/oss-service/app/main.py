@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from os import getenv
 from uuid import UUID
 
+import jwt
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
@@ -66,6 +67,19 @@ def db():
         yield session
     finally:
         session.close()
+
+
+def portal_principal(request: Request) -> dict:
+    header = request.headers.get("Authorization", "")
+    secret = getenv("CUSTOMER_PORTAL_JWT_SECRET", getenv("PLATFORM_JWT_SECRET", ""))
+    if not header.startswith("Bearer ") or len(secret) < 32:
+        raise HTTPException(401, "customer portal authentication required")
+    try:
+        claims = jwt.decode(header[7:], secret, algorithms=["HS256"], issuer="isp-customer-portal", options={"require": ["customer_id", "tenant_id", "exp", "iat", "iss"]})
+    except jwt.PyJWTError as error:
+        raise HTTPException(401, "invalid or expired customer portal session") from error
+    if claims.get("token_type") != "customer_portal": raise HTTPException(401, "invalid customer portal token")
+    return claims
 
 
 def provisioning(session: Session = Depends(db)) -> ProvisioningService:
@@ -350,6 +364,52 @@ def list_subscriptions(tenant_id: UUID | None = Query(default=None), status: str
     if status:
         stmt = stmt.where(ServiceSubscription.status == status)
     return list(session.scalars(stmt))
+
+
+@app.get("/api/oss/portal/connections")
+def portal_connections(request: Request, session: Session = Depends(db)):
+    principal = portal_principal(request)
+    rows = session.scalars(select(ServiceSubscription).where(
+        ServiceSubscription.tenant_id == UUID(principal["tenant_id"]),
+        ServiceSubscription.customer_id == principal["customer_id"],
+    ).order_by(ServiceSubscription.created_at))
+    return [SubscriptionResponse.model_validate(row).model_dump(mode="json") for row in rows]
+
+
+@app.get("/api/oss/portal/connections/{subscription_id}/usage")
+def portal_connection_usage(subscription_id: UUID, request: Request, session: Session = Depends(db)):
+    principal = portal_principal(request)
+    subscription = session.scalar(select(ServiceSubscription).where(
+        ServiceSubscription.id == subscription_id,
+        ServiceSubscription.tenant_id == UUID(principal["tenant_id"]),
+        ServiceSubscription.customer_id == principal["customer_id"],
+    ))
+    if subscription is None:
+        raise HTTPException(404, "connection not found")
+    try:
+        return get_adapter("aaa").get_subscriber_usage(subscription.tenant_id, subscription.id)
+    except AdapterError as error:
+        raise HTTPException(503, str(error)) from error
+
+
+@app.post("/api/oss/subscriptions/reconcile-billing", dependencies=[Depends(management_auth)])
+def reconcile_subscription_billing(tenant_id: UUID, session: Session = Depends(db)):
+    bss = get_adapter("bss")
+    subscriptions = list(session.scalars(select(ServiceSubscription).where(
+        ServiceSubscription.tenant_id == tenant_id,
+        ServiceSubscription.plan_reference.is_not(None),
+        ServiceSubscription.status != "TERMINATED",
+    )))
+    reconciled, failures = 0, []
+    for subscription in subscriptions:
+        try:
+            account = bss.create_billing_account(tenant_id, subscription.customer_id, subscription.plan_reference, subscription.id)
+            subscription.billing_account_reference = account["billing_account_reference"]
+            reconciled += 1
+        except Exception as error:  # report every row; do not hide a partial migration
+            failures.append({"subscription_id": str(subscription.id), "error": str(error)})
+    session.commit()
+    return {"reconciled": reconciled, "failed": len(failures), "failures": failures}
 
 
 @app.get("/api/oss/subscriptions/{subscription_id}", response_model=SubscriptionResponse, dependencies=[Depends(management_auth)])

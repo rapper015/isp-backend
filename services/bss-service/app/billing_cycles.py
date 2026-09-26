@@ -4,7 +4,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
-from .models import BillingRun, BillingSchedule, Invoice, Plan
+from .models import BillingAccount, BillingAccountItem, BillingRun, Invoice, Plan
 
 LOCK_ID = 4_218_551_001
 
@@ -22,42 +22,64 @@ def run_due_billing(session: Session, now: datetime | None = None, tenant_id=Non
     run = BillingRun(status="running")
     session.add(run)
     session.flush()
-    statement = select(BillingSchedule).where(
-        BillingSchedule.status == "active",
-        BillingSchedule.auto_invoice.is_(True),
-        BillingSchedule.next_invoice_at <= now,
+    statement = select(BillingAccount).where(
+        BillingAccount.status == "active",
+        BillingAccount.auto_invoice.is_(True),
+        BillingAccount.next_invoice_at <= now,
     ).with_for_update(skip_locked=True)
     if tenant_id is not None:
-        statement = statement.where(BillingSchedule.tenant_id == tenant_id)
-    schedules = list(session.scalars(statement.order_by(BillingSchedule.next_invoice_at).limit(1000)))
+        statement = statement.where(BillingAccount.tenant_id == tenant_id)
+    accounts = list(session.scalars(statement.order_by(BillingAccount.next_invoice_at).limit(1000)))
     generated = 0
     failures: list[dict] = []
-    for schedule in schedules:
-        plan = session.get(Plan, schedule.plan_id)
-        if plan is None or plan.status.lower() != "active":
-            failures.append({"account_code": schedule.account_code, "error": "plan is missing or inactive"})
+    for account in accounts:
+        items = list(session.scalars(select(BillingAccountItem).where(
+            BillingAccountItem.billing_account_id == account.id,
+            BillingAccountItem.status == "active",
+            BillingAccountItem.effective_from <= now,
+            (BillingAccountItem.effective_until.is_(None)) | (BillingAccountItem.effective_until > now),
+        ).order_by(BillingAccountItem.created_at)))
+        if not items:
+            failures.append({"account_number": account.account_number, "error": "billing account has no active subscriber charges"})
             continue
-        period_start = schedule.next_invoice_at
-        period_end = period_start + timedelta(days=schedule.cycle_days) - timedelta(seconds=1)
-        invoice_number = f"INV-{schedule.account_code[-24:]}-{period_start:%Y%m%d}"
+        period_start = account.next_invoice_at
+        period_end = period_start + timedelta(days=account.cycle_days) - timedelta(seconds=1)
+        invoice_number = f"INV-{account.account_number[-24:]}-{period_start:%Y%m%d}"
         if session.scalar(select(Invoice.id).where(Invoice.invoice_number == invoice_number)):
-            schedule.last_invoice_at = period_start
-            schedule.next_invoice_at = period_start + timedelta(days=schedule.cycle_days)
+            account.last_invoice_at = period_start
+            account.next_invoice_at = period_start + timedelta(days=account.cycle_days)
             continue
-        subtotal = schedule.custom_amount if schedule.custom_amount is not None else plan.monthly_fee
-        tax = (subtotal * schedule.tax_percent / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        subtotal = Decimal("0")
+        line_items = []
+        plan_ids = []
+        for item in items:
+            plan = session.get(Plan, item.plan_id)
+            if plan is None or plan.status.lower() != "active":
+                failures.append({"account_number": account.account_number, "subscriber_id": str(item.subscriber_id), "error": "plan is missing or inactive"})
+                continue
+            charge = item.custom_amount if item.custom_amount is not None else plan.monthly_fee
+            subtotal += charge
+            plan_ids.append(plan.id)
+            line_items.append({
+                "type": "subscription", "subscriber_id": str(item.subscriber_id), "plan_id": str(plan.id),
+                "description": item.description or plan.name, "plan_name": plan.name,
+                "quantity": 1, "unit_price": str(charge), "total": str(charge),
+            })
+        if not line_items:
+            continue
+        tax = (subtotal * account.tax_percent / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         total = subtotal + tax
-        line_items = [{"description": plan.name, "quantity": 1, "unit_price": str(subtotal), "total": str(subtotal)}]
         if tax:
-            line_items.append({"description": f"Tax ({schedule.tax_percent}%)", "quantity": 1, "unit_price": str(tax), "total": str(tax)})
+            line_items.append({"type": "tax", "description": f"Tax ({account.tax_percent}%)", "quantity": 1, "unit_price": str(tax), "total": str(tax)})
         session.add(Invoice(
-            invoice_number=invoice_number, tenant_id=schedule.tenant_id, customer_id=schedule.customer_id,
-            subscriber_id=schedule.subscriber_id, plan_id=plan.id, subtotal=subtotal, tax_amount=tax,
-            amount=total, balance_due=total, status="issued", due_date=now + timedelta(days=schedule.due_days),
+            invoice_number=invoice_number, tenant_id=account.tenant_id, customer_id=account.customer_id,
+            billing_account_id=account.id, subscriber_id=items[0].subscriber_id if len(items) == 1 else None,
+            plan_id=plan_ids[0], subtotal=subtotal, tax_amount=tax,
+            amount=total, balance_due=total, status="issued", due_date=now + timedelta(days=account.due_days),
             billing_period_start=period_start, billing_period_end=period_end, line_items=line_items,
         ))
-        schedule.last_invoice_at = period_start
-        schedule.next_invoice_at = period_start + timedelta(days=schedule.cycle_days)
+        account.last_invoice_at = period_start
+        account.next_invoice_at = period_start + timedelta(days=account.cycle_days)
         generated += 1
     run.generated_count = generated
     run.failed_count = len(failures)

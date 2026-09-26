@@ -84,14 +84,15 @@ class BssClient(Adapter):
             checks={"payment_ok": not blocked},
         )
 
-    def create_billing_account(self, tenant_id, customer_id, plan_reference) -> dict:
+    def create_billing_account(self, tenant_id, customer_id, plan_reference, subscriber_id=None) -> dict:
         base_url = getenv("OSS_BSS_BASE_URL", "http://bss-service:8000").rstrip("/")
         headers = {"X-BSS-Service-Key": getenv("OSS_BSS_INTERNAL_API_KEY", "")}
         try:
             response = httpx.post(
                 f"{base_url}/billing/accounts",
                 headers=headers,
-                json={"tenant_id": str(tenant_id), "customer_id": str(customer_id), "plan_id": str(plan_reference)},
+                json={"tenant_id": str(tenant_id), "customer_id": str(customer_id), "plan_id": str(plan_reference),
+                      "subscriber_id": str(subscriber_id) if subscriber_id else None},
                 timeout=5.0,
             )
         except httpx.HTTPError as error:
@@ -100,6 +101,18 @@ class BssClient(Adapter):
             raise AdapterError(f"BSS rejected billing account creation ({response.status_code})")
         account = response.json()
         return {"billing_account_reference": str(account["id"]), "account_code": account.get("account_code")}
+
+    def attach_billing_item(self, billing_account_reference, subscriber_id, plan_reference) -> dict:
+        base_url = getenv("OSS_BSS_BASE_URL", "http://bss-service:8000").rstrip("/")
+        response = httpx.post(
+            f"{base_url}/billing/accounts/{billing_account_reference}/items",
+            headers={"X-BSS-Service-Key": getenv("OSS_BSS_INTERNAL_API_KEY", "")},
+            json={"subscriber_id": str(subscriber_id), "plan_id": str(plan_reference), "description": "Internet service"},
+            timeout=5.0,
+        )
+        if response.status_code >= 400:
+            raise AdapterError(f"BSS rejected billing connection ({response.status_code})")
+        return response.json()
 
     def suspend_billing(self, tenant_id, billing_account_reference) -> dict:
         return {"billing_account_reference": billing_account_reference, "suspended": True}

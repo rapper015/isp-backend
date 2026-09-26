@@ -160,7 +160,10 @@ async def management_auth(request: Request) -> None:
     if len(secret) < 32:
         raise HTTPException(503, "management authentication is not securely configured")
     try:
-        claims = jwt.decode(header[7:], secret, algorithms=["HS256"])
+        claims = jwt.decode(
+            header[7:], secret, algorithms=["HS256"], issuer="isp-customer-portal",
+            options={"require": ["sub", "customer_id", "tenant_id", "exp", "iat", "iss"]},
+        )
     except jwt.PyJWTError as error:
         raise HTTPException(401, "invalid or expired management token") from error
     required = management_permission(request.method, request.url.path)
@@ -201,8 +204,8 @@ async def customer_auth(request: Request) -> None:
         claims = jwt.decode(header[7:], secret, algorithms=["HS256"])
     except jwt.PyJWTError as error:
         raise HTTPException(401, "invalid or expired customer token") from error
-    if claims.get("role") not in ("CUSTOMER", "PORTAL_USER"):
-        raise HTTPException(403, "customer role required")
+    if claims.get("token_type") != "customer_portal":
+        raise HTTPException(403, "customer portal token required")
     customer_id = claims.get("customer_id")
     tenant_id = claims.get("tenant_id") or claims.get("tenantId")
     if not customer_id or not tenant_id:

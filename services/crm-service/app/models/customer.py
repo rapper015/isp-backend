@@ -44,7 +44,7 @@ class Customer(Base, Timestamped):
     """
     __tablename__ = "crm_customers"
     __table_args__ = (
-        UniqueConstraint("tenant_id", "customer_number", name="uq_crm_customer_tenant_number"),
+        UniqueConstraint("customer_number", name="uq_crm_customer_number_global"),
         UniqueConstraint("tenant_id", "customer_code", name="uq_crm_customer_tenant_code"),
         Index("ix_crm_customer_tenant_phone", "tenant_id", "phone"),
         Index("ix_crm_customer_tenant_email", "tenant_id", "email"),
@@ -86,6 +86,26 @@ class Customer(Base, Timestamped):
     activation_date: Mapped[date | None] = mapped_column(nullable=True)
     closure_date: Mapped[date | None] = mapped_column(nullable=True)
     created_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
+
+
+class CustomerPortalIdentity(Base, Timestamped):
+    """Login identity for a person/company; deliberately unrelated to AAA credentials."""
+    __tablename__ = "crm_customer_portal_identities"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "customer_id", name="uq_crm_portal_customer"),
+        UniqueConstraint("username", name="uq_crm_portal_login_global"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("crm_tenants.id"), index=True, nullable=False)
+    customer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("crm_customers.id", ondelete="CASCADE"), index=True, nullable=False)
+    username: Mapped[str] = mapped_column(String(255), nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), default="ACTIVE", index=True)
+    must_change_password: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    failed_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    password_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Contact(Base, Timestamped):

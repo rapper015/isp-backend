@@ -105,7 +105,6 @@ def validate_and_prepare(session: Session, order_service: OrderService, order) -
 def _step_create_subscription(ctx: StepContext) -> StepResult:
     order = ctx.order_service.repo.load(ctx.order_id)
     bss = get_adapter("bss")
-    billing = bss.create_billing_account(ctx.tenant_id, str(order.customer_id), order.requested_plan_reference)
     subscription_code = f"SUB-{order.order_number[-12:]}"
     sub = ServiceSubscription(
         tenant_id=ctx.tenant_id,
@@ -114,12 +113,14 @@ def _step_create_subscription(ctx: StepContext) -> StepResult:
         customer_id=order.customer_id,
         service_location_id=order.service_location_id,
         plan_reference=order.requested_plan_reference,
-        billing_account_reference=billing.get("billing_account_reference"),
+        billing_account_reference=None,
         order_reference=order.order_number,
         resource_references={"network_policy": (order.requested_snapshot or {}).get("network_policy")},
     )
     ctx.session.add(sub)
     ctx.session.flush()
+    billing = bss.create_billing_account(ctx.tenant_id, str(order.customer_id), order.requested_plan_reference, sub.id)
+    sub.billing_account_reference = billing.get("billing_account_reference")
     order.service_subscription_id = sub.id
     publish_outbox(ctx.session, "oss.service.created.v1", {"subscription_code": subscription_code, "customer_id": str(order.customer_id)}, ctx.tenant_id, order.correlation_id)
     return ok_result({"subscription_id": str(sub.id), "subscription_code": subscription_code, "billing_account_reference": billing.get("billing_account_reference")})

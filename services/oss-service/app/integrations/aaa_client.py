@@ -96,3 +96,24 @@ class AaaClient(Adapter):
         if response.status_code >= 400:
             raise AdapterError("AAA credential generation is temporarily unavailable")
         return response.json()
+
+    def get_subscriber_usage(self, tenant_id, subscriber_id) -> dict:
+        """Read the current FUP cycle through AAA's private service boundary."""
+        base_url = getenv("OSS_AAA_BASE_URL", "http://aaa-service:8000").rstrip("/")
+        service_key = getenv("OSS_AAA_INTERNAL_API_KEY", "")
+        if not service_key:
+            raise AdapterError("OSS to AAA service authentication is not configured")
+        try:
+            response = httpx.get(
+                f"{base_url}/api/aaa/fup/subscribers/{subscriber_id}/usage",
+                params={"tenant_id": str(tenant_id)},
+                headers={"X-AAA-Service-Key": service_key},
+                timeout=5.0,
+            )
+        except httpx.HTTPError as error:
+            raise AdapterError("usage information is temporarily unavailable") from error
+        if response.status_code == 404:
+            return {"subscriber_id": str(subscriber_id), "available": False, "input_octets": 0, "output_octets": 0, "active_tier": None}
+        if response.status_code >= 400:
+            raise AdapterError("usage information is temporarily unavailable")
+        return {"available": True, **response.json()}
