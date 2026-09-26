@@ -139,7 +139,7 @@ services:
     environment:
       <<: *domain-environment
       SERVICE_NAME: bss-service
-      DATABASE_URL: postgresql://isp:isp@postgres:5432/bss
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/bss
       BSS_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       CUSTOMER_PORTAL_JWT_SECRET: ${CUSTOMER_PORTAL_JWT_SECRET:-${PLATFORM_JWT_SECRET}}
       BSS_AAA_BASE_URL: http://aaa-service:8000
@@ -155,7 +155,7 @@ services:
     environment:
       <<: *domain-environment
       SERVICE_NAME: billing-scheduler
-      DATABASE_URL: postgresql://isp:isp@postgres:5432/bss
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/bss
       BSS_BILLING_INTERVAL_SECONDS: ${BSS_BILLING_INTERVAL_SECONDS:-300}
     depends_on:
       bss-service:
@@ -168,7 +168,7 @@ services:
     environment:
       <<: *domain-environment
       SERVICE_NAME: oss-service
-      DATABASE_URL: postgresql://isp:isp@postgres:5432/oss
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/oss
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
       CUSTOMER_PORTAL_JWT_SECRET: ${CUSTOMER_PORTAL_JWT_SECRET:-${PLATFORM_JWT_SECRET}}
       OSS_BSS_BASE_URL: http://bss-service:8000
@@ -274,7 +274,7 @@ services:
   ipam-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: ipam-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: ipam-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/ipam}
+    environment: {<<: *domain-environment, SERVICE_NAME: ipam-service, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/ipam"}
 
   siem-service:
     <<: *domain-service
@@ -342,19 +342,19 @@ services:
   aiops-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aiops-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: aiops-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/aiops}
+    environment: {<<: *domain-environment, SERVICE_NAME: aiops-service, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aiops"}
 
   device-management-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: device-management-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: device-management-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/device_management, ACS_PROVIDER: genieacs, GENIEACS_BASE_URL: http://genieacs:7557, DEVICE_FIRMWARE_DIR: /data/firmware}
+    environment: {<<: *domain-environment, SERVICE_NAME: device-management-service, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/device_management", ACS_PROVIDER: genieacs, GENIEACS_BASE_URL: http://genieacs:7557, DEVICE_FIRMWARE_DIR: /data/firmware}
     volumes:
       - device-firmware:/data/firmware
 
   device-management-worker:
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: device-management-service}}
     command: ["python", "-m", "app.worker_runner"]
-    environment: {<<: *domain-environment, SERVICE_NAME: device-management-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/device_management, ACS_PROVIDER: genieacs, GENIEACS_BASE_URL: http://genieacs:7557, DEVICE_FIRMWARE_DIR: /data/firmware}
+    environment: {<<: *domain-environment, SERVICE_NAME: device-management-worker, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/device_management", ACS_PROVIDER: genieacs, GENIEACS_BASE_URL: http://genieacs:7557, DEVICE_FIRMWARE_DIR: /data/firmware}
     depends_on:
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
@@ -369,7 +369,7 @@ services:
     environment:
       <<: *domain-environment
       SERVICE_NAME: tenancy-service
-      DATABASE_URL: postgresql://isp:isp@postgres:5432/tenancy
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/tenancy
       TENANCY_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
 
   tenancy-worker:
@@ -378,7 +378,7 @@ services:
     environment:
       <<: *domain-environment
       SERVICE_NAME: tenancy-worker
-      DATABASE_URL: postgresql://isp:isp@postgres:5432/tenancy
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/tenancy
       TENANCY_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
     depends_on:
       postgres: {condition: service_healthy}
@@ -389,12 +389,12 @@ services:
   assurance-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: assurance-service}}
-    environment: {<<: *domain-environment, SERVICE_NAME: assurance-service, DATABASE_URL: postgresql://isp:isp@postgres:5432/assurance}
+    environment: {<<: *domain-environment, SERVICE_NAME: assurance-service, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/assurance"}
 
   assurance-worker:
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: assurance-service}}
     command: ["python", "-m", "app.worker_runner"]
-    environment: {<<: *domain-environment, SERVICE_NAME: assurance-worker, DATABASE_URL: postgresql://isp:isp@postgres:5432/assurance}
+    environment: {<<: *domain-environment, SERVICE_NAME: assurance-worker, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/assurance"}
     depends_on:
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
