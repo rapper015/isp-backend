@@ -155,9 +155,7 @@ def get_auth_context(request: Request) -> TenantContext:
         raise HTTPException(status_code=401, detail="Missing bearer token")
     claims = _decode_token(auth[7:])
     role = claims.get("role", "READ_ONLY")
-    perms = set(ROLE_PERMISSIONS.get(role, set(ROLE_PERMISSIONS["READ_ONLY"])))
-    if claims.get("permissions"):
-        perms |= set(claims["permissions"])
+    perms = set(claims.get("permissions", []))
     tenant_raw = claims.get("tenant_id")
     scope_kind = claims.get("scope_kind")
     ctx = TenantContext(
@@ -166,7 +164,7 @@ def get_auth_context(request: Request) -> TenantContext:
         tenant_id=UUID(tenant_raw) if tenant_raw else None,
         permissions=perms,
         scope_kind=scope_kind,
-        is_platform_aggregate=(scope_kind == "PLATFORM_AGGREGATE" or role in ("PLATFORM_ADMIN", "super_admin")),
+        is_platform_aggregate=(scope_kind == "PLATFORM_AGGREGATE"),
     )
     current_tenant.set(ctx)
     return ctx

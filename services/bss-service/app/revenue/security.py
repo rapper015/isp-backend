@@ -12,29 +12,32 @@ ROLE_PERMISSIONS = {
     "ISP_OWNER": {"*"},
     "ISP_ADMIN": {"*"},
     "BSS_MANAGER": {
+        "bss.plan.read", "bss.plan.manage",
         "bss.invoice.view", "bss.invoice.manage", "bss.payment.view", "bss.payment.manage",
         "bss.payment.capture", "bss.refund.approve", "bss.manual_payment.approve",
         "bss.ledger.view", "bss.reconciliation.manage", "bss.dunning.manage",
         "bss.gateway.manage", "bss.webhook.view", "bss.report.view", "bss.audit.view",
     },
     "BSS_OPERATOR": {
+        "bss.plan.read",
         "bss.invoice.view", "bss.payment.view", "bss.payment.manage", "bss.manual_payment.submit",
         "bss.ledger.view", "bss.reconciliation.view", "bss.dunning.view", "bss.webhook.view",
         "bss.report.view", "bss.audit.view",
     },
     "FINANCE_MANAGER": {
+        "bss.plan.read",
         "bss.invoice.view", "bss.payment.view", "bss.refund.approve", "bss.manual_payment.approve",
         "bss.ledger.view", "bss.reconciliation.manage", "bss.report.view", "bss.audit.view",
     },
-    "AUDITOR": {"bss.invoice.view", "bss.payment.view", "bss.ledger.view", "bss.report.view", "bss.audit.view"},
-    "READ_ONLY": {"bss.invoice.view", "bss.payment.view", "bss.report.view"},
+    "AUDITOR": {"bss.plan.read", "bss.invoice.view", "bss.payment.view", "bss.ledger.view", "bss.report.view", "bss.audit.view"},
+    "READ_ONLY": {"bss.plan.read", "bss.invoice.view", "bss.payment.view", "bss.report.view"},
     "super_admin": {"*"},
 }
 
 
 def management_permission(method: str, path: str) -> str | None:
     if path.startswith("/plans"):
-        return "bss.invoice.view" if method == "GET" else "bss.invoice.manage"
+        return "bss.plan.read" if method == "GET" else "bss.plan.manage"
     if path.startswith("/invoices"):
         return "bss.invoice.view" if method == "GET" else "bss.invoice.manage"
     if path.startswith("/payments"):
@@ -87,15 +90,16 @@ async def management_auth(request: Request) -> None:
         raise HTTPException(401, "invalid or expired management token") from error
     required = management_permission(request.method, request.url.path)
     role = claims.get("role", "")
-    permissions = set(claims.get("permissions", [])) | ROLE_PERMISSIONS.get(role, set())
+    permissions = set(claims.get("permissions", []))
     if required and "*" not in permissions and required not in permissions:
         raise HTTPException(403, "BSS permission denied")
     claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
-    if claimed_tenant and role not in {"PLATFORM_ADMIN", "ISP_OWNER", "ISP_ADMIN", "super_admin"}:
+    if claimed_tenant and "*" not in permissions:
         supplied = request.query_params.get("tenant_id") or (await _json_tenant(request))
         if supplied and not secrets.compare_digest(str(claimed_tenant), str(supplied)):
             raise HTTPException(403, "tenant access denied")
-    request.state.bss_principal = {"subject": claims.get("userId", claims.get("sub", "admin")), "role": role, "permissions": sorted(permissions)}
+    request.state.bss_principal = {"subject": claims.get("userId", claims.get("sub", "admin")), "role": role,
+                                   "tenant_id": claimed_tenant, "permissions": sorted(permissions)}
 
 
 async def _json_tenant(request: Request) -> str | None:

@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .enums import (ADDRESS_TYPES, CAF_STATUSES, CONTACT_ROLES, CUSTOMER_LIFECYCLE, CUSTOMER_TYPES, FOLLOWUP_STATUSES, INTERACTION_CHANNELS, KYC_DOCUMENT_TYPES, KYC_STATUSES, KYC_TYPES, LEAD_PRIORITIES, LEAD_SOURCES, LEAD_STAGES, LEAD_TYPES, RISK_LEVELS, RISK_SOURCES)
 
@@ -189,6 +189,8 @@ class AddressCreate(StrictModel):
     address_type: Literal["BILLING", "INSTALLATION", "REGISTERED_OFFICE", "CORRESPONDENCE", "PERMANENT", "OTHER"]
     country: str | None = Field(default=None, max_length=64)
     state: str | None = Field(default=None, max_length=128)
+    country_id: str | None = Field(default=None, max_length=128)
+    state_id: str | None = Field(default=None, max_length=128)
     district: str | None = Field(default=None, max_length=128)
     city: str | None = Field(default=None, max_length=128)
     zipcode: str | None = Field(default=None, max_length=16)
@@ -272,6 +274,26 @@ class CafCreateIn(StrictModel):
     document_checklist: dict[str, Any] = Field(default_factory=dict)
 
 
+class CustomerOnboardingOrderIn(StrictModel):
+    order_type: Literal["NEW_CONNECTION"] = "NEW_CONNECTION"
+    requested_plan_reference: UUID
+    franchise_id: UUID
+    source_channel: str = Field(default="PORTAL", max_length=32)
+    requested_snapshot: dict[str, Any] = Field(default_factory=dict)
+    idempotency_key: str | None = Field(default=None, max_length=128)
+
+
+class CustomerOnboardingIn(StrictModel):
+    """One operator command for customer, first connection, KYC, CAF and OSS order."""
+
+    customer: CustomerCreate
+    address: AddressCreate
+    service_location: ServiceLocationCreate = Field(default_factory=ServiceLocationCreate)
+    kyc: KycCreateIn = Field(default_factory=KycCreateIn)
+    caf: CafCreateIn = Field(default_factory=CafCreateIn)
+    order: CustomerOnboardingOrderIn
+
+
 class CafDecisionIn(StrictModel):
     reason: str | None = Field(default=None, max_length=500)
 
@@ -283,38 +305,44 @@ class TenantIn(StrictModel):
 
 class FranchiseProfile(StrictModel):
     custom_url: str | None = Field(default=None, max_length=500)
-    role: str | None = Field(default=None, max_length=64)
     reseller_type: str | None = Field(default=None, max_length=64)
     gstin: str | None = Field(default=None, min_length=15, max_length=15, pattern=r"^[0-9A-Z]{15}$")
     pan_number: str | None = Field(default=None, min_length=10, max_length=10, pattern=r"^[A-Z]{5}[0-9]{4}[A-Z]$")
     gst_type: str | None = Field(default=None, max_length=32)
+    tds_percentage: Decimal = Field(default=Decimal("0"), ge=0, le=100)
+    agr_percentage: Decimal = Field(default=Decimal("0"), ge=0, le=100)
     currency_symbol: str = Field(default="INR", min_length=1, max_length=8)
     entity_code: str | None = Field(default=None, max_length=64)
     contact_person: str | None = Field(default=None, max_length=255)
     mobile: str | None = Field(default=None, max_length=32, pattern=r"^[+0-9() -]+$")
-    landline: str | None = Field(default=None, max_length=32, pattern=r"^[+0-9() -]+$")
+    landline: str | None = Field(default=None, max_length=32, pattern=r"^[0-9]+$")
     email: str | None = Field(default=None, max_length=255, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
-    account_manager: str | None = Field(default=None, max_length=255)
     sms_gateway: str | None = Field(default=None, max_length=64)
     address: str | None = Field(default=None, max_length=1000)
+    country_id: str | None = Field(default=None, max_length=128)
+    state_id: str | None = Field(default=None, max_length=128)
     country: str | None = Field(default=None, max_length=64)
     state: str | None = Field(default=None, max_length=128)
     district: str | None = Field(default=None, max_length=128)
     area: str | None = Field(default=None, max_length=128)
     city: str | None = Field(default=None, max_length=128)
     zip_code: str | None = Field(default=None, max_length=16)
+    currency_id: str | None = Field(default=None, max_length=64)
     bank_account_name: str | None = Field(default=None, max_length=255)
     static_isp_share: Decimal = Field(default=Decimal("0"), ge=0, le=100)
     static_reseller_share: Decimal = Field(default=Decimal("0"), ge=0, le=100)
     reseller_wallet_offer: Decimal = Field(default=Decimal("0"), ge=0)
     primary_pop: str | None = Field(default=None, max_length=128)
     redundancy_pop: str | None = Field(default=None, max_length=128)
+    primary_pop_id: str | None = Field(default=None, max_length=128)
+    redundancy_pop_id: str | None = Field(default=None, max_length=128)
     package_renewal_expiry_mode: str | None = Field(default=None, max_length=64)
     ott_operator_code: str | None = Field(default=None, max_length=64)
     comments: str | None = Field(default=None, max_length=200)
     logo_url: str | None = Field(default=None, max_length=1000)
     caf_template_url: str | None = Field(default=None, max_length=1000)
     two_step_verification: bool = False
+    enable_virtual_wallet: bool = False
     franchise_management: bool = False
     custom_package_price: bool = False
     franchise_info_on_invoice: bool = False
@@ -337,12 +365,47 @@ class FranchiseProfile(StrictModel):
     ott_settings: bool = False
     own_caf_template: bool = False
     message_templates: bool = False
+    package_ids: list[UUID] = Field(default_factory=list, max_length=500)
+    nas_ids: list[UUID] = Field(default_factory=list, max_length=500)
+    ip_pool_ids: list[UUID] = Field(default_factory=list, max_length=500)
 
 
 class FranchiseIn(StrictModel):
     franchise_code: str = Field(min_length=1, max_length=64)
     name: str = Field(min_length=1, max_length=255)
     profile: FranchiseProfile = Field(default_factory=FranchiseProfile)
+
+
+class FranchiseAdminIn(StrictModel):
+    full_name: str = Field(min_length=2, max_length=255)
+    username: str = Field(min_length=3, max_length=128)
+    email: str = Field(min_length=3, max_length=255)
+    mobile: str = Field(min_length=7, max_length=32)
+    password: str = Field(min_length=12, max_length=256)
+    confirm_password: str
+
+
+class FranchiseOnboardingIn(StrictModel):
+    franchise_code: str = Field(min_length=2, max_length=64)
+    name: str = Field(min_length=2, max_length=255)
+    status: Literal["ACTIVE", "INACTIVE"] = "ACTIVE"
+    profile: FranchiseProfile
+    admin: FranchiseAdminIn
+    access_template_id: UUID
+
+    @model_validator(mode="after")
+    def validate_onboarding(self):
+        if self.admin.password != self.admin.confirm_password:
+            raise ValueError("administrator passwords do not match")
+        required = {"address": self.profile.address, "city": self.profile.city,
+                    "zip_code": self.profile.zip_code, "mobile": self.profile.mobile,
+                    "email": self.profile.email, "reseller_type": self.profile.reseller_type,
+                    "currency_id": self.profile.currency_id,
+                    "sms_gateway": self.profile.sms_gateway}
+        missing = [name for name, value in required.items() if not value]
+        if missing:
+            raise ValueError(f"missing required franchise fields: {', '.join(missing)}")
+        return self
 
 
 class FranchiseUpdate(StrictModel):
@@ -360,14 +423,16 @@ class FranchiseSettingsPatch(StrictModel):
 class BranchProfile(StrictModel):
     email: str = Field(min_length=3, max_length=255, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
     mobile: str = Field(min_length=5, max_length=32, pattern=r"^[+0-9() -]+$")
-    landline: str | None = Field(default=None, max_length=32, pattern=r"^[+0-9() -]+$")
+    landline: str | None = Field(default=None, max_length=32, pattern=r"^[0-9]+$")
     address: str = Field(min_length=3, max_length=1000)
     package_ids: list[str] = Field(default_factory=list, max_length=500)
     ip_pool_ids: list[str] = Field(default_factory=list, max_length=500)
 
 
 class BranchIn(StrictModel):
-    franchise_id: UUID
+    # Franchise-scoped operators inherit this from their authenticated
+    # identity. Tenant/platform administrators must provide it explicitly.
+    franchise_id: UUID | None = None
     branch_code: str = Field(min_length=1, max_length=64)
     name: str = Field(min_length=1, max_length=255)
     profile: BranchProfile

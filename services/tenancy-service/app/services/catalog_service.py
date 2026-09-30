@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from ..domain.access import DEFAULT_ROLE_TEMPLATES, DEFAULT_SOD
 from ..models import (
     Entitlement,
-    FeatureFlag,
     Permission,
     Quota,
     Role,
@@ -17,15 +16,6 @@ from ..models import (
     RoleTemplate,
     SodConstraint,
 )
-
-_DEFAULT_FEATURES = [
-    ("portal.white_label", "White-label customer portal", True),
-    ("portal.custom_domain", "Custom domain hosting", True),
-    ("franchise.customer_transfer", "Cross-franchise customer transfer", True),
-    ("franchise.self_signup", "Franchise self signup", False),
-    ("finance.partial_settlement", "Partial settlement payouts", True),
-    ("security.require_mfa_partner", "Require MFA for partner admins", False),
-]
 
 _DEFAULT_QUOTAS = [
     ("USERS", None), ("CUSTOMERS", None), ("SUBSCRIBERS", None),
@@ -55,7 +45,7 @@ def ensure_defaults(session: Session) -> None:
     for code in ("customers.view", "customers.create", "customers.own.view", "tenants.manage",
                  "tenants.create", "tenants.view", "tenants.activate", "tenants.suspend",
                  "tenants.offboard", "tenants.export", "domains.manage", "config.manage",
-                 "feature.manage", "entitlements.manage", "quota.manage", "org.units.manage",
+                 "entitlements.manage", "quota.manage", "org.units.manage",
                  "partners.manage", "partners.create", "partners.view", "agreements.manage",
                  "agreements.approve", "ownership.manage", "ownership.transfer", "grants.manage",
                  "memberships.manage", "roles.manage", "permissions.manage", "access.review",
@@ -86,10 +76,6 @@ def ensure_defaults(session: Session) -> None:
         if session.scalars(select(SodConstraint).where(SodConstraint.operation == operation)).first() is None:
             session.add(SodConstraint(operation=operation, maker_permission=maker,
                                       checker_permission=checker))
-
-    for code, name, default in _DEFAULT_FEATURES:
-        if session.scalars(select(FeatureFlag).where(FeatureFlag.code == code)).first() is None:
-            session.add(FeatureFlag(code=code, name=name, platform_default=default))
 
     for code, _name in _DEFAULT_ENTITLEMENTS:
         if session.scalars(select(Entitlement).where(Entitlement.code == code)).first() is None:

@@ -35,6 +35,23 @@ class Branch(Base, Timestamped):
     profile: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
 
 
+class PhoneIdentity(Base, Timestamped):
+    """Canonical CRM-wide ownership of a normalized telephone number.
+
+    Phone-bearing domain records may live in different tables (and some older
+    profiles are JSON), so a single registry is required for a real database
+    uniqueness guarantee across those records.
+    """
+    __tablename__ = "crm_phone_identities"
+    __table_args__ = (
+        UniqueConstraint("owner_type", "owner_id", "field_name", name="uq_crm_phone_identity_owner_field"),
+    )
+    normalized_phone: Mapped[str] = mapped_column(String(32), primary_key=True)
+    owner_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    owner_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True)
+    field_name: Mapped[str] = mapped_column(String(32), nullable=False)
+
+
 class Customer(Base, Timestamped):
     """Authoritative customer identity and profile.
 

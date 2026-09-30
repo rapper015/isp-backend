@@ -124,7 +124,7 @@ async def management_auth(request: Request) -> None:
         raise HTTPException(401, "invalid token type")
     roles = claims.get("roles", [])
     legacy_role = claims.get("role", "")
-    permissions = set(claims.get("permissions", [])) | ROLE_PERMISSIONS.get(legacy_role, set())
+    permissions = set(claims.get("permissions", []))
     if required and "*" not in permissions and required not in permissions:
         raise HTTPException(403, "OSS permission denied")
     claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
@@ -149,3 +149,16 @@ def internal_service_auth(request: Request) -> None:
         raise HTTPException(401, "internal service authentication failed")
     if not secrets.compare_digest(header, secret):
         raise HTTPException(401, "internal service authentication failed")
+
+
+async def management_or_internal_auth(request: Request) -> None:
+    """Authorize an operator JWT or a trusted in-network service credential."""
+    if request.headers.get("X-Internal-API-Key"):
+        internal_service_auth(request)
+        request.state.oss_principal = {
+            "subject": request.headers.get("X-Service-Name", "internal-service"),
+            "roles": ["INTERNAL_SERVICE"],
+            "permissions": ["*"],
+        }
+        return
+    await management_auth(request)

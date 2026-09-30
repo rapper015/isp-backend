@@ -28,10 +28,13 @@ def verify_password(value, hashed):
     try: return PASSWORDS.verify(hashed, value)
     except VerifyMismatchError: return False
 def token_hash(value): return hashlib.sha256(value.encode()).hexdigest()
-def issue_access_token(user, roles, permissions):
+def issue_access_token(user, roles, permissions, access_scopes=None, effective_access=None):
     now = datetime.now(timezone.utc); ttl = int(getenv("PLATFORM_ACCESS_TOKEN_TTL_SECONDS", "900"))
     return jwt.encode({"sub": str(user.id), "tenant_id": str(user.tenant_id) if user.tenant_id else None,
-        "roles": sorted(roles), "permissions": sorted(permissions), "token_type": "access", "jti": str(uuid.uuid4()),
+        "franchise_id": str(user.franchise_id) if user.franchise_id else None,
+        "roles": sorted(roles), "permissions": sorted(permissions), "access_scopes": access_scopes or [],
+        "effective_access": effective_access or {"platform": False, "tenant_ids": [], "franchise_ids": [], "branch_ids": []},
+        "token_type": "access", "jti": str(uuid.uuid4()),
         "iat": now, "exp": now + timedelta(seconds=ttl), "iss": ISSUER}, _secret(), algorithm="HS256")
 def issue_service_access_token(account_id, tenant_id, permissions):
     now = datetime.now(timezone.utc); ttl = int(getenv("PLATFORM_SERVICE_TOKEN_TTL_SECONDS", "300"))

@@ -3,13 +3,14 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from os import getenv
 from uuid import UUID
+from typing import Literal
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import BillingAccount, BillingAccountItem, Invoice, Payment, Plan, PlanNetworkPolicyBinding
+from .models import BillingAccount, BillingAccountItem, Invoice, Payment, Plan, PlanFranchiseAvailability, PlanNetworkPolicyBinding, PlanOttMapping, PlanPrice
 from .billing_cycles import refresh_overdue_invoices, run_due_billing
 from .revenue.router import router as revenue_router
 from .revenue.catalog_router import router as catalog_router
@@ -41,18 +42,60 @@ def portal_principal(request: Request) -> dict:
     if claims.get("token_type") != "customer_portal": raise HTTPException(401, "invalid customer portal token")
     return claims
 
+class PlanPriceIn(BaseModel):
+    name: str = Field(min_length=1, max_length=128)
+    price: Decimal = Field(gt=0)
+    duration: int = Field(gt=0)
+    duration_unit: Literal["MINUTE", "HOUR", "DAY", "WEEK", "MONTH", "YEAR"] = "DAY"
+    status: Literal["ACTIVE", "INACTIVE"] = "ACTIVE"
+
+
+class PlanOttMappingIn(BaseModel):
+    provider_id: str = Field(min_length=1, max_length=128)
+    provider_name: str = Field(min_length=1, max_length=128)
+    provider_plan_id: str = Field(min_length=1, max_length=128)
+    provider_plan_name: str = Field(min_length=1, max_length=128)
+    status: Literal["ACTIVE", "INACTIVE"] = "ACTIVE"
+
+
 class PlanCreate(BaseModel):
     tenant_id: UUID | None = None
     plan_code: str = Field(min_length=1, max_length=64)
     name: str
     description: str = ""
-    monthly_fee: Decimal = Field(gt=0)
+    monthly_fee: Decimal | None = Field(default=None, gt=0)
     download_rate_kbps: int = Field(gt=0)
     upload_rate_kbps: int = Field(gt=0)
     billing_cycle_days: int = Field(default=30, ge=1, le=366)
+    status: Literal["active", "inactive"] = "active"
+    package_type: Literal["BASE_PLAN", "FALLBACK_PACKAGE", "DATA_ADDON", "ON_DEMAND_SPEED", "CABLE_TV", "IPTV", "OTT", "STATIC_IP", "DEVICE_RENTAL"] = "BASE_PLAN"
+    package_data_type: Literal["FUP", "UNLIMITED", "UNLIMITED_FUP"] = "UNLIMITED"
+    apply_to: Literal["PENDING_ACTIVATION", "ACTIVATED", "BOTH"] = "BOTH"
+    policy_mode: Literal["KBPS", "POLICY_NAME"] = "KBPS"
+    available_to_all_franchises: bool = True
+    self_care_portal_enabled: bool = False
+    network_config: dict = Field(default_factory=dict)
+    fup_config: dict = Field(default_factory=dict)
+    billing_config: dict = Field(default_factory=dict)
+    service_config: dict = Field(default_factory=dict)
+    promotion_content: str | None = None
+    comment: str | None = Field(default=None, max_length=200)
+    prices: list[PlanPriceIn] = Field(default_factory=list, max_length=100)
+    allowed_franchise_ids: list[UUID] = Field(default_factory=list, max_length=1000)
+    ott_mappings: list[PlanOttMappingIn] = Field(default_factory=list, max_length=100)
+
+    @model_validator(mode="after")
+    def package_rules(self):
+        if self.monthly_fee is None and not self.prices:
+            raise ValueError("monthly_fee or at least one price variant is required")
+        if self.package_data_type in {"FUP", "UNLIMITED_FUP"} and not self.fup_config.get("limit_mb"):
+            raise ValueError("FUP packages require fup_config.limit_mb")
+        if not self.available_to_all_franchises and not self.allowed_franchise_ids:
+            raise ValueError("select at least one allowed franchise")
+        return self
 class PlanResponse(PlanCreate):
     model_config = ConfigDict(from_attributes=True)
-    id: UUID; status: str
+    id: UUID
     network_policy: dict | None = None
 
 
@@ -68,6 +111,21 @@ class PlanUpdate(BaseModel):
     upload_rate_kbps: int | None = Field(default=None, gt=0)
     billing_cycle_days: int | None = Field(default=None, ge=1, le=366)
     status: str | None = Field(default=None, min_length=1, max_length=16)
+    package_type: str | None = None
+    package_data_type: str | None = None
+    apply_to: str | None = None
+    policy_mode: str | None = None
+    available_to_all_franchises: bool | None = None
+    self_care_portal_enabled: bool | None = None
+    network_config: dict | None = None
+    fup_config: dict | None = None
+    billing_config: dict | None = None
+    service_config: dict | None = None
+    promotion_content: str | None = None
+    comment: str | None = Field(default=None, max_length=200)
+    prices: list[PlanPriceIn] | None = None
+    allowed_franchise_ids: list[UUID] | None = None
+    ott_mappings: list[PlanOttMappingIn] | None = None
 class InvoiceCreate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     tenant_id: UUID | None = None
@@ -177,6 +235,9 @@ def _network_policy_response(binding: PlanNetworkPolicyBinding | None) -> dict |
 
 def _plan_response(plan: Plan, db: Session) -> dict:
     binding = db.scalar(select(PlanNetworkPolicyBinding).where(PlanNetworkPolicyBinding.plan_id == plan.id))
+    prices = list(db.scalars(select(PlanPrice).where(PlanPrice.plan_id == plan.id).order_by(PlanPrice.duration)))
+    availability = list(db.scalars(select(PlanFranchiseAvailability).where(PlanFranchiseAvailability.plan_id == plan.id)))
+    ott = list(db.scalars(select(PlanOttMapping).where(PlanOttMapping.plan_id == plan.id)))
     return {
         "id": plan.id,
         "plan_code": plan.plan_code,
@@ -188,8 +249,54 @@ def _plan_response(plan: Plan, db: Session) -> dict:
         "upload_rate_kbps": plan.upload_rate_kbps,
         "billing_cycle_days": plan.billing_cycle_days,
         "status": plan.status,
+        "package_type": plan.package_type,
+        "package_data_type": plan.package_data_type,
+        "apply_to": plan.apply_to,
+        "policy_mode": plan.policy_mode,
+        "available_to_all_franchises": plan.available_to_all_franchises,
+        "self_care_portal_enabled": plan.self_care_portal_enabled,
+        "network_config": plan.network_config or {},
+        "fup_config": plan.fup_config or {},
+        "billing_config": plan.billing_config or {},
+        "service_config": plan.service_config or {},
+        "promotion_content": plan.promotion_content,
+        "comment": plan.comment,
+        "prices": [{"id": str(item.id), "name": item.name, "price": item.price, "duration": item.duration,
+                    "duration_unit": item.duration_unit, "status": item.status} for item in prices],
+        "allowed_franchise_ids": [item.franchise_id for item in availability],
+        "ott_mappings": [{"id": str(item.id), "provider_id": item.provider_id, "provider_name": item.provider_name,
+                          "provider_plan_id": item.provider_plan_id, "provider_plan_name": item.provider_plan_name,
+                          "status": item.status} for item in ott],
         "network_policy": _network_policy_response(binding),
     }
+
+
+def _replace_plan_children(db: Session, plan: Plan, payload: PlanCreate | PlanUpdate) -> None:
+    if payload.prices is not None:
+        for item in db.scalars(select(PlanPrice).where(PlanPrice.plan_id == plan.id)):
+            db.delete(item)
+        for item in payload.prices:
+            db.add(PlanPrice(plan_id=plan.id, **item.model_dump()))
+    if payload.allowed_franchise_ids is not None:
+        for item in db.scalars(select(PlanFranchiseAvailability).where(PlanFranchiseAvailability.plan_id == plan.id)):
+            db.delete(item)
+        for franchise_id in dict.fromkeys(payload.allowed_franchise_ids):
+            db.add(PlanFranchiseAvailability(tenant_id=plan.tenant_id, plan_id=plan.id, franchise_id=franchise_id))
+    if payload.ott_mappings is not None:
+        for item in db.scalars(select(PlanOttMapping).where(PlanOttMapping.plan_id == plan.id)):
+            db.delete(item)
+        for item in payload.ott_mappings:
+            db.add(PlanOttMapping(plan_id=plan.id, **item.model_dump()))
+
+
+def _plan_for_request(plan_id: UUID, request: Request, db: Session) -> Plan:
+    plan = db.get(Plan, plan_id)
+    if plan is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, 'plan not found')
+    claimed_tenant = (getattr(request.state, "bss_principal", {}) or {}).get("tenant_id")
+    if claimed_tenant and str(plan.tenant_id) != claimed_tenant:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, 'plan not found')
+    return plan
 
 def _schedule_response(item: BillingAccount, db: Session) -> dict:
     outstanding = db.scalar(select(func.coalesce(func.sum(Invoice.balance_due), 0)).where(
@@ -246,10 +353,16 @@ def _active_policy_version(tenant_id: UUID, policy_version_id: UUID) -> dict:
 
 @app.post('/plans', response_model=PlanResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(internal_service_auth)])
 def create_plan(payload: PlanCreate, tenant_id: UUID | None = None, db: Session = Depends(db_session)):
-    values = payload.model_dump()
+    values = payload.model_dump(exclude={"prices", "allowed_franchise_ids", "ott_mappings"})
     values["tenant_id"] = payload.tenant_id or tenant_id
+    if values["tenant_id"] is None:
+        raise HTTPException(422, "tenant_id is required")
+    values["monthly_fee"] = payload.monthly_fee or min(item.price for item in payload.prices)
     plan = Plan(**values); db.add(plan)
-    try: db.commit()
+    try:
+        db.flush()
+        _replace_plan_children(db, plan, payload)
+        db.commit()
     except Exception as exc: db.rollback(); raise HTTPException(409, 'plan_code already exists') from exc
     db.refresh(plan); return _plan_response(plan, db)
 @app.get('/plans', response_model=list[PlanResponse], dependencies=[Depends(internal_service_auth)])
@@ -259,18 +372,15 @@ def list_plans(tenant_id: UUID | None = None, db: Session = Depends(db_session))
         statement = statement.where((Plan.tenant_id == tenant_id) | (Plan.tenant_id.is_(None)))
     return [_plan_response(plan, db) for plan in db.scalars(statement.order_by(Plan.created_at.desc()))]
 @app.get('/plans/{plan_id}', response_model=PlanResponse, dependencies=[Depends(internal_service_auth)])
-def get_plan(plan_id: UUID, db: Session = Depends(db_session)):
-    plan = db.get(Plan, plan_id)
-    if plan is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, 'plan not found')
+def get_plan(plan_id: UUID, request: Request, db: Session = Depends(db_session)):
+    plan = _plan_for_request(plan_id, request, db)
     return _plan_response(plan, db)
 @app.patch('/plans/{plan_id}', response_model=PlanResponse, dependencies=[Depends(internal_service_auth)])
-def update_plan(plan_id: UUID, payload: PlanUpdate, db: Session = Depends(db_session)):
-    plan = db.get(Plan, plan_id)
-    if plan is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, 'plan not found')
-    for field, value in payload.model_dump(exclude_unset=True).items():
+def update_plan(plan_id: UUID, payload: PlanUpdate, request: Request, db: Session = Depends(db_session)):
+    plan = _plan_for_request(plan_id, request, db)
+    for field, value in payload.model_dump(exclude_unset=True, exclude={"prices", "allowed_franchise_ids", "ott_mappings"}).items():
         setattr(plan, field, value)
+    _replace_plan_children(db, plan, payload)
     db.commit()
     db.refresh(plan)
     return _plan_response(plan, db)
@@ -288,8 +398,11 @@ def get_plan_network_policy(plan_id: UUID, db: Session = Depends(db_session)):
 
 @app.put('/plans/{plan_id}/network-policy', dependencies=[Depends(internal_service_auth)])
 def attach_plan_network_policy(plan_id: UUID, payload: PlanNetworkPolicyBindingIn, db: Session = Depends(db_session)):
-    if db.get(Plan, plan_id) is None:
+    plan = db.get(Plan, plan_id)
+    if plan is None:
         raise HTTPException(404, 'plan not found')
+    if plan.tenant_id != payload.tenant_id:
+        raise HTTPException(422, 'network policy tenant must match the plan tenant')
     policy = _active_policy_version(payload.tenant_id, payload.policy_version_id)
     binding = db.scalar(select(PlanNetworkPolicyBinding).where(PlanNetworkPolicyBinding.plan_id == plan_id))
     values = {

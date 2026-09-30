@@ -18,6 +18,14 @@ def normalize_phone(value: str | None) -> str | None:
     digits = re.sub(r"[^0-9]", "", value)
     if len(digits) < 7 or len(digits) > 15:
         raise ValidationError("invalid phone number")
+    # The current product is India-first and older records were stored as
+    # national 10-digit values. Canonicalize both national and +91 forms to
+    # the same E.164 digits so formatting/country-prefix changes cannot evade
+    # uniqueness checks.
+    if len(digits) == 11 and digits.startswith("0"):
+        digits = digits[1:]
+    if len(digits) == 10:
+        digits = f"91{digits}"
     return digits
 
 

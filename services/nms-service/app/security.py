@@ -39,7 +39,7 @@ async def management_auth(request: Request) -> None:
         raise HTTPException(401, "invalid or expired management token") from error
     required = management_permission(request.method, request.url.path)
     role = claims.get("role", "")
-    permissions = set(claims.get("permissions", [])) | ROLE_PERMISSIONS.get(role, set())
+    permissions = set(claims.get("permissions", []))
     if required and "*" not in permissions and required not in permissions:
         raise HTTPException(403, "NMS permission denied")
     request.state.nms_principal = {

@@ -30,7 +30,7 @@ from .schemas import (
     ValidateResponse,
     ValidActionsResponse,
 )
-from .security import management_auth
+from .security import management_auth, management_or_internal_auth
 from .integrations.base import AdapterError, get_adapter
 from .services.activation import ProvisioningService
 from .services.order_service import OrderService, valid_actions as order_valid_actions
@@ -107,7 +107,7 @@ def service_status():
 # Orders
 # ===========================================================================
 
-@app.post("/api/oss/orders", response_model=OrderResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(management_auth)])
+@app.post("/api/oss/orders", response_model=OrderResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(management_or_internal_auth)])
 def create_order(payload: OrderCreate, session: Session = Depends(db)):
     service = OrderService(session)
     try:

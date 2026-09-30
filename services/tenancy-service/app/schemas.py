@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class StrictModel(BaseModel):
@@ -18,6 +19,57 @@ class TenantCreate(StrictModel):
     country: str | None = None
     legal_name: str | None = None
     isolation_mode: str = "SHARED_SCHEMA_WITH_RLS"
+
+class TenantAdminIn(StrictModel):
+    full_name: str = Field(min_length=2, max_length=255)
+    username: str = Field(min_length=3, max_length=128)
+    email: str
+    mobile: str = Field(min_length=7, max_length=32)
+    password: str = Field(min_length=12, max_length=256)
+    confirm_password: str
+
+class TenantOnboardingIn(StrictModel):
+    name: str = Field(min_length=2, max_length=160)
+    code: str = Field(min_length=2, max_length=40)
+    organization_type: str
+    business_email: str
+    primary_mobile: str
+    status: str = "ACTIVE"
+    custom_domain: str | None = None
+    legal_name: str | None = None
+    website: str | None = None
+    landline: str | None = None
+    description: str | None = None
+    logo_url: str | None = None
+    address: dict
+    country: str = "IN"
+    currency: str = "INR"
+    admin: TenantAdminIn
+    access_template_id: UUID
+
+    @model_validator(mode="after")
+    def validate_onboarding(self):
+        if self.admin.password != self.admin.confirm_password:
+            raise ValueError("admin passwords do not match")
+        if self.status not in {"ACTIVE", "TRIAL", "SUSPENDED", "INACTIVE"}:
+            raise ValueError("unsupported tenant status")
+        return self
+
+
+class TenantUpdateIn(StrictModel):
+    name: str = Field(min_length=2, max_length=160)
+    organization_type: str
+    business_email: str
+    primary_mobile: str
+    custom_domain: str | None = None
+    legal_name: str | None = None
+    website: str | None = None
+    landline: str | None = None
+    description: str | None = None
+    logo_url: str | None = None
+    address: dict
+    country: str = "IN"
+    currency: str = "INR"
 
 
 class TenantStatusIn(StrictModel):
@@ -37,11 +89,6 @@ class DomainIn(StrictModel):
 
 class DomainVerifyIn(StrictModel):
     token: str
-
-
-class FeatureIn(StrictModel):
-    code: str
-    enabled: bool
 
 
 class EntitlementIn(StrictModel):

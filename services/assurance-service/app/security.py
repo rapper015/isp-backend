@@ -122,11 +122,9 @@ async def management_auth(request: Request) -> None:
         raise HTTPException(401, "invalid or expired management token") from error
     required = _required_permission(request.method, request.url.path)
     role = claims.get("role", "")
-    permissions = set(claims.get("permissions", [])) | ROLE_PERMISSIONS.get(role, set())
+    permissions = set(claims.get("permissions", []))
     if required and "*" not in permissions and required not in permissions:
         raise HTTPException(403, "assurance permission denied")
-    if required in ELEVATED_PERMISSIONS and role not in ELEVATED_PERMISSIONS[required]:
-        raise HTTPException(403, "elevated permission required")
     remote = request.client.host if request.client else "unknown"
     if not limited(f"assurance:mgmt:{remote}:{request.url.path}",
                    int(getenv("ASSURANCE_RATE_LIMIT", "120")), 60):

@@ -35,9 +35,9 @@ def management_auth(request: Request, creds: HTTPAuthorizationCredentials | None
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
     role = claims.get("role", "READ_ONLY")
-    perms = set(claims.get("permissions") or []) | ROLE_PERMISSIONS.get(role, set())
+    perms = set(claims.get("permissions") or [])
     need = _required_permission(request.method, request.url.path)
-    if need not in perms and role not in ("PLATFORM_ADMIN",):
+    if "*" not in perms and need not in perms:
         raise HTTPException(status_code=403, detail=f"Missing permission: {need}")
     request.state.wh_principal = {"role": role, "tenant_id": claims.get("tenant_id"), "userId": claims.get("userId")}
     return request.state.wh_principal

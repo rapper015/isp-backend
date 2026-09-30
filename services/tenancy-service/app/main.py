@@ -9,6 +9,8 @@ import secrets as _secrets
 from datetime import datetime
 from os import getenv
 import uuid
+import json
+from urllib import error as urlerror, request as urlrequest
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
@@ -20,7 +22,7 @@ from . import models  # noqa: F401
 from .context import require_tenant
 from .database import Base, SessionLocal, engine
 from .domain.exceptions import TenancyError
-from .models import AuditLog, FeatureFlag, Tenant, TenantFeature
+from .models import AuditLog, Tenant, TenantDomain
 from .schemas import (
     AdjustmentIn,
     AggregateIn,
@@ -42,7 +44,6 @@ from .schemas import (
     EarningIn,
     EntitlementIn,
     ExportIn,
-    FeatureIn,
     GrantIn,
     ImpersonationIn,
     MembershipIn,
@@ -65,7 +66,9 @@ from .schemas import (
     ServiceScopeIn,
     SettlementIn,
     TenantCreate,
+    TenantOnboardingIn,
     TenantStatusIn,
+    TenantUpdateIn,
     TerritoryIn,
     TransferApproveIn,
     TransferIn,
@@ -187,6 +190,63 @@ def create_tenant(payload: TenantCreate, request: Request = None, session: Sessi
     return _run(session, fn, request)
 
 
+@app.post("/api/tenancy/tenant-onboarding", status_code=status.HTTP_201_CREATED, dependencies=[Depends(management_auth)])
+def onboard_tenant(payload: TenantOnboardingIn, request: Request, session: Session = Depends(db)):
+    """Create a tenant, profile, domain and initial administrator in one UI request."""
+    try:
+        tenant = tenant_service.create_tenant(session, name=payload.name, code=payload.code,
+            currency=payload.currency, country=payload.country, legal_name=payload.legal_name,
+            requested_by=_actor(request))
+        tenant.profile = {"organization_type": payload.organization_type,
+            "business_email": payload.business_email, "primary_mobile": payload.primary_mobile,
+            "website": payload.website, "landline": payload.landline,
+            "description": payload.description, "logo_url": payload.logo_url,
+            "address": payload.address, "requested_status": payload.status}
+        domain = tenant_service.add_domain(session, tenant.id, payload.custom_domain, is_primary=True,
+            actor=_actor(request)) if payload.custom_domain else None
+        if payload.status in {"ACTIVE", "TRIAL"}:
+            tenant_service.provision_tenant(session, tenant.id, actor=_actor(request))
+        body = json.dumps({"username": payload.admin.username, "password": payload.admin.password,
+            "email": payload.admin.email, "full_name": payload.admin.full_name,
+            "mobile": payload.admin.mobile, "tenant_id": str(tenant.id), "roles": ["TENANT_ADMIN"],
+            "is_organization_owner": True}).encode()
+        upstream = urlrequest.Request(
+            f"{getenv('PLATFORM_CORE_BASE_URL', 'http://platform-core-service:8000').rstrip('/')}/api/v1/platform/users",
+            data=body, headers={"Content-Type": "application/json",
+            "Authorization": request.headers.get("Authorization", "")}, method="POST")
+        try:
+            with urlrequest.urlopen(upstream, timeout=10) as response:
+                admin = json.loads(response.read())
+        except urlerror.HTTPError as exc:
+            raw = exc.read().decode()
+            try: detail = json.loads(raw).get("detail", raw)
+            except (ValueError, AttributeError): detail = raw
+            raise HTTPException(exc.code, detail or "tenant administrator could not be created") from exc
+        assignment = urlrequest.Request(
+            f"{getenv('PLATFORM_CORE_BASE_URL', 'http://platform-core-service:8000').rstrip('/')}/api/v1/platform/access-template-assignments/TENANT/{tenant.id}",
+            data=json.dumps({"template_id": str(payload.access_template_id)}).encode(),
+            headers={"Content-Type": "application/json", "Authorization": request.headers.get("Authorization", "")},
+            method="PUT")
+        try:
+            with urlrequest.urlopen(assignment, timeout=10): pass
+        except urlerror.HTTPError as exc:
+            raw = exc.read().decode()
+            try: detail = json.loads(raw).get("detail", raw)
+            except (ValueError, AttributeError): detail = raw
+            raise HTTPException(exc.code, detail or "tenant access template could not be assigned") from exc
+        session.commit()
+        return {"id": str(tenant.id), "code": tenant.code, "status": tenant.status,
+            "access_template_id": str(payload.access_template_id),
+            "domain": domain.domain if domain else None, "domain_status": domain.status if domain else None,
+            "admin": {"id": admin.get("id"), "username": admin.get("username")}}
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as exc:
+        session.rollback()
+        _raise(exc)
+
+
 @app.post("/api/tenancy/tenants/{tenant_id}/validate", dependencies=[Depends(management_auth)])
 def validate_tenant(tenant_id: UUID, request: Request = None, session: Session = Depends(db)):
     def fn():
@@ -215,18 +275,97 @@ def list_tenants(request: Request = None, session: Session = Depends(db)):
     stmt = select(Tenant).order_by(Tenant.created_at.desc())
     if ctx.tenant_id is not None:
         stmt = stmt.where(Tenant.id == ctx.tenant_id)
+    else:
+        principal = getattr(request.state, "tenancy_principal", {})
+        scopes = principal.get("access_scopes") or []
+        platform_wide = any(scope.get("scope_type") == "PLATFORM" for scope in scopes if isinstance(scope, dict))
+        effective = principal.get("effective_access") or {}
+        tenant_ids = [_tid(value) for value in effective.get("tenant_ids", [])]
+        if not tenant_ids:
+            tenant_ids = [_tid(scope["scope_id"]) for scope in scopes
+                          if isinstance(scope, dict) and scope.get("scope_type") == "TENANT" and scope.get("scope_id")]
+        if not platform_wide and "*" not in principal.get("permissions", []):
+            # Franchise and branch identifiers are owned by CRM and must not be
+            # interpreted as tenant identifiers. With no explicit tenant scope,
+            # fail closed by returning no tenant records.
+            if not tenant_ids:
+                return []
+            stmt = stmt.where(Tenant.id.in_(tenant_ids))
     rows = list(session.scalars(stmt.limit(200)))
     return [{"id": str(t.id), "code": t.code, "name": t.name, "status": t.status,
-             "isolation_mode": t.isolation_mode} for t in rows]
+             "isolation_mode": t.isolation_mode, "profile": t.profile} for t in rows]
 
 
 @app.get("/api/tenancy/tenants/{tenant_id}", dependencies=[Depends(management_auth)])
-def tenant_detail(tenant_id: UUID, session: Session = Depends(db)):
+def tenant_detail(tenant_id: UUID, request: Request, session: Session = Depends(db)):
+    ctx = require_tenant()
+    principal = getattr(request.state, "tenancy_principal", {})
+    if ctx.tenant_id is not None and ctx.tenant_id != tenant_id:
+        raise HTTPException(403, "tenant access denied")
+    if ctx.tenant_id is None and "*" not in principal.get("permissions", []):
+        effective = principal.get("effective_access") or {}
+        allowed = {str(value) for value in effective.get("tenant_ids", [])}
+        if str(tenant_id) not in allowed:
+            raise HTTPException(403, "tenant access denied")
     tenant = tenant_service.get_tenant_or_404(session, _tid(tenant_id))
+    domains = session.scalars(
+        select(TenantDomain)
+        .where(TenantDomain.tenant_id == tenant.id)
+        .order_by(TenantDomain.is_primary.desc(), TenantDomain.created_at.asc())
+    ).all()
     return {"id": str(tenant.id), "code": tenant.code, "name": tenant.name, "legal_name": tenant.legal_name,
             "currency": tenant.currency, "country": tenant.country, "status": tenant.status,
             "isolation_mode": tenant.isolation_mode, "provision_state": tenant.provision_state,
+            "profile": tenant.profile,
+            "domains": [{"id": str(domain.id), "domain": domain.domain,
+                         "is_primary": domain.is_primary, "is_verified": domain.is_verified,
+                         "status": domain.status} for domain in domains],
             "activated_at": tenant.activated_at.isoformat() if tenant.activated_at else None}
+
+
+@app.put("/api/tenancy/tenants/{tenant_id}", dependencies=[Depends(management_auth)])
+def update_tenant(tenant_id: UUID, payload: TenantUpdateIn, request: Request, session: Session = Depends(db)):
+    """Update tenant business details and its primary custom domain in one transaction."""
+    principal = getattr(request.state, "tenancy_principal", {})
+    if "*" not in principal.get("permissions", []) and "tenants.manage" not in principal.get("permissions", []):
+        raise HTTPException(403, "tenant management permission is required")
+    def fn():
+        tenant = tenant_service.get_tenant_or_404(session, _tid(tenant_id))
+        tenant.name = payload.name.strip()
+        tenant.legal_name = payload.legal_name.strip() if payload.legal_name else None
+        tenant.country = payload.country.strip().upper()
+        tenant.currency = payload.currency.strip().upper()
+        existing_profile = tenant.profile if isinstance(tenant.profile, dict) else {}
+        tenant.profile = {**existing_profile,
+            "organization_type": payload.organization_type,
+            "business_email": payload.business_email.strip(),
+            "primary_mobile": payload.primary_mobile.strip(),
+            "website": payload.website.strip() if payload.website else None,
+            "landline": payload.landline.strip() if payload.landline else None,
+            "description": payload.description.strip() if payload.description else None,
+            "logo_url": payload.logo_url.strip() if payload.logo_url else None,
+            "address": payload.address}
+
+        primary_domain = session.scalars(select(TenantDomain).where(
+            TenantDomain.tenant_id == tenant.id, TenantDomain.is_primary.is_(True))).first()
+        domain_name = payload.custom_domain.strip().lower() if payload.custom_domain else None
+        if primary_domain and not domain_name:
+            session.delete(primary_domain)
+        elif primary_domain and primary_domain.domain != domain_name:
+            duplicate = session.scalars(select(TenantDomain).where(
+                TenantDomain.domain == domain_name, TenantDomain.id != primary_domain.id)).first()
+            if duplicate:
+                raise HTTPException(409, "custom domain is already assigned")
+            primary_domain.domain = domain_name
+            primary_domain.is_verified = False
+            primary_domain.status = "PENDING"
+            primary_domain.verification_token = _secrets.token_urlsafe(32)
+            primary_domain.changed_by = _actor(request)
+        elif not primary_domain and domain_name:
+            tenant_service.add_domain(session, tenant.id, domain_name, is_primary=True, actor=_actor(request))
+        session.flush()
+        return {"id": str(tenant.id), "name": tenant.name, "status": tenant.status}
+    return _run(session, fn, request)
 
 
 @app.post("/api/tenancy/tenants/{tenant_id}/activate", dependencies=[Depends(management_auth)])
@@ -288,7 +427,7 @@ def tenant_health(tenant_id: UUID, session: Session = Depends(db)):
 
 
 # ===========================================================================
-# Tenant configuration, domains, features, entitlements, quotas, secrets
+# Tenant configuration, domains, entitlements, quotas, secrets
 # ===========================================================================
 @app.get("/api/tenancy/tenants/{tenant_id}/config", dependencies=[Depends(management_auth)])
 def get_config(tenant_id: UUID, category: str = Query(default="all"), session: Session = Depends(db)):
@@ -310,25 +449,6 @@ def set_config(tenant_id: UUID, payload: ConfigIn, request: Request = None, sess
     return _run(session, fn, request)
 
 
-@app.get("/api/tenancy/tenants/{tenant_id}/features", dependencies=[Depends(management_auth)])
-def list_tenant_features(tenant_id: UUID, session: Session = Depends(db)):
-    tid = _tid(tenant_id)
-    tenant_service.get_tenant_or_404(session, tid)
-    flags = list(session.scalars(select(FeatureFlag).where(FeatureFlag.state == "ENABLED").order_by(FeatureFlag.name)))
-    overrides = {
-        row.flag_id: row
-        for row in session.scalars(select(TenantFeature).where(TenantFeature.tenant_id == tid))
-    }
-    return [{
-        "code": flag.code,
-        "name": flag.name,
-        "description": flag.description,
-        "platform_default": flag.platform_default,
-        "override": overrides[flag.id].enabled if flag.id in overrides else None,
-        "enabled": overrides[flag.id].enabled if flag.id in overrides else flag.platform_default,
-    } for flag in flags]
-
-
 @app.post("/api/tenancy/tenants/{tenant_id}/domains", status_code=status.HTTP_201_CREATED,
           dependencies=[Depends(management_auth)])
 def add_domain(tenant_id: UUID, payload: DomainIn, request: Request = None, session: Session = Depends(db)):
@@ -347,15 +467,6 @@ def verify_domain(tenant_id: UUID, domain_id: UUID, payload: DomainVerifyIn,
         row = tenant_service.verify_domain(session, _tid(tenant_id), domain_id, token=payload.token)
         return {"id": str(row.id), "domain": row.domain, "status": row.status}
     return _run(session, fn, Request)
-
-
-@app.post("/api/tenancy/tenants/{tenant_id}/features", dependencies=[Depends(management_auth)])
-def set_feature(tenant_id: UUID, payload: FeatureIn, request: Request = None, session: Session = Depends(db)):
-    def fn():
-        tenant_service.set_feature(session, _tid(tenant_id), payload.code, payload.enabled,
-                                   actor=_actor(request))
-        return {"code": payload.code, "enabled": payload.enabled}
-    return _run(session, fn, request)
 
 
 @app.post("/api/tenancy/tenants/{tenant_id}/entitlements", dependencies=[Depends(management_auth)])

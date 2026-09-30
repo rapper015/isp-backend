@@ -17,6 +17,7 @@ class Tenant(Base, Timestamped, UuidPk):
     name: Mapped[str] = mapped_column(String(160), nullable=False)
     code: Mapped[str] = mapped_column(String(40), nullable=False, unique=True, index=True)
     legal_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    profile: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
     country: Mapped[str | None] = mapped_column(String(4), nullable=True)
     currency: Mapped[str] = mapped_column(String(8), default="INR", nullable=False)
     timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -25,7 +26,6 @@ class Tenant(Base, Timestamped, UuidPk):
     isolation_mode: Mapped[str] = mapped_column(String(32), default="SHARED_SCHEMA_WITH_RLS", nullable=False)
     plan_ref: Mapped[str | None] = mapped_column(String(80), nullable=True)
     provision_state: Mapped[str | None] = mapped_column(String(40), nullable=True)
-    feature_flags_ref: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
     created_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
     activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -100,29 +100,6 @@ class TenantSecret(Base, Timestamped, UuidPk):
     secret_ref: Mapped[str] = mapped_column(String(255), nullable=False)  # encrypted
     category: Mapped[str] = mapped_column(String(48), default="INTEGRATION", nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-
-
-class FeatureFlag(Base, Timestamped, UuidPk):
-    __tablename__ = "ten_feature_flags"
-    __table_args__ = (UniqueConstraint("code", name="uq_ten_feature_code"),)
-
-    code: Mapped[str] = mapped_column(String(80), nullable=False)
-    name: Mapped[str] = mapped_column(String(160), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    platform_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    environment: Mapped[str] = mapped_column(String(32), default="ALL", nullable=False)
-    state: Mapped[str] = mapped_column(String(24), default="ENABLED", nullable=False)
-
-
-class TenantFeature(Base, Timestamped, UuidPk):
-    __tablename__ = "ten_tenant_features"
-    __table_args__ = (UniqueConstraint("tenant_id", "flag_id", name="uq_ten_tenant_feature"),)
-
-    tenant_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True)
-    flag_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True)
-    enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    changed_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
 
 class Entitlement(Base, Timestamped, UuidPk):

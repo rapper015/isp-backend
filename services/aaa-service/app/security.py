@@ -18,47 +18,28 @@ def hash_api_key(value: str) -> str: return hashlib.sha256(value.encode()).hexdi
 
 def management_permission(method: str, path: str) -> str | None:
     if path == "/api/nas" or path.startswith("/api/nas/"):
-        if path == "/api/nas":
-            return "nas.view" if method == "GET" else "nas.create" if method == "POST" else "nas.update"
-        if method == "GET":
-            return "nas.audit.view" if path.endswith("/audit") else "nas.configuration.view" if ("/snapshots" in path or "/jobs" in path or "/plans/" in path or path.endswith("/current-radius-configuration") or path.endswith("/desired-configuration") or path.endswith("/radius-registration-status")) else "nas.view"
-        if method == "PATCH":
-            return "nas.credentials.manage" if "/credentials" in path else "nas.radius_assignment.manage" if "radius-assignments" in path else "nas.update"
-        if method == "DELETE":
-            return "nas.radius_assignment.manage" if "radius-assignments" in path else "nas.delete"
-        # POST below this point.
-        if path.endswith("/enable"): return "nas.enable"
-        if path.endswith("/disable"): return "nas.disable"
-        if path.endswith("/decommission"): return "nas.decommission"
-        if path.endswith("/credentials/rotate"): return "nas.credentials.manage"
-        if path.endswith("/test-connection"): return "nas.connection.test"
-        if path.endswith("/discover"): return "nas.discovery.run"
-        if path.endswith("/approve"): return "nas.configuration.approve"
-        if path.endswith("/cancel"): return "nas.configuration.apply"
-        if path.endswith("/apply"): return "nas.configuration.apply"
-        if path.endswith("/plan"): return "nas.configuration.plan"
-        if path.endswith("/rollback"): return "nas.configuration.rollback"
-        if path.endswith("/detect-drift"): return "nas.drift.view"
-        if path.endswith("/reconcile"): return "nas.drift.reconcile"
-        if path.endswith("/registration-package/reveal"): return "nas.radius_secret.view_once"
-        if path.endswith("/registration-package"): return "nas.radius_secret.generate"
-        if path.endswith("/rotate-secret") or path.endswith("/confirm-freeradius-update") or path.endswith("/apply-secret") or path.endswith("/rollback-secret"): return "nas.radius_secret.rotate"
-        if path.endswith("/confirm-registration"): return "nas.radius_registration.confirm"
-        if path.endswith("/verify"): return "nas.radius_registration.verify" if "/radius-assignments/" in path else "nas.configuration.apply"
-        if "radius-assignments" in path: return "nas.radius_assignment.manage"
-        return "nas.update"
+        # The platform permission registry intentionally exposes NAS access as
+        # read/manage capabilities.  Requiring the old fine-grained `nas.*`
+        # names here made those permissions impossible for tenant tokens to
+        # receive, even though the UI and platform RBAC granted NAS access.
+        return "aaa.nas.read" if method == "GET" else "aaa.nas.manage"
     if not path.startswith("/api/aaa/"): return None
-    if "/nas" in path: return "aaa.nas.view" if method == "GET" else "aaa.nas.rotate_secret" if path.endswith("/rotate-secret") else "aaa.nas.manage"
+    # Keep these names aligned with platform-core's canonical permission
+    # registry. Tenant administrators receive aaa.nas.read/aaa.nas.manage;
+    # checking the former aaa.nas.view name made every tenant GET fail with
+    # 403 because that permission could never be assigned or issued.
+    if "/nas" in path: return "aaa.nas.read" if method == "GET" else "aaa.nas.manage"
     if "radius-server" in path: return "aaa.radius_server.view" if method == "GET" else "aaa.radius_server.manage"
     if "/sessions" in path: return "aaa.session.view" if method == "GET" else "aaa.session.coa" if path.endswith("/coa") else "aaa.session.disconnect"
     if "/accounting-events" in path: return "aaa.accounting.view" if method == "GET" else "aaa.accounting.replay"
     if "/usage" in path: return "aaa.usage.view"
     if "/subscribers" in path: return "aaa.subscriber_policy.view" if method == "GET" or path.endswith(("preview-policy", "test-eligibility")) else "aaa.session.coa" if path.endswith("/coa") else "aaa.session.disconnect" if path.endswith("/disconnect") else "aaa.subscriber_policy.manage"
-    if "/credentials" in path or "/ip-pools" in path: return "aaa.secret.manage"
+    if "/credentials" in path: return "aaa.secret.manage"
+    if "/ip-pools" in path: return "aaa.ip_pool.view" if method == "GET" else "aaa.ip_pool.manage"
     if path.endswith("/tenants"): return "aaa.secret.manage"
     # Milestone 3 network-control paths.
     if "/policies" in path or "/bandwidth-profiles" in path or "/traffic-classes" in path or "/qos-profiles" in path or "/fup-policies" in path:
-        return "aaa.policy.manage" if method == "POST" else "aaa.policy.view"
+        return "aaa.policy.view" if method == "GET" else "aaa.policy.manage"
     if "/policy-assignment" in path or "/overrides" in path: return "aaa.policy.manage"
     if path.endswith("/effective-policy/explain") or "effective-policy" in path: return "aaa.policy.explain" if method == "GET" or method == "POST" else "aaa.policy.view"
     if "/network/sessions" in path:
@@ -95,7 +76,9 @@ async def _jwt_management_auth(request: Request) -> None:
         if supplied and not secrets.compare_digest(str(claimed_tenant), str(supplied)): raise HTTPException(403, "tenant access denied")
     remote = request.client.host if request.client else "unknown"
     if not limited(f"management:{remote}:{request.url.path}", int(getenv("AAA_MANAGEMENT_RATE_LIMIT", "120")), 60): raise HTTPException(429, "rate limit exceeded")
-    request.state.aaa_principal = {"subject": claims["sub"], "tenant_id": claimed_tenant, "roles": claims.get("roles", []), "permissions": sorted(permissions)}
+    request.state.aaa_principal = {"subject": claims["sub"], "tenant_id": claimed_tenant,
+        "franchise_id": claims.get("franchise_id") or claims.get("franchiseId"),
+        "roles": claims.get("roles", []), "permissions": sorted(permissions)}
 
 async def internal_service_auth(request: Request) -> None:
     supplied = request.headers.get("X-AAA-Service-Key", "")

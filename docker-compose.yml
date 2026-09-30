@@ -118,8 +118,13 @@ services:
       CUSTOMER_PORTAL_ACCESS_MINUTES: ${CUSTOMER_PORTAL_ACCESS_MINUTES:-30}
       CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
       CRM_INTERNAL_API_KEYS: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
+      CRM_OSS_BASE_URL: http://oss-service:8000
+      CRM_OSS_INTERNAL_API_KEY: ${OSS_INTERNAL_API_KEY:-local-development-oss-service-key-change-in-production}
+      CRM_DOCUMENT_STORAGE_ROOT: /data/crm-documents
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}
     command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    volumes:
+      - crm-documents:/data/crm-documents
 
   support-service:
     <<: *domain-service
@@ -170,6 +175,7 @@ services:
       SERVICE_NAME: oss-service
       DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/oss
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
+      OSS_INTERNAL_API_KEY: ${OSS_INTERNAL_API_KEY:-local-development-oss-service-key-change-in-production}
       CUSTOMER_PORTAL_JWT_SECRET: ${CUSTOMER_PORTAL_JWT_SECRET:-${PLATFORM_JWT_SECRET}}
       OSS_BSS_BASE_URL: http://bss-service:8000
       OSS_BSS_INTERNAL_API_KEY: ${BSS_INTERNAL_API_KEY:-local-development-bss-service-key-change-in-production}
@@ -190,6 +196,8 @@ services:
       AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
       AAA_ENCRYPTION_KEY: ${AAA_ENCRYPTION_KEY:?set AAA_ENCRYPTION_KEY in .env}
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
+      AAA_CRM_BASE_URL: http://crm-service:8000
+      AAA_CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
       AAA_INTERNAL_RATE_LIMIT: ${AAA_INTERNAL_RATE_LIMIT:-300}
       AAA_MANAGEMENT_RATE_LIMIT: ${AAA_MANAGEMENT_RATE_LIMIT:-120}
       AAA_REQUEST_MAX_BYTES: ${AAA_REQUEST_MAX_BYTES:-65536}
@@ -251,11 +259,14 @@ services:
   platform-core-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: platform-core-service}}
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
     environment:
       <<: *domain-environment
       SERVICE_NAME: platform-core-service
       DATABASE_URL: postgresql://${POSTGRES_USER:?set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/platform_core
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
+      PLATFORM_CRM_BASE_URL: http://crm-service:8000
+      PLATFORM_CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
       PLATFORM_BOOTSTRAP_ADMIN_USERNAME: ${PLATFORM_BOOTSTRAP_ADMIN_USERNAME:-admin}
       PLATFORM_BOOTSTRAP_ADMIN_PASSWORD: ${PLATFORM_BOOTSTRAP_ADMIN_PASSWORD:?set PLATFORM_BOOTSTRAP_ADMIN_PASSWORD in .env}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}
@@ -509,4 +520,5 @@ volumes:
   postgres-data:
   valkey-data:
   device-firmware:
+  crm-documents:
   prometheus-data:

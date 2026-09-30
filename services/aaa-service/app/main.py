@@ -4,6 +4,7 @@ from os import getenv
 from uuid import UUID
 import hashlib, secrets
 import bcrypt
+import httpx
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -74,6 +75,27 @@ def visible_tenant(request: Request, tenant_id: UUID | None) -> UUID | None:
     if tenant_id is None and principal and "*" not in permissions:
         raise HTTPException(403, "platform-wide tenant access is not permitted")
     return tenant_id
+
+def franchise_resource_ids(request: Request, tenant_id: UUID | None, resource: str) -> set[UUID] | None:
+    principal = getattr(request.state, "aaa_principal", {}) or {}
+    franchise_id = principal.get("franchise_id")
+    if not franchise_id:
+        return None
+    if tenant_id is None:
+        raise HTTPException(403, "franchise resource access requires a tenant scope")
+    try:
+        response = httpx.get(
+            f"{getenv('AAA_CRM_BASE_URL', 'http://crm-service:8000').rstrip('/')}/api/crm/franchises/{franchise_id}",
+            params={"tenant_id": str(tenant_id)},
+            headers={"X-CRM-Service-Key": getenv("AAA_CRM_INTERNAL_API_KEY", "")},
+            timeout=5.0,
+        )
+        response.raise_for_status()
+        profile = response.json().get("profile") or {}
+        values = profile.get(f"{resource}_ids") or profile.get(f"{resource}Ids") or []
+        return {UUID(str(value)) for value in values}
+    except (httpx.HTTPError, ValueError, TypeError) as error:
+        raise HTTPException(502, f"could not resolve franchise {resource} access") from error
 
 def tenant_item(session: Session, model, item_id: UUID, tenant_id: UUID | None, label: str):
     statement = select(model).where(model.id == item_id)
@@ -217,6 +239,11 @@ def list_managed_nas(request: Request, tenant_id: UUID | None = None, lifecycle_
     statement = select(Nas)
     if effective_tenant:
         statement = statement.where(Nas.tenant_id == effective_tenant)
+    allowed_nas_ids = franchise_resource_ids(request, effective_tenant, "nas")
+    if allowed_nas_ids is not None:
+        if not allowed_nas_ids:
+            return []
+        statement = statement.where(Nas.id.in_(allowed_nas_ids))
     if lifecycle_status: statement = statement.where(Nas.lifecycle_status == lifecycle_status.upper())
     if enabled is not None: statement = statement.where(Nas.enabled.is_(enabled))
     if health: statement = statement.where(Nas.health == health)
@@ -839,6 +866,27 @@ def list_ip_pools(request: Request, tenant_id: UUID | None = None, session: Sess
     statement = select(IpPool)
     if effective_tenant:
         statement = statement.where(IpPool.tenant_id == effective_tenant)
+    principal = getattr(request.state, "aaa_principal", {}) or {}
+    franchise_id = principal.get("franchise_id")
+    if franchise_id:
+        if not effective_tenant:
+            raise HTTPException(403, "franchise IP-pool access requires a tenant scope")
+        try:
+            response = httpx.get(
+                f"{getenv('AAA_CRM_BASE_URL', 'http://crm-service:8000').rstrip('/')}/api/crm/franchises/{franchise_id}",
+                params={"tenant_id": str(effective_tenant)},
+                headers={"X-CRM-Service-Key": getenv("AAA_CRM_INTERNAL_API_KEY", "")},
+                timeout=5.0,
+            )
+            response.raise_for_status()
+            profile = response.json().get("profile") or {}
+            allowed_pool_ids = profile.get("ip_pool_ids") or profile.get("ipPoolIds") or []
+            parsed_pool_ids = [UUID(str(value)) for value in allowed_pool_ids]
+        except (httpx.HTTPError, ValueError, TypeError) as error:
+            raise HTTPException(502, "could not resolve franchise IP-pool access") from error
+        if not parsed_pool_ids:
+            return []
+        statement = statement.where(IpPool.id.in_(parsed_pool_ids))
     return [{"id": str(item.id), "tenant_id": str(item.tenant_id), "name": item.name, "cidr": item.cidr, "family": item.address_family, "enabled": item.enabled} for item in session.scalars(statement.limit(100))]
 @app.get("/api/aaa/ip-pools/{pool_id}/leases", dependencies=[Depends(internal_service_auth)])
 def list_ip_leases(pool_id: UUID, tenant_id: UUID, limit: int = 100, offset: int = 0, session: Session = Depends(db)):

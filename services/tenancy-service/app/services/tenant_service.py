@@ -1,4 +1,4 @@
-"""Tenant lifecycle + provisioning saga + configuration, domains, features,
+"""Tenant lifecycle + provisioning saga + configuration, domains,
 entitlements, quotas and secrets. Provisioning is an idempotent saga that never
 marks a tenant ACTIVE before verification succeeds."""
 from __future__ import annotations
@@ -17,13 +17,12 @@ from ..domain.exceptions import (
     TenantSuspendedError,
     ValidationError,
 )
-from ..domain.features import effective_feature, quota_allows
+from ..domain.features import quota_allows
 from ..domain.identity import generate_domain_token, normalize_domain, normalize_tenant_code
 from ..domain.secrets import decrypt_secret, encrypt_secret
 from ..events import outbox
 from ..models import (
     Entitlement,
-    FeatureFlag,
     Quota,
     Tenant,
     TenantConfiguration,
@@ -31,7 +30,6 @@ from ..models import (
     TenantDatabase,
     TenantDomain,
     TenantEntitlement,
-    TenantFeature,
     TenantHealth,
     TenantQuota,
     TenantSecret,
@@ -241,38 +239,8 @@ def verify_domain(session: Session, tenant_id, domain_id, *, token: str,
 
 
 # ---------------------------------------------------------------------------
-# Features / entitlements / quotas
+# Entitlements / quotas
 # ---------------------------------------------------------------------------
-def get_feature(session: Session, tenant_id, code: str) -> bool:
-    flag = session.scalars(select(FeatureFlag).where(FeatureFlag.code == code)).first()
-    if flag is None:
-        return False
-    override = session.scalars(select(TenantFeature).where(
-        TenantFeature.tenant_id == tenant_id, TenantFeature.flag_id == flag.id)).first()
-    return effective_feature(flag.platform_default, override.enabled if override else None)
-
-
-def set_feature(session: Session, tenant_id, code: str, enabled: bool, *, actor: str = "system",
-                correlation_id: str | None = None) -> None:
-    request_id = correlation(correlation_id)
-    flag = session.scalars(select(FeatureFlag).where(FeatureFlag.code == code)).first()
-    if flag is None:
-        raise NotFoundError(f"feature flag {code!r} not found")
-    row = session.scalars(select(TenantFeature).where(
-        TenantFeature.tenant_id == tenant_id, TenantFeature.flag_id == flag.id)).first()
-    if row is None:
-        row = TenantFeature(tenant_id=tenant_id, flag_id=flag.id, enabled=enabled)
-        session.add(row)
-    else:
-        row.enabled = enabled
-    row.changed_by = actor
-    session.flush()
-    audit(session, tenant_id, actor, "tenant.feature.changed", resource_type="feature_flag",
-          resource_id=flag.id, after={"code": code, "enabled": enabled}, correlation_id=request_id)
-    outbox(session, "tenancy.feature.changed.v1", tenant_id, request_id,
-           {"tenant_id": str(tenant_id), "feature": code, "enabled": enabled})
-
-
 def grant_entitlement(session: Session, tenant_id, code: str, *, quantity: float | None = None,
                       granted_by: str = "system") -> None:
     entitlement = session.scalars(select(Entitlement).where(Entitlement.code == code)).first()
@@ -439,8 +407,6 @@ def _verify(session: Session, tenant: Tenant) -> list[dict]:
     checks = []
     db = session.scalars(select(TenantDatabase).where(TenantDatabase.tenant_id == tenant.id)).first()
     checks.append({"check": "database", "result": "PASSED" if db and db.state == "READY" else "FAILED"})
-    features = list(session.scalars(select(TenantFeature).where(TenantFeature.tenant_id == tenant.id)))
-    checks.append({"check": "features", "result": "PASSED"})
     session.flush()
     return checks
 

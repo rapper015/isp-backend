@@ -1,7 +1,7 @@
 """CRM domain models. Import the models you need from this package."""
 from .tenant import Tenant
 from .lead import FollowUp, Lead, LeadAssignment, LeadInteraction, LeadStageHistory
-from .customer import (Address, Branch, Contact, Customer, CustomerOwnership, CustomerPortalIdentity, ExternalReference, Franchise, ServiceLocation)
+from .customer import (Address, Branch, Contact, Customer, CustomerOwnership, CustomerPortalIdentity, ExternalReference, Franchise, PhoneIdentity, ServiceLocation)
 from .kyc import KycCase, KycDocument
 from .caf import CafRecord
 from .lifecycle import CustomerLifecycleEvent, CustomerRisk, TimelineEntry
@@ -22,7 +22,7 @@ from .ecosystem import (
 
 __all__ = [
     "Tenant", "Lead", "LeadAssignment", "LeadInteraction", "FollowUp", "LeadStageHistory",
-    "Franchise", "Branch", "Customer", "Contact", "Address", "ServiceLocation",
+    "Franchise", "Branch", "PhoneIdentity", "Customer", "Contact", "Address", "ServiceLocation",
     "CustomerOwnership", "CustomerPortalIdentity", "ExternalReference", "KycCase", "KycDocument", "CafRecord",
     "CustomerLifecycleEvent", "CustomerRisk", "TimelineEntry", "AuditLog",
     "OutboxEvent", "ConsumerInbox",

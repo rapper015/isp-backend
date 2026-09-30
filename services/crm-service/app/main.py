@@ -8,15 +8,22 @@ idempotent where applicable.
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from os import getenv
-from uuid import UUID
+from pathlib import Path
+import base64
+import hashlib
+import json
+from urllib import error as urlerror, request as urlrequest
+from uuid import UUID, uuid4
 
 import bcrypt
 import jwt
-from fastapi import Depends, FastAPI, HTTPException, Request
+from cryptography.fernet import Fernet
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from isp_shared.cors import cors_allowed_origins
@@ -26,10 +33,11 @@ from .models import (AuditLog, Branch, Customer, CustomerPortalIdentity, Experie
                      FederationLink, Franchise, KbFeedback, KycCase, KycDocument, Lead,
                      LeadInteraction, FollowUp, LoyaltyScore, ServiceLocation, Tenant,
                      TicketSuggestion, TimelineEntry)
-from .schemas import (AddressCreate, BranchIn, BranchUpdate, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, FranchiseSettingsPatch, FranchiseUpdate, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, PortalIdentityCreate, PortalLogin, PortalPasswordChange, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
+from .schemas import (AddressCreate, BranchIn, BranchProfile, BranchUpdate, CafCreateIn, CafDecisionIn, ContactCreate, ContactUpdate, CustomerCreate, CustomerOnboardingIn, CustomerUpdate, ExternalReferenceIn, FollowUpCompleteIn, FollowUpCreate, FollowUpReschedule, FranchiseIn, FranchiseOnboardingIn, FranchiseSettingsPatch, FranchiseUpdate, InteractionIn, KycCreateIn, KycDecisionIn, KycDocumentIn, LeadAssignIn, LeadConvertIn, LeadCreate, LeadFeasibilityIn, LeadQualifyIn, LeadTransitionIn, LifecycleTransitionIn, MergeIn, PortalIdentityCreate, PortalLogin, PortalPasswordChange, RiskOverrideIn, RiskRecordIn, ServiceLocationCreate, TenantIn)
 from .security import internal_service_auth
 from .services import (caf_service, conversion_service, customer_360, customer_service, duplicate_service, kyc_service, lead_service, lifecycle_service, merge_service, risk_service)
 from .services.audit_service import outbox, record_audit
+from .services.phone_identity_service import PhoneConflict, profile_numbers, replace_owner_numbers
 from .services.ecosystem_service import (
     EscalationService,
     FederationService,
@@ -69,6 +77,18 @@ def db():
         yield session
     finally:
         session.close()
+
+
+DOCUMENT_TYPES = {"AADHAAR", "PAN", "PASSPORT", "DRIVING_LICENSE", "VOTER_ID", "ADDRESS_PROOF", "GST_REGISTRATION", "INCORPORATION", "CAF", "PHOTOGRAPH", "OTHER"}
+DOCUMENT_MIME_TYPES = {"image/jpeg", "image/png", "image/gif", "application/pdf"}
+DOCUMENT_MAX_BYTES = 4 * 1024 * 1024
+
+
+def _document_cipher() -> Fernet:
+    secret = getenv("CRM_DOCUMENT_ENCRYPTION_KEY") or getenv("PLATFORM_JWT_SECRET", "")
+    if not secret:
+        raise HTTPException(503, "document encryption is not configured")
+    return Fernet(base64.urlsafe_b64encode(hashlib.sha256(secret.encode()).digest()))
 
 
 def _portal_secret() -> str:
@@ -119,8 +139,13 @@ def visible_tenant_filter(request: Request, tenant_id: UUID | None) -> UUID | No
     claimed = principal.get("tenant_id")
     if claimed and "*" not in permissions:
         return UUID(str(claimed))
-    if tenant_id is None and principal and "*" not in permissions:
-        raise HTTPException(403, "platform-wide tenant access is not permitted")
+    if principal and "*" not in permissions:
+        allowed = {str(value) for value in (principal.get("effective_access") or {}).get("tenant_ids", [])}
+        if tenant_id is not None:
+            if str(tenant_id) not in allowed: raise HTTPException(403, "tenant access denied")
+            return tenant_id
+        if len(allowed) == 1: return UUID(next(iter(allowed)))
+        raise HTTPException(422, "tenant_id is required when more than one tenant is assigned")
     return tenant_id
 
 
@@ -148,6 +173,38 @@ def _raise(error: Exception) -> HTTPException:
     if isinstance(error, (ValueError, ValidationError)):
         return HTTPException(422, str(error))
     raise error
+
+
+async def _store_document(session: Session, tenant_id: UUID, case_id: UUID, document_type: str, file: UploadFile) -> tuple[KycDocument, Path]:
+    """Encrypt and stage one uploaded KYC document in the current transaction."""
+    kind = document_type.strip().upper()
+    if kind not in DOCUMENT_TYPES:
+        raise HTTPException(422, "unsupported document type")
+    content_type = (file.content_type or "").lower()
+    if content_type not in DOCUMENT_MIME_TYPES:
+        raise HTTPException(422, "only JPEG, PNG, GIF, and PDF documents are allowed")
+    contents = await file.read(DOCUMENT_MAX_BYTES + 1)
+    if not contents:
+        raise HTTPException(422, "document is empty")
+    if len(contents) > DOCUMENT_MAX_BYTES:
+        raise HTTPException(413, "document exceeds the 4 MiB limit")
+    checksum = hashlib.sha256(contents).hexdigest()
+    root = Path(getenv("CRM_DOCUMENT_STORAGE_ROOT", "/data/crm-documents")).resolve()
+    target_dir = (root / str(tenant_id) / str(case_id)).resolve()
+    if root not in target_dir.parents:
+        raise HTTPException(400, "invalid document path")
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = target_dir / f"{uuid4()}.enc"
+    target.write_bytes(_document_cipher().encrypt(contents))
+    try:
+        document = kyc_service.add_kyc_document(
+            session, tenant_id, case_id, kind, str(target.relative_to(root)), None,
+            content_type, len(contents), checksum,
+        )
+    except Exception:
+        target.unlink(missing_ok=True)
+        raise
+    return document, target
 
 
 @app.get("/health")
@@ -185,6 +242,9 @@ def list_tenants(request: Request, limit: int = 100, offset: int = 0, session: S
     claimed_tenant = principal.get("tenant_id")
     if claimed_tenant and "*" not in permissions:
         statement = statement.where(Tenant.id == UUID(claimed_tenant))
+    elif principal and "*" not in permissions:
+        allowed = [UUID(str(value)) for value in (principal.get("effective_access") or {}).get("tenant_ids", [])]
+        statement = statement.where(Tenant.id.in_(allowed))
     tenants = list(session.scalars(statement.offset(max(offset, 0)).limit(bounded(limit))))
     return [
         {
@@ -203,19 +263,102 @@ def create_franchise(tenant_id: UUID, payload: FranchiseIn, session: Session = D
     item = Franchise(tenant_id=tenant_id, **payload.model_dump(mode="json"))
     session.add(item)
     session.flush()
+    try:
+        replace_owner_numbers(session, "FRANCHISE", item.id, profile_numbers(item.profile))
+        session.flush()
+    except (PhoneConflict, IntegrityError) as error:
+        session.rollback()
+        raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "phone number already exists") from error
     record_audit(session, tenant_id, "system", "franchise.created", "franchise", str(item.id), safe_after=jsonable_encoder(safe_franchise(item)))
     session.commit()
     return {"id": str(item.id), "franchise_code": item.franchise_code}
 
 
+@app.post("/api/crm/franchise-onboarding", status_code=201, dependencies=[Depends(internal_service_auth)])
+def onboard_franchise(tenant_id: UUID, payload: FranchiseOnboardingIn, request: Request, session: Session = Depends(db)):
+    """Create a franchise and its initial scoped administrator through one operator request."""
+    principal = getattr(request.state, "crm_principal", {}) or {}
+    if principal.get("franchise_id") or ("crm.franchise.manage" not in principal.get("permissions", []) and "*" not in principal.get("permissions", [])):
+        raise HTTPException(403, "only a tenant administrator can onboard franchises")
+    tenant = session.get(Tenant, tenant_id)
+    if tenant is None:
+        # Tenancy is the source of truth. A tenant-scoped, authenticated request
+        # may safely materialize CRM's local ownership reference on first use.
+        tenant = Tenant(id=tenant_id, name=f"tenant-{str(tenant_id)[:8]}")
+        session.add(tenant)
+        session.flush()
+    if session.scalar(select(Franchise).where(
+        Franchise.tenant_id == tenant_id, Franchise.franchise_code == payload.franchise_code)):
+        raise HTTPException(409, "franchise code already exists")
+    item = Franchise(tenant_id=tenant_id, franchise_code=payload.franchise_code,
+        name=payload.name, status=payload.status, profile=payload.profile.model_dump(mode="json"))
+    session.add(item)
+    session.flush()
+    try:
+        replace_owner_numbers(session, "FRANCHISE", item.id, profile_numbers(item.profile))
+        session.flush()
+    except (PhoneConflict, IntegrityError) as error:
+        session.rollback()
+        raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "phone number already exists") from error
+    body = json.dumps({"username": payload.admin.username, "password": payload.admin.password,
+        "email": payload.admin.email, "full_name": payload.admin.full_name,
+        "mobile": payload.admin.mobile, "tenant_id": str(tenant_id),
+        "franchise_id": str(item.id), "roles": ["FRANCHISE_ADMIN"],
+        "is_organization_owner": True}).encode()
+    upstream = urlrequest.Request(
+        f"{getenv('PLATFORM_CORE_BASE_URL', 'http://platform-core-service:8000').rstrip('/')}/api/v1/platform/users",
+        data=body, headers={"Content-Type": "application/json",
+        "Authorization": request.headers.get("Authorization", "")}, method="POST")
+    try:
+        with urlrequest.urlopen(upstream, timeout=10) as response:
+            admin = json.loads(response.read())
+    except urlerror.HTTPError as exc:
+        session.rollback()
+        raw = exc.read().decode()
+        try: detail = json.loads(raw).get("detail", raw)
+        except (ValueError, AttributeError): detail = raw
+        raise HTTPException(exc.code, detail or "franchise administrator could not be created") from exc
+    except Exception as exc:
+        session.rollback()
+        raise HTTPException(502, "franchise administrator service is unavailable") from exc
+    assignment = urlrequest.Request(
+        f"{getenv('PLATFORM_CORE_BASE_URL', 'http://platform-core-service:8000').rstrip('/')}/api/v1/platform/access-template-assignments/FRANCHISE/{item.id}",
+        data=json.dumps({"template_id": str(payload.access_template_id)}).encode(),
+        headers={"Content-Type": "application/json", "Authorization": request.headers.get("Authorization", "")},
+        method="PUT")
+    try:
+        with urlrequest.urlopen(assignment, timeout=10): pass
+    except urlerror.HTTPError as exc:
+        session.rollback(); raw = exc.read().decode()
+        try: detail = json.loads(raw).get("detail", raw)
+        except (ValueError, AttributeError): detail = raw
+        raise HTTPException(exc.code, detail or "franchise access template could not be assigned") from exc
+    record_audit(session, tenant_id, actor_of(request), "franchise.onboarded", "franchise", str(item.id),
+        safe_after={"franchise": jsonable_encoder(safe_franchise(item)), "administrator_id": admin.get("id")})
+    session.commit()
+    return {"id": str(item.id), "franchise_code": item.franchise_code,
+        "access_template_id": str(payload.access_template_id),
+        "status": item.status, "administrator": {"id": admin.get("id"), "username": admin.get("username")}}
+
+
+def franchise_profile_without_legacy_access_fields(profile: dict | None) -> dict:
+    cleaned = dict(profile or {})
+    # These were legacy profile concepts. Organization access is governed by the
+    # franchise access-template assignment; login roles belong to user accounts.
+    for legacy_key in ("role", "role_id", "account_manager", "account_manager_id"):
+        cleaned.pop(legacy_key, None)
+    return cleaned
+
+
 def safe_franchise(item: Franchise) -> dict:
+    profile = franchise_profile_without_legacy_access_fields(item.profile)
     return {
         "id": str(item.id),
         "tenant_id": str(item.tenant_id),
         "franchise_code": item.franchise_code,
         "name": item.name,
         "status": item.status,
-        "profile": item.profile or {},
+        "profile": profile,
         "created_at": item.created_at,
         "updated_at": item.updated_at,
     }
@@ -227,6 +370,17 @@ def list_franchises(request: Request, tenant_id: UUID | None = None, status: str
     statement = select(Franchise)
     if effective_tenant:
         statement = statement.where(Franchise.tenant_id == effective_tenant)
+    franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
+    if franchise_scope:
+        statement = statement.where(Franchise.id == UUID(franchise_scope))
+    else:
+        principal = getattr(request.state, "crm_principal", {}) or {}
+        # A tenant-bound principal owns the complete tenant boundary and may
+        # see every franchise in that tenant. Explicit franchise IDs are only
+        # needed for platform operators delegated to selected child scopes.
+        if principal and not principal.get("tenant_id") and "*" not in principal.get("permissions", []):
+            allowed = [UUID(str(value)) for value in (principal.get("effective_access") or {}).get("franchise_ids", [])]
+            statement = statement.where(Franchise.id.in_(allowed))
     if status:
         statement = statement.where(Franchise.status.ilike(status))
     items = session.scalars(statement.order_by(Franchise.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))
@@ -235,11 +389,21 @@ def list_franchises(request: Request, tenant_id: UUID | None = None, status: str
 
 @app.get("/api/crm/franchises/{franchise_id}", dependencies=[Depends(internal_service_auth)])
 def get_franchise(franchise_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
+    if franchise_scope and str(franchise_id) != franchise_scope:
+        raise HTTPException(403, "franchise access denied")
+    principal = getattr(request.state, "crm_principal", {}) or {}
+    if principal and not principal.get("tenant_id") and not franchise_scope and "*" not in principal.get("permissions", []):
+        allowed = {str(value) for value in (principal.get("effective_access") or {}).get("franchise_ids", [])}
+        if str(franchise_id) not in allowed: raise HTTPException(403, "franchise access denied")
     return safe_franchise(visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise"))
 
 
 @app.patch("/api/crm/franchises/{franchise_id}", dependencies=[Depends(internal_service_auth)])
 def update_franchise(franchise_id: UUID, tenant_id: UUID, payload: FranchiseUpdate, request: Request, session: Session = Depends(db)):
+    franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
+    if franchise_scope and str(franchise_id) != franchise_scope:
+        raise HTTPException(403, "franchise access denied")
     item = tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
     before = jsonable_encoder(safe_franchise(item))
     changes = payload.model_dump(exclude_unset=True, exclude={"profile"}, mode="json")
@@ -247,6 +411,12 @@ def update_franchise(franchise_id: UUID, tenant_id: UUID, payload: FranchiseUpda
         changes["profile"] = payload.profile.model_dump(mode="json")
     for field, value in changes.items():
         setattr(item, field, value)
+    try:
+        replace_owner_numbers(session, "FRANCHISE", item.id, profile_numbers(item.profile))
+        session.flush()
+    except (PhoneConflict, IntegrityError) as error:
+        session.rollback()
+        raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "phone number already exists") from error
     record_audit(session, tenant_id, actor_of(request), "franchise.updated", "franchise", str(item.id), safe_after={"before": before, "after": jsonable_encoder(safe_franchise(item))})
     session.commit()
     session.refresh(item)
@@ -274,31 +444,48 @@ FRANCHISE_CAPABILITIES = {
 
 @app.get("/api/crm/franchises/{franchise_id}/settings", dependencies=[Depends(internal_service_auth)])
 def get_franchise_settings(franchise_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
+    if franchise_scope and str(franchise_id) != franchise_scope:
+        raise HTTPException(403, "franchise access denied")
     item = visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise")
-    return {"franchise_id": str(item.id), "status": item.status, "settings": item.profile or {}}
+    return {"franchise_id": str(item.id), "status": item.status,
+            "settings": franchise_profile_without_legacy_access_fields(item.profile)}
 
 
 @app.patch("/api/crm/franchises/{franchise_id}/settings", dependencies=[Depends(internal_service_auth)])
 def patch_franchise_settings(franchise_id: UUID, tenant_id: UUID, payload: FranchiseSettingsPatch, request: Request, session: Session = Depends(db)):
     from .schemas import FranchiseProfile
 
+    franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
+    if franchise_scope and str(franchise_id) != franchise_scope:
+        raise HTTPException(403, "franchise access denied")
     item = tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
-    before = dict(item.profile or {})
+    before = franchise_profile_without_legacy_access_fields(item.profile)
     merged = {**before, **payload.settings}
     try:
         validated = FranchiseProfile.model_validate(merged).model_dump(mode="json")
     except PydanticValidationError as error:
         raise HTTPException(422, jsonable_encoder(error.errors(include_url=False))) from error
     item.profile = validated
+    try:
+        replace_owner_numbers(session, "FRANCHISE", item.id, profile_numbers(validated))
+        session.flush()
+    except (PhoneConflict, IntegrityError) as error:
+        session.rollback()
+        raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "phone number already exists") from error
     record_audit(session, tenant_id, actor_of(request), "franchise.settings.updated", "franchise", str(item.id), safe_after={"changed": sorted(payload.settings), "settings": validated}, reason=payload.reason)
     outbox(session, "crm.franchise.settings.updated.v1", tenant_id, request.headers.get("X-Correlation-Id") or "franchise-settings", {"franchise_id": str(item.id), "changed": sorted(payload.settings), "settings": validated})
     session.commit()
     session.refresh(item)
-    return {"franchise_id": str(item.id), "status": item.status, "settings": item.profile}
+    return {"franchise_id": str(item.id), "status": item.status,
+            "settings": franchise_profile_without_legacy_access_fields(item.profile)}
 
 
 @app.get("/api/crm/franchises/{franchise_id}/settings/history", dependencies=[Depends(internal_service_auth)])
 def franchise_settings_history(franchise_id: UUID, request: Request, tenant_id: UUID | None = None, limit: int = 100, session: Session = Depends(db)):
+    franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
+    if franchise_scope and str(franchise_id) != franchise_scope:
+        raise HTTPException(403, "franchise access denied")
     item = visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise")
     rows = session.scalars(select(AuditLog).where(AuditLog.tenant_id == item.tenant_id, AuditLog.aggregate_type == "franchise", AuditLog.aggregate_id == str(franchise_id), AuditLog.action == "franchise.settings.updated").order_by(AuditLog.created_at.desc()).limit(bounded(limit)))
     return [{"action": row.action, "actor": row.actor, "reason": row.reason, "changes": row.safe_after, "created_at": row.created_at} for row in rows]
@@ -315,11 +502,25 @@ def evaluate_franchise_capability(franchise_id: UUID, capability: str, tenant_id
 
 
 @app.post("/api/crm/branches", dependencies=[Depends(internal_service_auth)])
-def create_branch(tenant_id: UUID, payload: BranchIn, session: Session = Depends(db)):
+def create_branch(tenant_id: UUID, payload: BranchIn, request: Request, session: Session = Depends(db)):
     tenant_item(session, Tenant, tenant_id, tenant_id, "tenant")
-    franchise = tenant_item(session, Franchise, payload.franchise_id, tenant_id, "franchise")
+    franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
+    if franchise_scope and payload.franchise_id and str(payload.franchise_id) != franchise_scope:
+        raise HTTPException(403, "franchise access denied")
+    effective_franchise_id = UUID(franchise_scope) if franchise_scope else payload.franchise_id
+    if effective_franchise_id is None:
+        raise HTTPException(422, "franchise_id is required for tenant and platform administrators")
+    franchise = tenant_item(session, Franchise, effective_franchise_id, tenant_id, "franchise")
+    validate_branch_resource_allowances(franchise, payload.profile)
     item = Branch(tenant_id=tenant_id, franchise_id=franchise.id, branch_code=payload.branch_code, name=payload.name, profile=payload.profile.model_dump(mode="json"))
     session.add(item)
+    session.flush()
+    try:
+        replace_owner_numbers(session, "BRANCH", item.id, profile_numbers(item.profile))
+        session.flush()
+    except (PhoneConflict, IntegrityError) as error:
+        session.rollback()
+        raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "phone number already exists") from error
     session.commit()
     return {"id": str(item.id), "branch_code": item.branch_code}
 
@@ -327,6 +528,7 @@ def create_branch(tenant_id: UUID, payload: BranchIn, session: Session = Depends
 def safe_branch(item: Branch, franchise: Franchise | None = None) -> dict:
     return {
         "id": str(item.id),
+        "tenant_id": str(item.tenant_id),
         "branch_code": item.branch_code,
         "name": item.name,
         "status": item.status,
@@ -338,10 +540,25 @@ def safe_branch(item: Branch, franchise: Franchise | None = None) -> dict:
     }
 
 
+def validate_branch_resource_allowances(franchise: Franchise, profile: BranchProfile) -> None:
+    franchise_profile = franchise.profile or {}
+    allowed_packages = {str(value) for value in franchise_profile.get("package_ids", [])}
+    requested_packages = set(profile.package_ids)
+    unauthorized_packages = requested_packages - allowed_packages
+    if unauthorized_packages:
+        raise HTTPException(422, "one or more selected packages are not assigned to this franchise")
+    allowed_pools = {str(value) for value in franchise_profile.get("ip_pool_ids", [])}
+    requested_pools = set(profile.ip_pool_ids)
+    unauthorized_pools = requested_pools - allowed_pools
+    if unauthorized_pools:
+        raise HTTPException(422, "one or more selected IP pools are not assigned to this franchise")
+
+
 @app.get("/api/crm/branches", dependencies=[Depends(internal_service_auth)])
 def list_branches(request: Request, tenant_id: UUID | None = None, franchise_id: UUID | None = None, franchiseId: UUID | None = None, status: str | None = None, limit: int =100, offset: int = 0, session: Session = Depends(db)):
     effective_tenant = visible_tenant_filter(request, tenant_id)
-    selected_franchise = franchise_id or franchiseId
+    franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
+    selected_franchise = UUID(franchise_scope) if franchise_scope else franchise_id or franchiseId
     statement = select(Branch)
     if effective_tenant:
         statement = statement.where(Branch.tenant_id == effective_tenant)
@@ -349,6 +566,12 @@ def list_branches(request: Request, tenant_id: UUID | None = None, franchise_id:
         if effective_tenant:
             tenant_item(session, Franchise, selected_franchise, effective_tenant, "franchise")
         statement = statement.where(Branch.franchise_id == selected_franchise)
+    principal = getattr(request.state, "crm_principal", {}) or {}
+    # Tenant-bound administrators can see every branch in their tenant.
+    # Explicit branch IDs apply only to delegated platform operators.
+    if principal and not principal.get("tenant_id") and not franchise_scope and "*" not in principal.get("permissions", []):
+        allowed = [UUID(str(value)) for value in (principal.get("effective_access") or {}).get("branch_ids", [])]
+        statement = statement.where(Branch.id.in_(allowed))
     if status:
         statement = statement.where(Branch.status.ilike(status))
     items = list(session.scalars(statement.order_by(Branch.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit))))
@@ -363,6 +586,13 @@ def list_branches(request: Request, tenant_id: UUID | None = None, franchise_id:
 @app.get("/api/crm/branches/{branch_id}", dependencies=[Depends(internal_service_auth)])
 def get_branch(branch_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
     item = visible_item(session, request, Branch, branch_id, tenant_id, "branch")
+    franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
+    if franchise_scope and str(item.franchise_id) != franchise_scope:
+        raise HTTPException(403, "franchise access denied")
+    principal = getattr(request.state, "crm_principal", {}) or {}
+    if principal and not principal.get("tenant_id") and not franchise_scope and "*" not in principal.get("permissions", []):
+        allowed = {str(value) for value in (principal.get("effective_access") or {}).get("branch_ids", [])}
+        if str(branch_id) not in allowed: raise HTTPException(403, "branch access denied")
     franchise = tenant_item(session, Franchise, item.franchise_id, item.tenant_id, "franchise") if item.franchise_id else None
     return safe_branch(item, franchise)
 
@@ -370,15 +600,28 @@ def get_branch(branch_id: UUID, request: Request, tenant_id: UUID | None = None,
 @app.patch("/api/crm/branches/{branch_id}", dependencies=[Depends(internal_service_auth)])
 def update_branch(branch_id: UUID, tenant_id: UUID, payload: BranchUpdate, request: Request, session: Session = Depends(db)):
     item = tenant_item(session, Branch, branch_id, tenant_id, "branch")
+    franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
+    if franchise_scope and str(item.franchise_id) != franchise_scope:
+        raise HTTPException(403, "franchise access denied")
     before = jsonable_encoder(safe_branch(item))
     changes = payload.model_dump(exclude_unset=True, exclude={"profile", "franchise_id"}, mode="json")
     if payload.franchise_id is not None:
+        if franchise_scope and str(payload.franchise_id) != franchise_scope:
+            raise HTTPException(403, "franchise access denied")
         franchise = tenant_item(session, Franchise, payload.franchise_id, tenant_id, "franchise")
         changes["franchise_id"] = franchise.id
     if payload.profile is not None:
+        target_franchise = tenant_item(session, Franchise, payload.franchise_id or item.franchise_id, tenant_id, "franchise")
+        validate_branch_resource_allowances(target_franchise, payload.profile)
         changes["profile"] = payload.profile.model_dump(mode="json")
     for field, value in changes.items():
         setattr(item, field, value)
+    try:
+        replace_owner_numbers(session, "BRANCH", item.id, profile_numbers(item.profile))
+        session.flush()
+    except (PhoneConflict, IntegrityError) as error:
+        session.rollback()
+        raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "phone number already exists") from error
     record_audit(session, tenant_id, actor_of(request), "branch.updated", "branch", str(item.id), safe_after={"before": before, "after": jsonable_encoder(safe_branch(item))})
     session.commit()
     session.refresh(item)
@@ -619,12 +862,141 @@ def safe_customer(item: Customer) -> dict:
 
 @app.post("/api/crm/customers", dependencies=[Depends(internal_service_auth)])
 def create_customer(payload: CustomerCreate, tenant_id: UUID, request: Request, session: Session = Depends(db)):
+    principal = getattr(request.state, "crm_principal", {}) or {}
+    franchise_scope = principal.get("franchise_id")
+    if franchise_scope:
+        if payload.franchise_id and str(payload.franchise_id) != franchise_scope:
+            raise HTTPException(403, "franchise access denied")
+        payload.franchise_id = UUID(franchise_scope)
+    if payload.franchise_id is None or payload.branch_id is None:
+        raise HTTPException(422, "franchise_id and branch_id are required")
+    franchise = tenant_item(session, Franchise, payload.franchise_id, tenant_id, "franchise")
+    branch = tenant_item(session, Branch, payload.branch_id, tenant_id, "branch")
+    if branch.franchise_id != franchise.id:
+        raise HTTPException(422, "selected branch does not belong to the selected franchise")
     try:
         customer = customer_service.create_customer(session, tenant_id, payload.model_dump(), actor_of(request))
+        replace_owner_numbers(session, "CUSTOMER", customer.id, {"phone": customer.phone})
+        session.flush()
+    except (PhoneConflict, IntegrityError) as error:
+        session.rollback()
+        raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "customer phone number already exists") from error
     except Exception as error:
         raise _raise(error) from error
     session.commit()
     return safe_customer(customer)
+
+
+@app.post("/api/crm/customer-onboarding", status_code=201, dependencies=[Depends(internal_service_auth)])
+async def onboard_customer(
+    request: Request,
+    tenant_id: UUID,
+    payload: str = Form(...),
+    identity_document: UploadFile | None = File(default=None),
+    address_proof: UploadFile | None = File(default=None),
+    customer_photo: UploadFile | None = File(default=None),
+    caf_document: UploadFile | None = File(default=None),
+    session: Session = Depends(db),
+):
+    """Create a billing customer and their first connection as one UI command.
+
+    CRM records are committed only after OSS accepts the provisioning order.
+    Uploaded files are removed if any stage fails.
+    """
+    try:
+        command = CustomerOnboardingIn.model_validate_json(payload)
+    except PydanticValidationError as error:
+        raise HTTPException(422, jsonable_encoder(error.errors())) from error
+
+    principal = getattr(request.state, "crm_principal", {}) or {}
+    franchise_scope = principal.get("franchise_id")
+    if franchise_scope:
+        if command.customer.franchise_id and str(command.customer.franchise_id) != franchise_scope:
+            raise HTTPException(403, "franchise access denied")
+        command.customer.franchise_id = UUID(franchise_scope)
+    if command.customer.franchise_id is None or command.customer.branch_id is None:
+        raise HTTPException(422, "franchise_id and branch_id are required")
+    if command.order.franchise_id != command.customer.franchise_id:
+        raise HTTPException(422, "order franchise does not match the customer franchise")
+    franchise = tenant_item(session, Franchise, command.customer.franchise_id, tenant_id, "franchise")
+    branch = tenant_item(session, Branch, command.customer.branch_id, tenant_id, "branch")
+    if branch.franchise_id != franchise.id:
+        raise HTTPException(422, "selected branch does not belong to the selected franchise")
+
+    stored_files: list[Path] = []
+    try:
+        actor = actor_of(request)
+        customer = customer_service.create_customer(session, tenant_id, command.customer.model_dump(), actor)
+        replace_owner_numbers(session, "CUSTOMER", customer.id, {"phone": customer.phone})
+        session.flush()
+        address = customer_service.add_address(session, tenant_id, customer.id, command.address.model_dump(), actor)
+        location_payload = command.service_location.model_dump()
+        location_payload["address_id"] = address.id
+        location = customer_service.create_service_location(session, tenant_id, customer.id, location_payload, actor)
+        kyc = kyc_service.create_kyc_case(session, tenant_id, customer.id, kyc_type=command.kyc.kyc_type, actor=actor)
+
+        uploads = (
+            (identity_document, "INCORPORATION" if command.customer.customer_type == "BUSINESS" else "AADHAAR"),
+            (address_proof, "ADDRESS_PROOF"),
+            (customer_photo, "PHOTOGRAPH"),
+            (caf_document, "CAF"),
+        )
+        for upload, kind in uploads:
+            if upload is not None and upload.filename:
+                _, target = await _store_document(session, tenant_id, kyc.id, kind, upload)
+                stored_files.append(target)
+
+        caf_payload = command.caf.model_dump()
+        caf_payload.update({"customer_id": customer.id, "franchise_id": customer.franchise_id, "branch_id": customer.branch_id})
+        caf = caf_service.create_caf(session, tenant_id, caf_payload, actor)
+
+        order_payload = command.order.model_dump(mode="json")
+        order_payload.update({
+            "tenant_id": str(tenant_id),
+            "customer_id": str(customer.id),
+            "service_location_id": str(location.id),
+            "actor": actor,
+        })
+        upstream = urlrequest.Request(
+            f"{getenv('CRM_OSS_BASE_URL', 'http://oss-service:8000').rstrip('/')}/api/oss/orders",
+            data=json.dumps(order_payload).encode(),
+            headers={
+                "Content-Type": "application/json",
+                "X-Internal-API-Key": getenv("CRM_OSS_INTERNAL_API_KEY", ""),
+                "X-Service-Name": SERVICE_NAME,
+            },
+            method="POST",
+        )
+        try:
+            with urlrequest.urlopen(upstream, timeout=15) as response:
+                order = json.loads(response.read())
+        except urlerror.HTTPError as error:
+            raw = error.read().decode()
+            try:
+                detail = json.loads(raw).get("detail", raw)
+            except (ValueError, AttributeError):
+                detail = raw
+            raise HTTPException(error.code, detail or "provisioning order could not be created") from error
+        except urlerror.URLError as error:
+            raise HTTPException(502, "provisioning service is unavailable") from error
+
+        session.commit()
+        return {
+            "customer_id": str(customer.id), "customer_number": customer.customer_number,
+            "address_id": str(address.id), "service_location_id": str(location.id),
+            "kyc_id": str(kyc.id), "caf_id": str(caf.id), "caf_number": caf.caf_number,
+            "order_id": order.get("id"), "order_number": order.get("order_number"), "order_state": order.get("state"),
+        }
+    except (PhoneConflict, IntegrityError) as error:
+        session.rollback()
+        for target in stored_files:
+            target.unlink(missing_ok=True)
+        raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "customer details already exist") from error
+    except Exception:
+        session.rollback()
+        for target in stored_files:
+            target.unlink(missing_ok=True)
+        raise
 
 
 @app.get("/api/crm/customers", dependencies=[Depends(internal_service_auth)])
@@ -947,6 +1319,18 @@ def add_kyc_document(case_id: UUID, tenant_id: UUID, payload: KycDocumentIn, req
         raise _raise(error) from error
     session.commit()
     return {"id": str(document.id), "document_type": document.document_type, "masked_identifier": document.masked_identifier}
+
+
+@app.post("/api/crm/kyc/{case_id}/documents/upload", status_code=201, dependencies=[Depends(internal_service_auth)])
+async def upload_kyc_document(case_id: UUID, tenant_id: UUID, document_type: str = Form(...), file: UploadFile = File(...), session: Session = Depends(db)):
+    try:
+        document, target = await _store_document(session, tenant_id, case_id, document_type, file)
+        session.commit()
+    except Exception:
+        if "target" in locals():
+            target.unlink(missing_ok=True)
+        raise
+    return {"id": str(document.id), "document_type": document.document_type, "file_name": Path(file.filename or "document").name, "verification_state": document.verification_state}
 
 
 @app.get("/api/crm/kyc/{case_id}/documents", dependencies=[Depends(internal_service_auth)])

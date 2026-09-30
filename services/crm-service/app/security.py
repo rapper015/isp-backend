@@ -34,6 +34,8 @@ def hash_value(value: str) -> str:
 def management_permission(method: str, path: str) -> str | None:
     if not path.startswith("/api/crm"):
         return None
+    if path.endswith("/customer-onboarding"):
+        return "crm.customer.create"
     # Sensitive document access requires the sensitive-view permission.
     if "/documents/" in path and method == "GET":
         return "crm.document.view_sensitive"
@@ -85,12 +87,17 @@ async def _jwt_management_auth(request: Request) -> None:
     if claims.get("token_type") != "access":
         raise HTTPException(401, "invalid token type")
     permissions = set(claims.get("permissions", []))
+    claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
     if required and "*" not in permissions and required not in permissions:
         raise HTTPException(403, "CRM permission denied")
-    claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
     if claimed_tenant and "*" not in permissions:
         supplied = request.query_params.get("tenant_id") or (await _json_tenant(request))
         if supplied and not secrets.compare_digest(str(claimed_tenant), str(supplied)):
+            raise HTTPException(403, "tenant access denied")
+    elif "*" not in permissions:
+        supplied = request.query_params.get("tenant_id") or (await _json_tenant(request))
+        allowed_tenants = {str(value) for value in (claims.get("effective_access") or {}).get("tenant_ids", [])}
+        if supplied and str(supplied) not in allowed_tenants:
             raise HTTPException(403, "tenant access denied")
     remote = request.client.host if request.client else "unknown"
     if not limited(f"crm:management:{remote}:{request.url.path}", int(getenv("CRM_MANAGEMENT_RATE_LIMIT", "120")), 60):
@@ -100,6 +107,8 @@ async def _jwt_management_auth(request: Request) -> None:
         "roles": claims.get("roles", []),
         "permissions": sorted(permissions),
         "tenant_id": str(claimed_tenant) if claimed_tenant else None,
+        "franchise_id": str(claims.get("franchise_id")) if claims.get("franchise_id") else None,
+        "effective_access": claims.get("effective_access", {}),
     }
 
 

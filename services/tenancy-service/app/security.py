@@ -6,6 +6,7 @@ conflict is rejected. Missing context fails closed."""
 import secrets as _secrets
 from contextvars import ContextVar
 from os import getenv
+from uuid import UUID
 
 import jwt
 from fastapi import HTTPException, Request
@@ -41,7 +42,7 @@ ELEVATED_PERMISSIONS = {
 PERMISSION_CATALOG = (
     "tenants.create", "tenants.view", "tenants.manage", "tenants.activate", "tenants.suspend",
     "tenants.offboard", "tenants.export", "tenants.health", "domains.manage", "config.manage",
-    "feature.manage", "entitlements.manage", "quota.manage",
+    "entitlements.manage", "quota.manage",
     "org.units.manage", "partners.create", "partners.manage", "partners.view",
     "agreements.manage", "agreements.approve", "ownership.manage", "ownership.transfer",
     "customers.view", "customers.create", "customers.own.view", "grants.manage",
@@ -73,8 +74,12 @@ def _required_permission(method: str, path: str) -> str | None:
         return "tenants.manage" if method in ("POST", "PUT", "PATCH", "DELETE") else "tenants.view"
     if "/domains" in p:
         return "domains.manage" if method in ("POST", "PUT", "PATCH", "DELETE") else "tenants.view"
-    if "/feature" in p or "/entitlement" in p or "/quota" in p or "/config" in p:
-        return "feature.manage" if method in ("POST", "PUT", "PATCH", "DELETE") else "tenants.view"
+    if "/entitlement" in p:
+        return "entitlements.manage" if method in ("POST", "PUT", "PATCH", "DELETE") else "tenants.view"
+    if "/quota" in p:
+        return "quota.manage" if method in ("POST", "PUT", "PATCH", "DELETE") else "tenants.view"
+    if "/config" in p:
+        return "config.manage" if method in ("POST", "PUT", "PATCH", "DELETE") else "tenants.view"
     if "/org-units" in p:
         return "org.units.manage" if method in ("POST", "PUT", "PATCH", "DELETE") else "partners.view"
     if "/partners/" in p and "approve" in p:
@@ -142,13 +147,24 @@ async def management_auth(request: Request) -> None:
 
     required = _required_permission(request.method, request.url.path)
     role = claims.get("role", "")
-    permissions = set(claims.get("permissions", [])) | ROLE_PERMISSIONS.get(role, set())
+    permissions = set(claims.get("permissions", []))
     if required and "*" not in permissions and required not in permissions:
         raise HTTPException(403, "tenancy permission denied")
-    if required in ELEVATED_PERMISSIONS and role not in ELEVATED_PERMISSIONS[required]:
-        raise HTTPException(403, "elevated permission required")
 
     claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
+    if not claimed_tenant and "*" not in permissions:
+        allowed_tenants = {str(value) for value in (claims.get("effective_access") or {}).get("tenant_ids", [])}
+        parts = [part for part in request.url.path.split("/") if part]
+        if "tenants" in parts:
+            position = parts.index("tenants") + 1
+            if position < len(parts):
+                try: target_tenant = str(UUID(parts[position]))
+                except (ValueError, TypeError): target_tenant = None
+                if target_tenant and target_tenant not in allowed_tenants:
+                    raise HTTPException(403, "tenant access denied")
+        supplied_tenant = request.query_params.get("tenant_id")
+        if supplied_tenant and str(supplied_tenant) not in allowed_tenants:
+            raise HTTPException(403, "tenant access denied")
     remote = request.client.host if request.client else "unknown"
     if not limited(f"tenancy:mgmt:{remote}:{request.url.path}",
                    int(getenv("TENANCY_RATE_LIMIT", "120")), 60):
@@ -168,6 +184,8 @@ async def management_auth(request: Request) -> None:
     request.state.tenancy_principal = {
         "subject": ctx.user_id, "role": role, "permissions": sorted(permissions),
         "tenant_id": str(ctx.tenant_id) if ctx.tenant_id else None, "scope_kind": scope_kind,
+        "access_scopes": claims.get("access_scopes", []),
+        "effective_access": claims.get("effective_access", {}),
     }
     current_tenant.set(ctx)
     set_context(ctx)

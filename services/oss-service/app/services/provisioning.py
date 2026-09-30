@@ -217,7 +217,7 @@ def _step_configure_access(ctx: StepContext) -> StepResult:
     aaa = get_adapter("aaa")
     nas = get_adapter("nas")
     sub = _subscription(ctx)
-    username = sub.subscription_code
+    username = str(order.requested_snapshot.get("access_username") or sub.subscription_code).strip()
     profile = aaa.create_subscriber_profile(ctx.tenant_id, username, order.requested_plan_reference, sub.subscription_code)
     aaa_ref = profile["aaa_subscriber_reference"]
     sub.aaa_subscriber_reference = aaa_ref

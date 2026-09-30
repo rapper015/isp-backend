@@ -4,7 +4,6 @@ from .messaging import AsyncTask, AuditLog, InboxMessage, OutboxEvent  # noqa: F
 from .base import Base, Timestamped, UuidPk  # noqa: F401
 from .tenants import (  # noqa: F401
     Entitlement,
-    FeatureFlag,
     Quota,
     Tenant,
     TenantConfiguration,
@@ -12,7 +11,6 @@ from .tenants import (  # noqa: F401
     TenantDatabase,
     TenantDomain,
     TenantEntitlement,
-    TenantFeature,
     TenantHealth,
     TenantQuota,
     TenantSecret,
@@ -117,7 +115,7 @@ from ..routing import tenant_owned
 # Tenant-owned models require a validated TenantContext before access.
 _TENANT_OWNED = (
     TenantConfiguration, TenantConfigurationVersion, TenantSecret,
-    TenantDomain, TenantFeature, TenantEntitlement, TenantQuota, TenantHealth,
+    TenantDomain, TenantEntitlement, TenantQuota, TenantHealth,
     OrganizationUnit, OrganizationUnitHistory, Partner, PartnerRelationship,
     PartnerAgreement, PartnerAgreementVersion, PartnerTerritory, PartnerServiceScope,
     PartnerMembership, PartnerBranding, PartnerPolicy, PartnerFinancialAccount,
