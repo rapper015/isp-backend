@@ -60,6 +60,7 @@ class IpReservationIn(StrictModel):
     subscriber_id: UUID
     address: str = Field(min_length=1, max_length=64)
 class RadiusServerIn(StrictModel):
+    tenant_id: UUID
     name: str = Field(min_length=1, max_length=128)
     host: str = Field(min_length=1, max_length=255)
     internal_api_key: str = Field(min_length=16, max_length=512)
@@ -119,6 +120,7 @@ class NasDraftIn(StrictModel):
     management_port: int = Field(default=8729, ge=1, le=65535)
     management_protocol: Literal["api", "api_ssl"] = "api_ssl"
     api_mode: Literal["auto", "legacy", "new"] = "auto"
+    routeros_version: str = Field(min_length=3, max_length=32, pattern=r"^\d+\.\d+(?:\.\d+)?(?:[ .(].*)?$")
     tls_verify: bool = True
     tls_settings: dict[str, Any] = Field(default_factory=dict, max_length=16)
     routeros_username: str = Field(min_length=1, max_length=128)
@@ -140,6 +142,7 @@ class NasUpdateManagementIn(StrictModel):
     management_port: int | None = Field(default=None, ge=1, le=65535)
     management_protocol: Literal["api", "api_ssl"] | None = None
     api_mode: Literal["auto", "legacy", "new"] | None = None
+    routeros_version: str | None = Field(default=None, min_length=3, max_length=32, pattern=r"^\d+\.\d+(?:\.\d+)?(?:[ .(].*)?$")
     tls_verify: bool | None = None
     radius_source_ip: str | None = Field(default=None, max_length=64)
     radius_source_ipv6: str | None = Field(default=None, max_length=64)

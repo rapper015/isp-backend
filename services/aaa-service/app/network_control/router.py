@@ -789,7 +789,9 @@ def network_setup_requirements(nas_id: uuid.UUID, tenant_id: uuid.UUID, session:
 
 
 @router.post("/nas/{nas_id}/managed-config/read")
-def read_managed_config(payload: ManagedRead, session: Session = Depends(db)):
+def read_managed_config(nas_id: uuid.UUID, payload: ManagedRead, session: Session = Depends(db)):
+    if nas_id != payload.nas_id:
+        raise HTTPException(422, "router reference does not match request")
     nas = _nas(session, payload.nas_id, payload.tenant_id)
     adapter = _build_adapter(session, nas)
     control = RouterOSControl(adapter)

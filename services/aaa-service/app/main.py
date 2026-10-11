@@ -8,7 +8,7 @@ import httpx
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
 from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLease, IpPool, Nas, NasCapability, NasChangePlan, NasCredential, NasDesiredConfiguration, NasHealthCheck, NasJob, NasRadiusAssignment, NasRemoteObject, NasSecretReveal, NasSecretRotation, NasSnapshot, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
@@ -20,7 +20,8 @@ from .security import decrypt_secret, encrypt_secret, hash_api_key, internal_ser
 from .services import accounting, audit, authenticate, authorize, correlation, outbox
 from .reconciliation import reconcile_nas_sessions
 from .metrics import increment, snapshot
-from .routeros import redact, validate_management_address
+from .routeros import parse_routeros_version, redact, validate_management_address
+from .routeros_profiles import profile_for_version, version_catalog
 from .nas_planning import build_plan, configuration_hash, sanitize_configuration
 from .nas_lifecycle import transition as lifecycle_transition
 from .nas_service import build_adapter, test_nas_connection, discover_nas, apply_nas_configuration, verify_nas_configuration, run_nas_health_check, validate_nas_management_inputs, safe_routeros_error
@@ -227,7 +228,11 @@ def create_nas_draft(payload: NasDraftIn, session: Session = Depends(db)):
     validated, error = validate_nas_management_inputs(session, payload.tenant_id, payload.model_dump())
     if error: raise HTTPException(422, error)
     if payload.radius_group_id and not session.scalar(select(RadiusServerGroup).where(RadiusServerGroup.id == payload.radius_group_id, (RadiusServerGroup.tenant_id == payload.tenant_id) | RadiusServerGroup.tenant_id.is_(None))): raise HTTPException(422, "RADIUS group is not available to tenant")
-    nas = Nas(tenant_id=payload.tenant_id, name=payload.name, short_name=payload.short_name or payload.name[:64], description=payload.description, site=payload.site, management_host=validated["management_host"], management_port=validated["management_port"], management_protocol=payload.management_protocol, api_mode=payload.api_mode, tls_verify=payload.tls_verify, source_ip=validated["radius_source_ip"], radius_source_ipv6=payload.radius_source_ipv6, nas_identifier=payload.nas_identifier, vendor=payload.vendor or "mikrotik", model=payload.model, device_type="routeros", radius_group_id=payload.radius_group_id, allowed_services=payload.services, health="unknown", lifecycle_status="DRAFT", connection_status="UNKNOWN", configuration_status="NONE", registration_status="NOT_REQUIRED", capabilities={"management_host": validated["management_host"], "management_port": validated["management_port"], "management_protocol": payload.management_protocol, "lifecycle": "DRAFT"})
+    parsed_version = parse_routeros_version(payload.routeros_version)
+    try: profile = profile_for_version(parsed_version) if parsed_version else None
+    except ValueError as error: raise HTTPException(422, str(error)) from error
+    if profile is None: raise HTTPException(422, "invalid RouterOS version")
+    nas = Nas(tenant_id=payload.tenant_id, name=payload.name, short_name=payload.short_name or payload.name[:64], description=payload.description, site=payload.site, management_host=validated["management_host"], management_port=validated["management_port"], management_protocol=payload.management_protocol, api_mode=payload.api_mode, tls_verify=payload.tls_verify, source_ip=validated["radius_source_ip"], radius_source_ipv6=payload.radius_source_ipv6, nas_identifier=payload.nas_identifier, vendor=payload.vendor or "mikrotik", model=payload.model, device_type="routeros", routeros_version=payload.routeros_version, radius_group_id=payload.radius_group_id, allowed_services=payload.services, health="unknown", lifecycle_status="DRAFT", connection_status="UNKNOWN", configuration_status="NONE", registration_status="NOT_REQUIRED", capabilities={"management_host": validated["management_host"], "management_port": validated["management_port"], "management_protocol": payload.management_protocol, "routeros_profile": profile.key, "lifecycle": "DRAFT"})
     session.add(nas); session.flush()
     session.add(NasCredential(nas_id=nas.id, username_ciphertext=encrypt_secret(payload.routeros_username), secret_ciphertext=encrypt_secret(payload.routeros_password), api_port=payload.management_port, tls_settings=payload.tls_settings))
     request_id = record_audit(session, payload.tenant_id, "nas.draft_created", str(nas.id), {"management_host": validated["management_host"], "services": payload.services})
@@ -251,6 +256,10 @@ def list_managed_nas(request: Request, tenant_id: UUID | None = None, lifecycle_
     order = {"name": Nas.name, "created_at": Nas.created_at, "updated_at": Nas.updated_at, "health": Nas.health}.get(sort, Nas.name)
     items = session.scalars(statement.order_by(order, Nas.id).offset(max(offset, 0)).limit(bounded(limit)))
     return [safe_nas(item) for item in items]
+
+@app.get("/api/nas/routeros-versions", dependencies=[Depends(internal_service_auth)])
+def list_routeros_versions():
+    return {"versions": version_catalog(), "custom_allowed": True, "detection": "routeros_api"}
 
 @app.get("/api/nas/{nas_id}", dependencies=[Depends(internal_service_auth)])
 def get_managed_nas(nas_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
@@ -278,8 +287,12 @@ def update_managed_nas(nas_id: UUID, tenant_id: UUID, payload: NasUpdateManageme
 def delete_managed_nas(nas_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     item = tenant_item(session, Nas, nas_id, tenant_id, "NAS")
     if item.lifecycle_status in {"CONFIGURING", "VERIFYING", "DECOMMISSIONING"}: raise HTTPException(409, "NAS has an operation in progress")
-    if session.scalar(select(NasJob.id).where(NasJob.nas_id == item.id, NasJob.status.in_(["QUEUED", "RUNNING"])).limit(1)): raise HTTPException(409, "NAS has pending jobs")
+    if session.scalar(select(NasJob.id).where(NasJob.nas_id == item.id, NasJob.status == "RUNNING").limit(1)): raise HTTPException(409, "NAS has an operation in progress")
     if session.scalar(select(ActiveSession.id).where(ActiveSession.nas_id == item.id, ActiveSession.status != "STOPPED").limit(1)): raise HTTPException(409, "cannot delete NAS with active sessions")
+    # Queued health checks are safe to discard when the device is deleted. They
+    # must not permanently trap a NAS when the worker queue is unavailable.
+    session.execute(delete(NasHealthCheck).where(NasHealthCheck.nas_id == item.id))
+    session.execute(delete(NasJob).where(NasJob.nas_id == item.id))
     request_id = record_audit(session, tenant_id, "nas.deleted", str(item.id), {"name": item.name}); session.delete(item); session.commit()
     return {"id": str(nas_id), "deleted": True, "correlation_id": request_id}
 
@@ -380,7 +393,7 @@ def list_nas_snapshots(nas_id: UUID, tenant_id: UUID, limit: int = 20, offset: i
 def create_nas_radius_assignment(nas_id: UUID, tenant_id: UUID, payload: NasRadiusAssignmentIn, session: Session = Depends(db)):
     nas = tenant_item(session, Nas, nas_id, tenant_id, "NAS")
     server = session.get(RadiusServer, payload.radius_server_id)
-    if not server or not server.enabled: raise HTTPException(422, "RADIUS server is not available")
+    if not server or not server.enabled or server.tenant_id not in (None, tenant_id): raise HTTPException(422, "RADIUS server is not available to this tenant")
     if session.scalar(select(NasRadiusAssignment.id).where(NasRadiusAssignment.nas_id == nas.id, NasRadiusAssignment.radius_server_id == server.id)): raise HTTPException(409, "RADIUS assignment already exists")
     assignment = NasRadiusAssignment(nas_id=nas.id, radius_server_id=server.id, priority=payload.priority, role=payload.role, services=payload.services, auth_port=payload.auth_port, accounting_port=payload.accounting_port, coa_port=payload.coa_port, timeout_seconds=payload.timeout_seconds, source_address=payload.source_address or nas.source_ip, secret_ciphertext=encrypt_secret(new_shared_secret()), secret_version=1, registration_status="DETAILS_GENERATED")
     session.add(assignment); request_id = record_audit(session, tenant_id, "nas.radius_assignment_created", str(assignment.id), {"radius_server_id": str(server.id), "role": payload.role}); outbox(session, "nas.radius_registration.generated.v1", tenant_id, request_id, {"nas_id": str(nas.id), "assignment_id": str(assignment.id), "radius_server_id": str(server.id)})
@@ -913,9 +926,12 @@ def release_ip(lease_id: UUID, tenant_id: UUID, session: Session = Depends(db)):
     release(session, item); request_id = record_audit(session, tenant_id, "ip.released", str(item.id), {"address": item.address}); session.commit()
     return {"id": str(item.id), "released": True, "correlation_id": request_id}
 @app.post("/api/aaa/radius-servers", dependencies=[Depends(internal_service_auth)])
-def create_radius_server(payload: RadiusServerIn, session: Session = Depends(db)):
+def create_radius_server(payload: RadiusServerIn, request: Request, session: Session = Depends(db)):
+    effective_tenant = visible_tenant(request, payload.tenant_id)
+    if effective_tenant != payload.tenant_id: raise HTTPException(403, "RADIUS server must belong to your tenant")
+    if not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
     item = RadiusServer(**payload.model_dump(exclude={"internal_api_key"}), api_key_hash=hash_api_key(payload.internal_api_key))
-    session.add(item); session.commit(); return {"id": str(item.id), "name": item.name, "host": item.host, "api_key_stored": True}
+    session.add(item); session.commit(); return {"id": str(item.id), "tenant_id": str(item.tenant_id), "name": item.name, "host": item.host, "api_key_stored": True}
 @app.post("/api/aaa/radius-server-groups", dependencies=[Depends(internal_service_auth)])
 def create_radius_server_group(payload: RadiusServerGroupIn, session: Session = Depends(db)):
     if payload.tenant_id and not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
@@ -943,8 +959,11 @@ def delete_radius_server_group(group_id: UUID, session: Session = Depends(db)):
     request_id = record_audit(session, item.tenant_id, "radius_server_group.deleted", str(item.id), {"name": item.name}); session.delete(item); session.commit()
     return {"id": str(group_id), "deleted": True, "correlation_id": request_id}
 @app.get("/api/aaa/radius-servers", dependencies=[Depends(internal_service_auth)])
-def list_radius_servers(session: Session = Depends(db)):
-    return [{"id": str(item.id), "name": item.name, "host": item.host, "enabled": item.enabled, "draining": item.draining, "health": item.health, "last_heartbeat_at": item.last_heartbeat_at} for item in session.scalars(select(RadiusServer).order_by(RadiusServer.name).limit(100))]
+def list_radius_servers(request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    effective_tenant = visible_tenant(request, tenant_id)
+    statement = select(RadiusServer)
+    if effective_tenant: statement = statement.where(RadiusServer.tenant_id == effective_tenant)
+    return [{"id": str(item.id), "tenant_id": str(item.tenant_id) if item.tenant_id else None, "name": item.name, "host": item.host, "enabled": item.enabled, "draining": item.draining, "health": item.health, "last_heartbeat_at": item.last_heartbeat_at, "environment": item.environment, "region": item.region} for item in session.scalars(statement.order_by(RadiusServer.name).limit(100))]
 @app.get("/api/aaa/radius-servers/{server_id}", dependencies=[Depends(internal_service_auth)])
 def get_radius_server(server_id: UUID, session: Session = Depends(db)):
     item = session.get(RadiusServer, server_id)

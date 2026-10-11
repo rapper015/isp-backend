@@ -116,10 +116,12 @@ def _approved_networks() -> list[ipaddress.IPv4Network | ipaddress.IPv6Network]:
 
 
 def validate_management_address(host: str) -> str:
-    """Permit IP management endpoints only in administrator-approved networks.
+    """Permit public IP endpoints and approved private management networks.
 
     Loopback, link-local, multicast, unspecified and reserved ranges are
     always rejected to prevent SSRF against internal or metadata services.
+    Public internet addresses do not require an allowlist entry. Private
+    addresses remain restricted to explicitly approved management networks.
     """
     value = host.strip()
     if not value:
@@ -133,9 +135,7 @@ def validate_management_address(host: str) -> str:
     if not (address.is_private or address.is_global):
         raise ValueError("management address is not allowed")
     networks = _approved_networks()
-    if not networks:
-        raise ValueError("no approved NAS management networks configured")
-    if not any(address in network for network in networks):
+    if address.is_private and not any(address in network for network in networks):
         raise ValueError("management address is outside approved networks")
     return str(address)
 
@@ -839,10 +839,9 @@ class RouterOSApiAdapter(RouterOSAdapter):
             arguments["accept"] = "yes" if settings["accept"] else "no"
         if settings.get("port") is not None:
             arguments["port"] = str(settings["port"])
-        if "disabled" in settings:
-            arguments["disabled"] = "yes" if settings["disabled"] else "no"
-        if settings.get("address"):
-            arguments["address"] = str(settings["address"])
+        # RouterOS 6 only accepts ``accept`` and ``port`` on this singleton
+        # menu. Sending the read-only/RouterOS-variant fields returned by
+        # discovery causes the entire configuration transaction to fail.
         self._call("/radius/incoming", "set", arguments=arguments)
 
     def verify_configuration(self, desired: dict) -> dict:
@@ -938,10 +937,10 @@ class RouterOSApiAdapter(RouterOSAdapter):
 # ---------------------------------------------------------------------------
 
 class RouterOSV6Adapter(RouterOSApiAdapter):
-    """RouterOS v6 (6.43+). Uses challenge login and legacy package paths."""
+    """RouterOS v6 (6.43+), using the modern API login by default."""
 
     def __init__(self, **kwargs):
-        super().__init__(plaintext_login=False, **kwargs)
+        super().__init__(plaintext_login=kwargs.pop("plaintext_login", True), **kwargs)
         self.version = "6"
 
     def get_packages(self) -> list[dict]:

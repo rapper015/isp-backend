@@ -210,7 +210,26 @@ def run_nas_health_checks(session: Session, limit: int = 10) -> int:
     configured minimum interval."""
     minimum_interval = int(getenv("AAA_NAS_HEALTH_INTERVAL_SECONDS", "300"))
     cutoff = datetime.now(timezone.utc) - timedelta(seconds=minimum_interval)
-    candidates = list(session.scalars(select(Nas).where(Nas.enabled.is_(True), (Nas.last_connected_at.is_(None)) | (Nas.last_connected_at < cutoff)).order_by(Nas.last_connected_at.asc().nullsfirst()).limit(limit)))
+    in_flight_health_check = select(NasJob.id).where(
+        NasJob.nas_id == Nas.id,
+        NasJob.job_type == "health_check",
+        NasJob.status.in_(["PENDING", "QUEUED", "RUNNING"]),
+    ).exists()
+    recent_health_check = select(NasJob.id).where(
+        NasJob.nas_id == Nas.id,
+        NasJob.job_type == "health_check",
+        NasJob.created_at >= cutoff,
+    ).exists()
+    candidates = list(session.scalars(
+        select(Nas)
+        .where(
+            Nas.enabled.is_(True),
+            ~in_flight_health_check,
+            ~recent_health_check,
+        )
+        .order_by(Nas.last_connected_at.asc().nullsfirst())
+        .limit(limit)
+    ))
     for nas in candidates:
         job = queue_nas_job(session, nas.id, "health_check", f"health:{nas.id}:{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}", correlation(None), {})
         if job is not None:

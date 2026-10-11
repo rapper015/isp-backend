@@ -21,6 +21,7 @@ from .nas_drift import detect_drift
 from .nas_planning import configuration_hash, sanitize_configuration
 from .routeros import (FakeRouterOSAdapter, RouterOSAdapter, RouterOSError, RouterOSUnsupportedVersion, adapter_for_version, parse_routeros_version, redact, validate_management_host, validate_port, validate_radius_source_ip)
 from .security import decrypt_secret
+from .routeros_profiles import profile_for_version
 
 SAFE_ERROR_MESSAGES = {
     "DNS_FAILURE": "management hostname could not be resolved",
@@ -55,9 +56,12 @@ def build_adapter(nas: Nas, credential: NasCredential | None) -> RouterOSAdapter
     try:
         parsed = parse_routeros_version(version or "")
         if parsed and parsed[0] in (6, 7):
+            profile = profile_for_version(parsed)
             options = {"host": host, "username": username, "password": password, "port": port, "use_ssl": nas.management_protocol == "api_ssl", "tls_verify": bool(tls.get("verify", nas.tls_verify)), "verify_hostname": bool(tls.get("verify_hostname", True)), "connection_timeout": float(getenv("AAA_ROUTEROS_CONNECT_TIMEOUT", "5")), "command_timeout": float(getenv("AAA_ROUTEROS_COMMAND_TIMEOUT", "10"))}
-            if parsed[0] == 7:
-                options["plaintext_login"] = nas.api_mode != "legacy"
+            # RouterOS 6.43+ and RouterOS 7 use the new plaintext API login
+            # exchange. Keep challenge-response only when the NAS is explicitly
+            # configured for legacy mode.
+            options["plaintext_login"] = profile.plaintext_login if nas.api_mode == "auto" else nas.api_mode != "legacy"
             return adapter_for_version(version, **options)
         return adapter_for_version(version, host=host, username=username, password=password, port=port, use_ssl=nas.management_protocol == "api_ssl", tls_verify=bool(tls.get("verify", nas.tls_verify)), verify_hostname=bool(tls.get("verify_hostname", True)))
     except RouterOSUnsupportedVersion:
@@ -104,10 +108,21 @@ def test_nas_connection(session: Session, nas: Nas, adapter: RouterOSAdapter) ->
         session.commit()
         return {"ok": False, "error": "UNSUPPORTED_ROUTEROS_VERSION", "message": SAFE_ERROR_MESSAGES["UNSUPPORTED_ROUTEROS_VERSION"]}
     now = datetime.now(timezone.utc)
+    declared_version = nas.routeros_version or ""
+    declared_parsed = parse_routeros_version(declared_version)
+    detected_parsed = parse_routeros_version(version)
+    version_match = bool(declared_parsed and detected_parsed and declared_parsed == detected_parsed)
     nas.connection_status = "CONNECTED"
     nas.health = "healthy"
     nas.last_connected_at = now
     nas.routeros_version = version
+    nas.capabilities = {
+        **(nas.capabilities or {}),
+        "declared_routeros_version": declared_version,
+        "detected_routeros_version": version,
+        "routeros_version_match": version_match,
+        "routeros_profile": profile_for_version(detected_parsed).key,
+    }
     nas.identity = str(result.get("identity") or nas.identity or "")
     nas.failure_reason = None
     record_health(session, nas.id, "api_connectivity", "PASS", {"identity": nas.identity, "version": version}, latency_ms=result.get("latency_ms"))
@@ -208,6 +223,12 @@ def apply_operations(session: Session, nas: Nas, adapter: RouterOSAdapter, opera
             secret = secrets.get(str(assignment_id), "")
             remote_id = adapter.create_radius_entry({**values, "secret": secret})
             _upsert_remote_object(session, nas.id, "radius_entry", remote_id, assignment_id, values)
+            assignment = session.get(NasRadiusAssignment, assignment_id)
+            if assignment:
+                assignment.remote_object_id = remote_id
+                assignment.applied_status = "applied"
+                assignment.failure_reason = None
+                assignment.last_synchronized_at = datetime.now(timezone.utc)
             summary.append({"operation": "add", "target": target, "assignment_id": assignment_id, "remote_object_id": remote_id})
         elif operation == "update" and target == "radius_assignment":
             assignment_id = op.get("assignment_id")
@@ -215,6 +236,12 @@ def apply_operations(session: Session, nas: Nas, adapter: RouterOSAdapter, opera
             secret = secrets.get(str(assignment_id), "")
             adapter.update_radius_entry(remote_id, {**values, "secret": secret})
             _upsert_remote_object(session, nas.id, "radius_entry", remote_id, assignment_id, values)
+            assignment = session.get(NasRadiusAssignment, assignment_id)
+            if assignment:
+                assignment.remote_object_id = remote_id
+                assignment.applied_status = "applied"
+                assignment.failure_reason = None
+                assignment.last_synchronized_at = datetime.now(timezone.utc)
             summary.append({"operation": "update", "target": target, "assignment_id": assignment_id, "remote_object_id": remote_id})
         elif operation == "remove" and target == "radius_assignment":
             remote_id = op.get("remote_object_id")

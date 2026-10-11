@@ -106,6 +106,7 @@ class RadiusServer(Base, Timestamped):
     __tablename__ = "radius_servers"
     __table_args__ = (UniqueConstraint("host", "auth_port", name="uq_radius_server_host_port"),)
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("aaa_tenants.id"), nullable=True, index=True)
     group_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("radius_server_groups.id"), nullable=True, index=True)
     name: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
     environment: Mapped[str] = mapped_column(String(32), default="production", nullable=False)
