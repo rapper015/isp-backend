@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import AccountingEvent, ActiveSession, AuditLog, Credential, IpLease, IpPool, Nas, NasCapability, NasChangePlan, NasCredential, NasDesiredConfiguration, NasHealthCheck, NasJob, NasRadiusAssignment, NasRemoteObject, NasSecretReveal, NasSecretRotation, NasSnapshot, RadiusCommand, RadiusServer, RadiusServerGroup, Tenant, UsageProjection
+from .models import AccountingEvent, ActiveSession, AuditLog, ControlAction, Credential, DevicePolicyBinding, EnforcementAction, IpLease, IpPool, Nas, NasCapability, NasChangePlan, NasCredential, NasDesiredConfiguration, NasHealthCheck, NasJob, NasOperationLock, NasRadiusAssignment, NasRemoteObject, NasSecretReveal, NasSecretRotation, NasSnapshot, PolicyDecision, PolicyDriftRecord, RadiusCommand, RadiusServer, RadiusServerGroup, RouterReadinessReport, SessionTimeline, Tenant, UsageProjection
 from .policy import calculate_policy
 from .ipam import InvalidPool, validate_pool
 from .radius import AttributeValidationError, normalize_attributes, normalize_mac, normalize_username
@@ -303,10 +303,27 @@ def delete_managed_nas(nas_id: UUID, tenant_id: UUID, session: Session = Depends
     if item.lifecycle_status in {"CONFIGURING", "VERIFYING", "DECOMMISSIONING"}: raise HTTPException(409, "NAS has an operation in progress")
     if session.scalar(select(NasJob.id).where(NasJob.nas_id == item.id, NasJob.status == "RUNNING").limit(1)): raise HTTPException(409, "NAS has an operation in progress")
     if session.scalar(select(ActiveSession.id).where(ActiveSession.nas_id == item.id, ActiveSession.status != "STOPPED").limit(1)): raise HTTPException(409, "cannot delete NAS with active sessions")
-    # Queued health checks are safe to discard when the device is deleted. They
-    # must not permanently trap a NAS when the worker queue is unavailable.
-    session.execute(delete(NasHealthCheck).where(NasHealthCheck.nas_id == item.id))
-    session.execute(delete(NasJob).where(NasJob.nas_id == item.id))
+    # Preserve tenant history/resources whose NAS reference is optional.
+    session.query(IpPool).filter(IpPool.nas_id == item.id).update({"nas_id": None}, synchronize_session=False)
+    session.query(PolicyDecision).filter(PolicyDecision.nas_id == item.id).update({"nas_id": None}, synchronize_session=False)
+    session.query(EnforcementAction).filter(EnforcementAction.nas_id == item.id).update({"nas_id": None}, synchronize_session=False)
+
+    # Remove router-owned operational/configuration records in dependency
+    # order. Active work and live sessions were rejected above, while completed
+    # history tied exclusively to this router is safe to discard.
+    session.execute(delete(ControlAction).where(ControlAction.nas_id == item.id))
+    session.execute(delete(RadiusCommand).where(RadiusCommand.nas_id == item.id))
+    session.execute(delete(SessionTimeline).where(SessionTimeline.session_id.in_(select(ActiveSession.id).where(ActiveSession.nas_id == item.id))))
+    session.query(IpLease).filter(IpLease.active_session_id.in_(select(ActiveSession.id).where(ActiveSession.nas_id == item.id))).update({"active_session_id": None}, synchronize_session=False)
+    session.execute(delete(ActiveSession).where(ActiveSession.nas_id == item.id))
+    session.execute(delete(AccountingEvent).where(AccountingEvent.nas_id == item.id))
+    session.execute(delete(NasSecretReveal).where(NasSecretReveal.rotation_id.in_(select(NasSecretRotation.id).where(NasSecretRotation.nas_id == item.id))))
+    session.execute(delete(NasSecretReveal).where(NasSecretReveal.assignment_id.in_(select(NasRadiusAssignment.id).where(NasRadiusAssignment.nas_id == item.id))))
+    session.execute(delete(NasSecretRotation).where(NasSecretRotation.nas_id == item.id))
+    session.execute(delete(NasChangePlan).where(NasChangePlan.nas_id == item.id))
+    for model in (NasDesiredConfiguration, NasSnapshot, NasRadiusAssignment, NasCredential, NasCapability, NasHealthCheck, NasRemoteObject, NasJob, DevicePolicyBinding, PolicyDriftRecord, RouterReadinessReport):
+        session.execute(delete(model).where(model.nas_id == item.id))
+    session.execute(delete(NasOperationLock).where(NasOperationLock.nas_id == item.id))
     request_id = record_audit(session, tenant_id, "nas.deleted", str(item.id), {"name": item.name}); session.delete(item); session.commit()
     return {"id": str(nas_id), "deleted": True, "correlation_id": request_id}
 
