@@ -77,6 +77,20 @@ def visible_tenant(request: Request, tenant_id: UUID | None) -> UUID | None:
         raise HTTPException(403, "platform-wide tenant access is not permitted")
     return tenant_id
 
+def scoped_radius_server(session: Session, request: Request, server_id: UUID, tenant_id: UUID | None) -> RadiusServer:
+    item = session.get(RadiusServer, server_id)
+    effective_tenant = visible_tenant(request, tenant_id)
+    if not item or (effective_tenant and item.tenant_id != effective_tenant):
+        raise HTTPException(404, "RADIUS server not found")
+    return item
+
+def scoped_radius_group(session: Session, request: Request, group_id: UUID, tenant_id: UUID | None) -> RadiusServerGroup:
+    item = session.get(RadiusServerGroup, group_id)
+    effective_tenant = visible_tenant(request, tenant_id)
+    if not item or (effective_tenant and item.tenant_id != effective_tenant):
+        raise HTTPException(404, "RADIUS server group not found")
+    return item
+
 def franchise_resource_ids(request: Request, tenant_id: UUID | None, resource: str) -> set[UUID] | None:
     principal = getattr(request.state, "aaa_principal", {}) or {}
     franchise_id = principal.get("franchise_id")
@@ -933,28 +947,29 @@ def create_radius_server(payload: RadiusServerIn, request: Request, session: Ses
     item = RadiusServer(**payload.model_dump(exclude={"internal_api_key"}), api_key_hash=hash_api_key(payload.internal_api_key))
     session.add(item); session.commit(); return {"id": str(item.id), "tenant_id": str(item.tenant_id), "name": item.name, "host": item.host, "api_key_stored": True}
 @app.post("/api/aaa/radius-server-groups", dependencies=[Depends(internal_service_auth)])
-def create_radius_server_group(payload: RadiusServerGroupIn, session: Session = Depends(db)):
-    if payload.tenant_id and not session.get(Tenant, payload.tenant_id): raise HTTPException(404, "tenant not found")
+def create_radius_server_group(payload: RadiusServerGroupIn, request: Request, session: Session = Depends(db)):
+    effective_tenant = visible_tenant(request, payload.tenant_id)
+    if not effective_tenant or effective_tenant != payload.tenant_id: raise HTTPException(403, "RADIUS server group must belong to your tenant")
+    if not session.get(Tenant, effective_tenant): raise HTTPException(404, "tenant not found")
     item = RadiusServerGroup(**payload.model_dump()); session.add(item)
     request_id = record_audit(session, item.tenant_id, "radius_server_group.created", str(item.id), {"name": item.name}); session.commit()
     return {"id": str(item.id), "correlation_id": request_id}
 @app.get("/api/aaa/radius-server-groups", dependencies=[Depends(internal_service_auth)])
-def list_radius_server_groups(tenant_id: UUID | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+def list_radius_server_groups(request: Request, tenant_id: UUID | None = None, limit: int = 100, offset: int = 0, session: Session = Depends(db)):
+    effective_tenant = visible_tenant(request, tenant_id)
     statement = select(RadiusServerGroup)
-    if tenant_id: statement = statement.where((RadiusServerGroup.tenant_id == tenant_id) | RadiusServerGroup.tenant_id.is_(None))
+    if effective_tenant: statement = statement.where(RadiusServerGroup.tenant_id == effective_tenant)
     return [{"id": str(item.id), "name": item.name, "tenant_id": str(item.tenant_id) if item.tenant_id else None, "region": item.region, "minimum_healthy": item.minimum_healthy, "enabled": item.enabled, "failover_policy": item.failover_policy} for item in session.scalars(statement.order_by(RadiusServerGroup.name).offset(max(offset, 0)).limit(bounded(limit)))]
 @app.patch("/api/aaa/radius-server-groups/{group_id}", dependencies=[Depends(internal_service_auth)])
-def update_radius_server_group(group_id: UUID, payload: RadiusServerGroupUpdateIn, session: Session = Depends(db)):
-    item = session.get(RadiusServerGroup, group_id)
-    if not item: raise HTTPException(404, "RADIUS server group not found")
+def update_radius_server_group(group_id: UUID, payload: RadiusServerGroupUpdateIn, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    item = scoped_radius_group(session, request, group_id, tenant_id)
     updates = payload.model_dump(exclude_unset=True)
     for key, value in updates.items(): setattr(item, key, value)
     request_id = record_audit(session, item.tenant_id, "radius_server_group.updated", str(item.id), {"fields": sorted(updates)}); session.commit()
     return {"id": str(item.id), "correlation_id": request_id}
 @app.delete("/api/aaa/radius-server-groups/{group_id}", dependencies=[Depends(internal_service_auth)])
-def delete_radius_server_group(group_id: UUID, session: Session = Depends(db)):
-    item = session.get(RadiusServerGroup, group_id)
-    if not item: raise HTTPException(404, "RADIUS server group not found")
+def delete_radius_server_group(group_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    item = scoped_radius_group(session, request, group_id, tenant_id)
     if session.scalar(select(Nas.id).where(Nas.radius_group_id == item.id).limit(1)) or session.scalar(select(RadiusServer.id).where(RadiusServer.group_id == item.id).limit(1)): raise HTTPException(409, "remove assignments before deleting group")
     request_id = record_audit(session, item.tenant_id, "radius_server_group.deleted", str(item.id), {"name": item.name}); session.delete(item); session.commit()
     return {"id": str(group_id), "deleted": True, "correlation_id": request_id}
@@ -965,37 +980,34 @@ def list_radius_servers(request: Request, tenant_id: UUID | None = None, session
     if effective_tenant: statement = statement.where(RadiusServer.tenant_id == effective_tenant)
     return [{"id": str(item.id), "tenant_id": str(item.tenant_id) if item.tenant_id else None, "name": item.name, "host": item.host, "enabled": item.enabled, "draining": item.draining, "health": item.health, "last_heartbeat_at": item.last_heartbeat_at, "environment": item.environment, "region": item.region} for item in session.scalars(statement.order_by(RadiusServer.name).limit(100))]
 @app.get("/api/aaa/radius-servers/{server_id}", dependencies=[Depends(internal_service_auth)])
-def get_radius_server(server_id: UUID, session: Session = Depends(db)):
-    item = session.get(RadiusServer, server_id)
-    if not item: raise HTTPException(404, "RADIUS server not found")
-    return {"id": str(item.id), "name": item.name, "host": item.host, "environment": item.environment, "region": item.region, "enabled": item.enabled, "draining": item.draining, "health": item.health, "version_metadata": item.version_metadata}
+def get_radius_server(server_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    item = scoped_radius_server(session, request, server_id, tenant_id)
+    return {"id": str(item.id), "tenant_id": str(item.tenant_id), "name": item.name, "host": item.host, "environment": item.environment, "region": item.region, "enabled": item.enabled, "draining": item.draining, "health": item.health, "version_metadata": item.version_metadata}
 @app.patch("/api/aaa/radius-servers/{server_id}", dependencies=[Depends(internal_service_auth)])
-def update_radius_server(server_id: UUID, payload: RadiusServerUpdateIn, session: Session = Depends(db)):
-    item = session.get(RadiusServer, server_id)
-    if not item: raise HTTPException(404, "RADIUS server not found")
+def update_radius_server(server_id: UUID, payload: RadiusServerUpdateIn, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    item = scoped_radius_server(session, request, server_id, tenant_id)
     updates = payload.model_dump(exclude_unset=True)
     for key, value in updates.items(): setattr(item, key, value)
-    request_id = record_audit(session, None, "radius_server.updated", str(item.id), {"fields": sorted(updates)}); session.commit()
+    request_id = record_audit(session, item.tenant_id, "radius_server.updated", str(item.id), {"fields": sorted(updates)}); session.commit()
     return {"id": str(item.id), "correlation_id": request_id}
 @app.delete("/api/aaa/radius-servers/{server_id}", dependencies=[Depends(internal_service_auth)])
-def delete_radius_server(server_id: UUID, session: Session = Depends(db)):
-    item = session.get(RadiusServer, server_id)
-    if not item: raise HTTPException(404, "RADIUS server not found")
-    request_id = record_audit(session, None, "radius_server.deleted", str(item.id), {"name": item.name}); session.delete(item); session.commit()
+def delete_radius_server(server_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    item = scoped_radius_server(session, request, server_id, tenant_id)
+    if session.scalar(select(NasRadiusAssignment.id).where(NasRadiusAssignment.radius_server_id == item.id).limit(1)):
+        raise HTTPException(409, "remove router assignments before deleting this RADIUS server")
+    request_id = record_audit(session, item.tenant_id, "radius_server.deleted", str(item.id), {"name": item.name}); session.delete(item); session.commit()
     return {"id": str(server_id), "deleted": True, "correlation_id": request_id}
 @app.post("/api/aaa/radius-servers/{server_id}/enable", dependencies=[Depends(internal_service_auth)])
-def set_radius_server_enabled(server_id: UUID, enabled: bool = True, session: Session = Depends(db)):
-    item = session.get(RadiusServer, server_id)
-    if not item: raise HTTPException(404, "RADIUS server not found")
-    item.enabled = enabled; request_id = record_audit(session, None, "radius_server.enabled" if enabled else "radius_server.disabled", str(item.id), {}); session.commit(); return {"id": str(item.id), "enabled": item.enabled, "correlation_id": request_id}
+def set_radius_server_enabled(server_id: UUID, request: Request, tenant_id: UUID | None = None, enabled: bool = True, session: Session = Depends(db)):
+    item = scoped_radius_server(session, request, server_id, tenant_id)
+    item.enabled = enabled; request_id = record_audit(session, item.tenant_id, "radius_server.enabled" if enabled else "radius_server.disabled", str(item.id), {}); session.commit(); return {"id": str(item.id), "enabled": item.enabled, "correlation_id": request_id}
 @app.post("/api/aaa/radius-servers/{server_id}/disable", dependencies=[Depends(internal_service_auth)])
-def disable_radius_server(server_id: UUID, session: Session = Depends(db)):
-    return set_radius_server_enabled(server_id, False, session)
+def disable_radius_server(server_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    return set_radius_server_enabled(server_id, request, tenant_id, False, session)
 @app.post("/api/aaa/radius-servers/{server_id}/heartbeat", dependencies=[Depends(internal_service_auth)])
-def heartbeat_radius_server(server_id: UUID, payload: HeartbeatIn, session: Session = Depends(db)):
+def heartbeat_radius_server(server_id: UUID, payload: HeartbeatIn, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
     from datetime import datetime, timezone
-    item = session.get(RadiusServer, server_id)
-    if not item: raise HTTPException(404, "RADIUS server not found")
+    item = scoped_radius_server(session, request, server_id, tenant_id)
     item.last_heartbeat_at = datetime.now(timezone.utc); item.health = "healthy"; item.version_metadata = payload.version_metadata; session.commit()
     return {"id": str(item.id), "health": item.health, "last_heartbeat_at": item.last_heartbeat_at}
 @app.get("/api/aaa/subscribers/{subscriber_id}/effective-policy", dependencies=[Depends(internal_service_auth)])
