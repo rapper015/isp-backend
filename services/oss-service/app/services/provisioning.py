@@ -544,7 +544,7 @@ def _step_change_connection_type(ctx: StepContext) -> StepResult:
     }
     aaa = get_adapter("aaa").update_connection_type(ctx.tenant_id, sub.aaa_subscriber_reference, connection_type, settings)
     nas = get_adapter("nas").configure_connection_type(ctx.tenant_id, nas_reference, sub.aaa_subscriber_reference, connection_type, settings)
-    if not aaa.get("updated") or not nas.output.get("configured"):
+    if not aaa.output.get("updated") or not nas.output.get("configured"):
         return fail_result("CONNECTION_CONFIGURATION_FAILED", "the new connection type could not be applied")
     sub.nas_reference = nas_reference
     sub.resource_references = {
