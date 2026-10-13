@@ -981,11 +981,38 @@ async def onboard_customer(
             raise HTTPException(502, "provisioning service is unavailable") from error
 
         session.commit()
+        activation = None
+        activation_error = None
+        activation_request = urlrequest.Request(
+            f"{getenv('CRM_OSS_BASE_URL', 'http://oss-service:8000').rstrip('/')}/api/oss/orders/{order['id']}/activate",
+            data=b"{}",
+            headers={
+                "Content-Type": "application/json",
+                "X-Internal-API-Key": getenv("CRM_OSS_INTERNAL_API_KEY", ""),
+                "X-Service-Name": SERVICE_NAME,
+            },
+            method="POST",
+        )
+        try:
+            with urlrequest.urlopen(activation_request, timeout=30) as response:
+                activation = json.loads(response.read())
+        except urlerror.HTTPError as error:
+            raw = error.read().decode()
+            try:
+                activation_error = json.loads(raw).get("detail", raw)
+            except (ValueError, AttributeError):
+                activation_error = raw
+        except urlerror.URLError:
+            activation_error = "provisioning service is unavailable"
         return {
             "customer_id": str(customer.id), "customer_number": customer.customer_number,
             "address_id": str(address.id), "service_location_id": str(location.id),
             "kyc_id": str(kyc.id), "caf_id": str(caf.id), "caf_number": caf.caf_number,
-            "order_id": order.get("id"), "order_number": order.get("order_number"), "order_state": order.get("state"),
+            "order_id": order.get("id"), "order_number": order.get("order_number"),
+            "order_state": (activation or {}).get("order_state", order.get("state")),
+            "workflow_state": (activation or {}).get("workflow_state"),
+            "subscription_id": (activation or {}).get("subscription_id"),
+            "activation_error": activation_error,
         }
     except (PhoneConflict, IntegrityError) as error:
         session.rollback()

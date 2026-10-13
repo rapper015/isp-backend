@@ -207,6 +207,34 @@ def fulfil_order(order_id: UUID, session: Session = Depends(db)):
     return order
 
 
+@app.post("/api/oss/orders/{order_id}/activate", dependencies=[Depends(management_or_internal_auth)])
+def activate_order(order_id: UUID, session: Session = Depends(db)):
+    """Submit, validate, and provision a newly-created connection order.
+
+    This is the zero-touch onboarding command used by CRM after the customer
+    transaction has committed. The lower-level transition endpoints remain
+    available for recovery and non-onboarding operations.
+    """
+    order = _order_or_404(session, order_id)
+    try:
+        if order.state == "DRAFT":
+            OrderService(session).submit(order_id, actor="customer-onboarding")
+            session.commit()
+        order, saga, workflow_state = provisioning(session).start_workflow(order_id)
+    except (ValueError, AdapterError) as error:
+        session.rollback()
+        raise HTTPException(422, str(error)) from error
+    session.refresh(order)
+    return {
+        "order_id": str(order.id),
+        "order_number": order.order_number,
+        "order_state": order.state,
+        "workflow_id": str(saga.id) if saga else None,
+        "workflow_state": saga.state if saga else workflow_state,
+        "subscription_id": str(order.service_subscription_id) if order.service_subscription_id else None,
+    }
+
+
 @app.post("/api/oss/orders/{order_id}/cancel", response_model=OrderResponse, dependencies=[Depends(management_auth)])
 def cancel_order(order_id: UUID, payload: TransitionRequest | None = None, session: Session = Depends(db)):
     service = OrderService(session)

@@ -446,6 +446,9 @@ def delete_nas_radius_assignment(nas_id: UUID, assignment_id: UUID, tenant_id: U
     item = assignment_item(session, nas_id, assignment_id, tenant_id)
     if item.applied_status in {"applied", "verified"}: raise HTTPException(409, "disable or roll back the applied assignment before deletion")
     request_id = record_audit(session, tenant_id, "nas.radius_assignment_deleted", str(item.id), {})
+    session.execute(delete(NasSecretReveal).where(NasSecretReveal.assignment_id == item.id))
+    session.execute(delete(NasSecretRotation).where(NasSecretRotation.assignment_id == item.id))
+    session.execute(delete(NasRemoteObject).where(NasRemoteObject.backend_assignment_id == item.id))
     session.delete(item); session.commit()
     return {"id": str(assignment_id), "deleted": True, "correlation_id": request_id}
 @app.post("/api/nas/{nas_id}/radius-assignments/{assignment_id}/registration-package", dependencies=[Depends(internal_service_auth)])
@@ -583,7 +586,15 @@ def create_nas_plan(nas_id: UUID, tenant_id: UUID, session: Session = Depends(db
     if not desired: raise HTTPException(422, "desired configuration is required before planning")
     assignments = list(session.scalars(select(NasRadiusAssignment).where(NasRadiusAssignment.nas_id == nas.id)))
     snapshot = session.scalar(select(NasSnapshot).where(NasSnapshot.nas_id == nas.id).order_by(NasSnapshot.version.desc()))
-    managed_addresses = {str(item.remote_object_id) for item in session.scalars(select(NasRemoteObject).where(NasRemoteObject.nas_id == nas.id, NasRemoteObject.object_type == "radius_entry"))}
+    managed_addresses = {
+        str(item.last_observed_attributes.get("address") or "")
+        for item in session.scalars(select(NasRemoteObject).where(
+            NasRemoteObject.nas_id == nas.id,
+            NasRemoteObject.object_type == "radius_entry",
+            NasRemoteObject.ownership == "BACKEND_MANAGED",
+        ))
+        if item.last_observed_attributes.get("address")
+    }
     tenant = session.get(Tenant, tenant_id)
     changes, risk, validation = build_plan(desired.configuration, assignments, snapshot.sanitized_configuration if snapshot else None, managed_addresses, nas.capabilities, tenant.policy if tenant else None)
     plan = NasChangePlan(nas_id=nas.id, desired_configuration_id=desired.id, current_snapshot_id=snapshot.id if snapshot else None, planned_changes=changes, risk=risk, validation=validation, requires_approval=risk == "critical", expires_at=datetime.now(timezone.utc) + timedelta(minutes=30))

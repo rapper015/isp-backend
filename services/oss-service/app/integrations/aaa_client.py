@@ -41,6 +41,14 @@ class AaaClient(Adapter):
     def update_plan(self, tenant_id, aaa_subscriber_reference, plan_reference) -> dict:
         return ok_result({"aaa_subscriber_reference": aaa_subscriber_reference, "plan_reference": plan_reference, "updated": True})
 
+    def update_connection_type(self, tenant_id, aaa_subscriber_reference, connection_type, settings=None) -> dict:
+        return ok_result({
+            "aaa_subscriber_reference": aaa_subscriber_reference,
+            "connection_type": connection_type,
+            "settings": settings or {},
+            "updated": True,
+        })
+
     def assign_network_policy(self, tenant_id, subscriber_id, policy_version_id, actor="oss-provisioning") -> dict:
         """Attach the version-pinned BSS policy to the OSS subscription in AAA.
 

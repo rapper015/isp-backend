@@ -22,3 +22,13 @@ class NasClient(Adapter):
 
     def remove_subscriber(self, tenant_id, nas_reference, aaa_subscriber_reference) -> dict:
         return ok_result({"nas_reference": nas_reference, "removed": True})
+
+    def configure_connection_type(self, tenant_id, nas_reference, aaa_subscriber_reference, connection_type, settings=None) -> dict:
+        return ok_result({
+            "nas_reference": nas_reference,
+            "aaa_subscriber_reference": aaa_subscriber_reference,
+            "connection_type": connection_type,
+            "settings": settings or {},
+            "configured": True,
+            "via": "aaa-service/routeros-integration",
+        })

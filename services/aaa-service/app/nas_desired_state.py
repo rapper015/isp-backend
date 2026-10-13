@@ -149,7 +149,9 @@ def compute_radius_changes(current_entries: list[dict], desired_entries: list[di
 
 def _ppp_aaa_changes(current: dict, desired: dict) -> list[dict]:
     if not desired.get("ppp_aaa"):
-        return []
+        if bool(current.get("use_radius")) or bool(current.get("accounting")):
+            return [{"operation": OP_UPDATE, "target": "ppp_aaa", "values": {"use_radius": False, "accounting": False}}]
+        return [{"operation": OP_NOOP, "target": "ppp_aaa", "values": {"use_radius": False, "accounting": False}}]
     wanted = {"use_radius": True, "accounting": desired.get("accounting", True), "interim_update_seconds": desired.get("interim_update_seconds")}
     current_values = {"use_radius": bool(current.get("use_radius")), "accounting": bool(current.get("accounting"))}
     if current_values["use_radius"] and current_values["accounting"] and not wanted["interim_update_seconds"]:
@@ -201,9 +203,10 @@ def _hotspot_changes(current_profiles: list[dict], desired: dict) -> list[dict]:
 def _incoming_changes(current: Any, desired: dict) -> list[dict]:
     """Compute incoming CoA changes. ``current`` may be a dict or a list with a
     single incoming-RADIUS row, depending on the adapter normalization."""
-    if not desired.get("incoming_coa"):
-        return []
     row = current[0] if isinstance(current, list) and current else (current or {})
+    if not desired.get("incoming_coa"):
+        wanted = {"accept": False, "port": desired.get("coa_port", 3799)}
+        return [{"operation": OP_UPDATE if bool(row.get("accept")) else OP_NOOP, "target": "radius_incoming", "values": wanted}]
     wanted = {"accept": True, "port": desired.get("coa_port", 3799), "disabled": False}
     if bool(row.get("accept")):
         return [{"operation": OP_NOOP, "target": "radius_incoming", "values": wanted}]
@@ -215,7 +218,14 @@ def validate_desired(desired: dict, capabilities: dict | None = None, tenant_pol
     errors: list[str] = []
     assignments = desired.get("radius_assignments", [])
     active = [item for item in assignments if item.get("desired_status", "enabled") != "disabled"]
-    if not active:
+    radius_requested = bool(
+        desired.get("services")
+        or desired.get("ppp_aaa")
+        or desired.get("login_radius")
+        or desired.get("incoming_coa")
+        or desired.get("hotspot_profiles")
+    )
+    if radius_requested and not active:
         errors.append("at least one RADIUS assignment is required")
     if desired.get("login_radius"):
         if not desired.get("break_glass_verified"):

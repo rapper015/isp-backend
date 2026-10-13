@@ -157,9 +157,17 @@ def discover_nas(session: Session, nas: Nas, adapter: RouterOSAdapter) -> dict:
     nas.last_discovery_at = datetime.now(timezone.utc)
     nas.configuration_status = "PENDING" if nas.configuration_status == "NONE" else nas.configuration_status
 
-    # Capability record (versioned).
+    # Capability record (versioned). Rediscovery on the same RouterOS release
+    # refreshes the existing record rather than violating the per-version
+    # uniqueness constraint.
     version = str(resource.get("version") or "0")
-    session.add(NasCapability(nas_id=nas.id, version=version, flags=capabilities, raw=redact(resource)))
+    capability = session.scalar(select(NasCapability).where(NasCapability.nas_id == nas.id, NasCapability.version == version))
+    if capability:
+        capability.flags = capabilities
+        capability.raw = redact(resource)
+        capability.detected_at = datetime.now(timezone.utc)
+    else:
+        session.add(NasCapability(nas_id=nas.id, version=version, flags=capabilities, raw=redact(resource)))
 
     # Redacted snapshot.
     sanitized = sanitize_configuration(resource)
@@ -173,7 +181,15 @@ def discover_nas(session: Session, nas: Nas, adapter: RouterOSAdapter) -> dict:
         server = assignment.radius_server
         if server is not None:
             desired_addresses.add(str(server.host))
-    managed_addresses = {str(item.remote_object_id) for item in session.scalars(select(NasRemoteObject).where(NasRemoteObject.nas_id == nas.id, NasRemoteObject.object_type == "radius_entry"))}
+    managed_addresses = {
+        str(item.last_observed_attributes.get("address") or "")
+        for item in session.scalars(select(NasRemoteObject).where(
+            NasRemoteObject.nas_id == nas.id,
+            NasRemoteObject.object_type == "radius_entry",
+            NasRemoteObject.ownership == OWNERSHIP_BACKEND,
+        ))
+        if item.last_observed_attributes.get("address")
+    }
     for entry in resource.get("radius_entries", []):
         ownership = classify_radius_entry(entry, desired_addresses, managed_addresses)
         object_type, remote_id = "radius_entry", str(entry.get("remote_id") or "")
@@ -245,8 +261,29 @@ def apply_operations(session: Session, nas: Nas, adapter: RouterOSAdapter, opera
             summary.append({"operation": "update", "target": target, "assignment_id": assignment_id, "remote_object_id": remote_id})
         elif operation == "remove" and target == "radius_assignment":
             remote_id = op.get("remote_object_id")
+            remote = session.scalar(select(NasRemoteObject).where(
+                NasRemoteObject.nas_id == nas.id,
+                NasRemoteObject.object_type == "radius_entry",
+                NasRemoteObject.remote_object_id == remote_id,
+            ))
+            if remote is None and values.get("address"):
+                remote = next((item for item in session.scalars(select(NasRemoteObject).where(
+                    NasRemoteObject.nas_id == nas.id,
+                    NasRemoteObject.object_type == "radius_entry",
+                    NasRemoteObject.ownership == OWNERSHIP_BACKEND,
+                )) if item.last_observed_attributes.get("address") == values.get("address")), None)
             adapter.remove_radius_entry(remote_id)
-            _drop_remote_object(session, nas.id, "radius_entry", remote_id)
+            if remote and remote.backend_assignment_id:
+                assignment = session.get(NasRadiusAssignment, remote.backend_assignment_id)
+                if assignment:
+                    assignment.remote_object_id = None
+                    assignment.applied_status = "disabled"
+                    assignment.failure_reason = None
+                    assignment.last_synchronized_at = datetime.now(timezone.utc)
+            if remote is not None:
+                session.delete(remote)
+            else:
+                _drop_remote_object(session, nas.id, "radius_entry", remote_id)
             summary.append({"operation": "remove", "target": target, "remote_object_id": remote_id})
         elif operation == "update" and target == "ppp_aaa":
             adapter.configure_ppp_aaa(values)
@@ -297,7 +334,15 @@ def apply_nas_configuration(session: Session, nas: Nas, adapter: RouterOSAdapter
     current = adapter.get_relevant_service_state()
     secrets = decrypt_assignment_secrets(assignments)
     desired = _desired_with_assignments(desired_configuration, assignments)
-    managed_addresses = {str(item.remote_object_id) for item in session.scalars(select(NasRemoteObject).where(NasRemoteObject.nas_id == nas.id, NasRemoteObject.object_type == "radius_entry"))}
+    managed_addresses = {
+        str(item.last_observed_attributes.get("address") or "")
+        for item in session.scalars(select(NasRemoteObject).where(
+            NasRemoteObject.nas_id == nas.id,
+            NasRemoteObject.object_type == "radius_entry",
+            NasRemoteObject.ownership == OWNERSHIP_BACKEND,
+        ))
+        if item.last_observed_attributes.get("address")
+    }
     plan = compute_plan(current, desired, assignments, managed_addresses, nas.capabilities, tenant_policy)
     if not plan["validation"]["valid"]:
         return {"ok": False, "valid": False, "errors": plan["validation"]["errors"], "applied": []}
@@ -310,7 +355,15 @@ def verify_nas_configuration(session: Session, nas: Nas, adapter: RouterOSAdapte
     """Read the configuration again and compare it with the desired state."""
     current = adapter.get_relevant_service_state()
     desired = _desired_with_assignments(desired_configuration, assignments)
-    managed_addresses = {str(item.remote_object_id) for item in session.scalars(select(NasRemoteObject).where(NasRemoteObject.nas_id == nas.id, NasRemoteObject.object_type == "radius_entry"))}
+    managed_addresses = {
+        str(item.last_observed_attributes.get("address") or "")
+        for item in session.scalars(select(NasRemoteObject).where(
+            NasRemoteObject.nas_id == nas.id,
+            NasRemoteObject.object_type == "radius_entry",
+            NasRemoteObject.ownership == OWNERSHIP_BACKEND,
+        ))
+        if item.last_observed_attributes.get("address")
+    }
     plan = compute_plan(current, desired, assignments, managed_addresses, nas.capabilities, tenant_policy)
     differences = [op for op in plan["operations"] if op["operation"] != "noop"]
     matched = not differences

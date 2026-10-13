@@ -60,6 +60,7 @@ from .schemas import (
     FupReset,
     FupTopUp,
     ManagedApply,
+    ManagedPolicyUpsert,
     ManagedRead,
     OverrideCreate,
     PolicyAssign,
@@ -179,6 +180,63 @@ def create_policy(payload: PolicyCreate, session: Session = Depends(db)):
     _audit(session, payload.tenant_id, "policy.created", str(policy.id), {"code": payload.code})
     session.commit()
     return {"id": str(policy.id), "code": policy.code, "state": policy.state, "current_version": version.version}
+
+
+@router.post("/policies/managed")
+def upsert_managed_policy(payload: ManagedPolicyUpsert, session: Session = Depends(db)):
+    """Create or version the active policy owned by a commercial package.
+
+    Package operators work with one object in BSS. AAA keeps the immutable
+    version history internally so provisioning and audits remain deterministic.
+    """
+    _tenant(session, payload.tenant_id)
+    errors = validate_policy_body(payload.body)
+    if errors:
+        raise HTTPException(422, "; ".join(errors))
+
+    policy = session.scalar(select(NetworkPolicy).where(
+        NetworkPolicy.tenant_id == payload.tenant_id,
+        NetworkPolicy.code == payload.code,
+    ))
+    if policy is None:
+        policy = NetworkPolicy(
+            tenant_id=payload.tenant_id,
+            code=payload.code,
+            name=payload.name,
+            description=payload.description,
+            state="ACTIVE",
+        )
+        session.add(policy)
+        session.flush()
+        version_number = 1
+    else:
+        policy.name = payload.name
+        policy.description = payload.description
+        current = session.get(NetworkPolicyVersion, policy.current_version_id) if policy.current_version_id else None
+        if current is not None and current.state == "ACTIVE" and current.body == payload.body:
+            session.commit()
+            return {"policy_id": str(policy.id), "policy_version_id": str(current.id), "policy_code": policy.code, "version": current.version, "state": "ACTIVE", "changed": False}
+        latest = session.scalar(select(NetworkPolicyVersion).where(NetworkPolicyVersion.policy_id == policy.id).order_by(NetworkPolicyVersion.version.desc()).limit(1))
+        version_number = (latest.version if latest else 0) + 1
+        for previous in session.scalars(select(NetworkPolicyVersion).where(NetworkPolicyVersion.policy_id == policy.id, NetworkPolicyVersion.state == "ACTIVE")):
+            previous.state = "SUPERSEDED"
+
+    version = NetworkPolicyVersion(
+        tenant_id=payload.tenant_id,
+        policy_id=policy.id,
+        version=version_number,
+        state="ACTIVE",
+        body=payload.body,
+        notes="Automatically managed from the package catalog",
+        created_by=payload.actor,
+    )
+    session.add(version)
+    session.flush()
+    policy.current_version_id = version.id
+    policy.state = "ACTIVE"
+    _audit(session, payload.tenant_id, "policy.managed", str(version.id), {"policy_id": str(policy.id), "version": version.version, "actor": payload.actor})
+    session.commit()
+    return {"policy_id": str(policy.id), "policy_version_id": str(version.id), "policy_code": policy.code, "version": version.version, "state": "ACTIVE", "changed": True}
 
 
 @router.get("/policies")

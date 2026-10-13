@@ -24,6 +24,15 @@ class PolicyVersionCreate(BaseModel):
     actor: str = "system"
 
 
+class ManagedPolicyUpsert(BaseModel):
+    tenant_id: uuid.UUID
+    code: str = Field(min_length=1, max_length=128)
+    name: str = Field(min_length=1, max_length=255)
+    description: str | None = None
+    body: dict = Field(default_factory=dict)
+    actor: str = "package-catalog"
+
+
 class PolicySchedule(BaseModel):
     tenant_id: uuid.UUID
     effective_from: datetime

@@ -136,23 +136,56 @@ def _comp_create_subscription(ctx: StepContext) -> StepResult:
 
 def _step_reserve_resources(ctx: StepContext) -> StepResult:
     order = ctx.order_service.repo.load(ctx.order_id)
+    snapshot = order.requested_snapshot or {}
     ipam = get_adapter("ipam")
     network = get_adapter("network")
     resources = ctx.resource_service
-    ip = ipam.allocate_ip(ctx.tenant_id, ctx.order_id, pool_code=ipam.find_pool(ctx.tenant_id, str(order.service_location_id)))
-    port = network.reserve_port(ctx.tenant_id, pop=order.requested_snapshot.get("pop", "pop-1"), node=order.requested_snapshot.get("node", "node-1"), port_type="PON_PORT")
-    ont_serial = order.requested_snapshot.get("ont_serial") or DEFAULT_ONT_SERIAL
-    ont = network.assign_ont(ctx.tenant_id, ont_serial)
-    ledger = resources.reserve(ctx.tenant_id, ctx.order_id, "IPV4", 1, actor="saga", reason="new connection")
-    ledger += resources.reserve(ctx.tenant_id, ctx.order_id, "VLAN", 1, actor="saga", reason="new connection")
-    ledger += resources.reserve(ctx.tenant_id, ctx.order_id, "PON_PORT", 1, actor="saga", reason="new connection")
+    ip_mode = str(snapshot.get("ip_address_mode") or "DHCP").upper()
+    ip: dict = {}
+    if ip_mode in {"STATIC_IP", "POOL_AND_STATIC_IP"}:
+        static_ip = str(snapshot.get("static_ip") or "").strip()
+        if not static_ip:
+            return fail_result("STATIC_IP_REQUIRED", "a static IP address is required for the selected IP mode")
+        ip = {"address": static_ip, "allocation_ref": None}
+
+    ledger = []
+    vlan_id = str(snapshot.get("vlan_id") or "").strip()
+    if vlan_id:
+        ledger += resources.reserve(ctx.tenant_id, ctx.order_id, "VLAN", 1, actor="saga", reason="explicit VLAN requirement", prefer_keys=[vlan_id])
+
+    pon_required = bool(snapshot.get("pon_port") or snapshot.get("ont_serial") or snapshot.get("requires_pon"))
+    port: dict = {}
+    ont_serial = None
+    ont_assigned = False
+    if pon_required:
+        port = network.reserve_port(
+            ctx.tenant_id,
+            pop=snapshot.get("pop", "pop-1"),
+            node=snapshot.get("node", "node-1"),
+            port_type="PON_PORT",
+        )
+        ont_serial = snapshot.get("ont_serial") or DEFAULT_ONT_SERIAL
+        ont = network.assign_ont(ctx.tenant_id, ont_serial)
+        ont_assigned = bool(ont.output.get("assigned"))
+        preferred_port = str(snapshot.get("pon_port") or "").strip()
+        ledger += resources.reserve(
+            ctx.tenant_id,
+            ctx.order_id,
+            "PON_PORT",
+            1,
+            actor="saga",
+            reason="explicit PON requirement",
+            prefer_keys=[preferred_port] if preferred_port else None,
+        )
     return ok_result(
         {
-            "ip_address": ip["address"],
-            "ip_allocation_ref": ip["allocation_ref"],
-            "port_reference": port["port_reference"],
+            "ip_address_mode": ip_mode,
+            "ip_address": ip.get("address"),
+            "ip_pool_id": snapshot.get("ip_pool_id"),
+            "ip_allocation_ref": ip.get("allocation_ref"),
+            "port_reference": port.get("port_reference"),
             "ont_serial": ont_serial,
-            "ont_assigned": bool(ont.output.get("assigned")),
+            "ont_assigned": ont_assigned,
             "reservation_tokens": [r.reservation_token for r in ledger],
             "resource_keys": {r.resource_type: r.resource_key for r in ledger},
         }
@@ -263,8 +296,10 @@ def _step_commit_and_activate(ctx: StepContext) -> StepResult:
         ctx.resource_service.allocate(token)
     sub.status = "ACTIVE"
     sub.activation_date = _now()
-    sub.resource_references = {
+    sub.resource_references = {**(sub.resource_references or {}),
+        "ip_address_mode": reserved.get("ip_address_mode"),
         "ip_address": reserved.get("ip_address"),
+        "ip_pool_id": reserved.get("ip_pool_id"),
         "port_reference": reserved.get("port_reference"),
         "ont_serial": reserved.get("ont_serial"),
         "resource_keys": reserved.get("resource_keys", {}),
@@ -480,6 +515,75 @@ def build_plan_change_saga(order_type: str) -> SagaDefinition:
     )
 
 
+SUPPORTED_CONNECTION_TYPES = {"PPPOE", "HOTSPOT", "DHCP"}
+
+
+def _connection_settings(snapshot: dict) -> dict:
+    return {
+        key: snapshot.get(key)
+        for key in ("authentication_protocol", "ip_address_mode", "ip_pool_id", "static_ip", "mac_address", "bind_mac", "hotspot_profile")
+        if snapshot.get(key) not in (None, "")
+    }
+
+
+def _step_change_connection_type(ctx: StepContext) -> StepResult:
+    sub = _subscription(ctx)
+    order = ctx.order_service.repo.load(ctx.order_id)
+    snapshot = order.requested_snapshot or {}
+    connection_type = str(snapshot.get("connection_type") or "").upper()
+    if connection_type not in SUPPORTED_CONNECTION_TYPES:
+        return fail_result("CONNECTION_TYPE_INVALID", "select PPPoE, Hotspot, or DHCP")
+    nas_reference = str(snapshot.get("nas_reference") or sub.nas_reference or "").strip()
+    if not nas_reference:
+        return fail_result("NAS_REQUIRED", "select a router for this connection")
+    settings = _connection_settings(snapshot)
+    previous = {
+        "connection_type": (sub.resource_references or {}).get("connection_type"),
+        "connection_settings": (sub.resource_references or {}).get("connection_settings", {}),
+        "nas_reference": sub.nas_reference,
+    }
+    aaa = get_adapter("aaa").update_connection_type(ctx.tenant_id, sub.aaa_subscriber_reference, connection_type, settings)
+    nas = get_adapter("nas").configure_connection_type(ctx.tenant_id, nas_reference, sub.aaa_subscriber_reference, connection_type, settings)
+    if not aaa.get("updated") or not nas.output.get("configured"):
+        return fail_result("CONNECTION_CONFIGURATION_FAILED", "the new connection type could not be applied")
+    sub.nas_reference = nas_reference
+    sub.resource_references = {
+        **(sub.resource_references or {}),
+        "connection_type": connection_type,
+        "connection_settings": settings,
+    }
+    return ok_result({"connection_type": connection_type, "nas_reference": nas_reference, "previous": previous})
+
+
+def _comp_change_connection_type(ctx: StepContext) -> StepResult:
+    sub = _subscription(ctx)
+    changed = ctx.store.get("change_connection_type") or {}
+    previous = changed.get("previous") or {}
+    previous_type = previous.get("connection_type")
+    if previous_type:
+        settings = previous.get("connection_settings") or {}
+        nas_reference = previous.get("nas_reference") or sub.nas_reference
+        get_adapter("aaa").update_connection_type(ctx.tenant_id, sub.aaa_subscriber_reference, previous_type, settings)
+        get_adapter("nas").configure_connection_type(ctx.tenant_id, nas_reference, sub.aaa_subscriber_reference, previous_type, settings)
+    sub.nas_reference = previous.get("nas_reference") or sub.nas_reference
+    sub.resource_references = {
+        **(sub.resource_references or {}),
+        "connection_type": previous_type,
+        "connection_settings": previous.get("connection_settings") or {},
+    }
+    return ok_result({"restored": True})
+
+
+def build_connection_type_change_saga() -> SagaDefinition:
+    return SagaDefinition(
+        "CONNECTION_TYPE_CHANGE",
+        [
+            Step("change_connection_type", _step_change_connection_type, _comp_change_connection_type, max_attempts=3, order_state="PROVISIONING"),
+            Step("verify_connection", _step_verify_readiness, None, max_attempts=3, order_state="VERIFYING"),
+        ],
+    )
+
+
 def _step_reserve_new_location(ctx: StepContext) -> StepResult:
     return _step_reserve_resources(ctx)
 
@@ -525,6 +629,7 @@ SAGA_BUILDERS = {
     "PACKAGE_UPGRADE": lambda: build_plan_change_saga("PACKAGE_UPGRADE"),
     "PACKAGE_DOWNGRADE": lambda: build_plan_change_saga("PACKAGE_DOWNGRADE"),
     "SERVICE_RELOCATION": build_relocation_saga,
+    "CONNECTION_TYPE_CHANGE": build_connection_type_change_saga,
 }
 
 # Order types that reuse a subscription context created earlier (saga reads it).
@@ -536,4 +641,5 @@ ORDER_TYPE_TO_WORKFLOW = {
     "SERVICE_REACTIVATION": "SERVICE_REACTIVATION",
     "SERVICE_TERMINATION": "SERVICE_TERMINATION",
     "SERVICE_RELOCATION": "SERVICE_RELOCATION",
+    "CONNECTION_TYPE_CHANGE": "CONNECTION_TYPE_CHANGE",
 }

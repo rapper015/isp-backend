@@ -1,6 +1,7 @@
 """Idempotent scheduled AAA maintenance tasks; an external scheduler invokes these."""
 from datetime import datetime, timedelta, timezone
 from os import getenv
+import logging
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from .events import declare_topology, publish_outbox
@@ -11,6 +12,8 @@ from .nas_lifecycle import job_transition, transition
 from .nas_service import apply_nas_configuration, build_adapter, discover_nas, rollback_nas_configuration, run_nas_health_check, test_nas_connection
 from .security import decrypt_secret
 from .services import correlation, outbox
+
+logger = logging.getLogger(__name__)
 
 def detect_stale_sessions(session: Session, stale_after_seconds: int | None = None) -> int:
     seconds = stale_after_seconds or int(getenv("AAA_SESSION_STALE_SECONDS", "900"))
@@ -81,7 +84,8 @@ def process_nas_job(session: Session, job_id) -> str | None:
         return None
     if job.status not in {"QUEUED", "PENDING"}:
         return job.status
-    nas = session.get(Nas, job.nas_id)
+    nas_id = job.nas_id
+    nas = session.get(Nas, nas_id)
     if nas is None or not nas.enabled:
         _job_finished(session, job, "FAILED")
         job.safe_result = {**job.safe_result, "error": "NAS is disabled or missing"}
@@ -108,6 +112,7 @@ def process_nas_job(session: Session, job_id) -> str | None:
         session.commit()
         return job.status
     except Exception:  # noqa: BLE001 - recover the session and mark the job failed
+        logger.exception("NAS job failed", extra={"nas_id": str(nas_id), "job_id": str(job_id)})
         session.rollback()
         job = session.get(NasJob, job_id)
         if job is not None:
@@ -138,15 +143,20 @@ def _dispatch_job(session: Session, nas: Nas, job: NasJob, adapter) -> dict:
         return {"status": "FAILED", "event": "nas.connection_test.failed.v1", "error": result.get("error"), "safe_result": {"ok": False, "error": result.get("error")}}
     if job_type == "discovery":
         _advance_lifecycle(nas, "DISCOVERING")
+        discovery_nas_id = nas.id
+        discovery_job_id = job.id
         try:
             result = discover_nas(session, nas, adapter)
             _advance_lifecycle(nas, "DISCOVERED")
             return {"status": "SUCCEEDED", "event": "nas.discovery.completed.v1", "lifecycle": "DISCOVERED", "safe_result": {"ok": True, "identity": result.get("identity"), "version": result.get("version"), "snapshot_checksum": result.get("snapshot_checksum")}}
         except Exception as error:  # noqa: BLE001 - mapped to safe failure
+            logger.exception("NAS discovery failed", extra={"nas_id": str(discovery_nas_id), "job_id": str(discovery_job_id)})
+            session.rollback()
+            nas = session.get(Nas, discovery_nas_id)
             nas.failure_reason = "DISCOVERY_FAILED"
             _advance_lifecycle(nas, "FAILED")
             session.commit()
-            return {"status": "FAILED", "event": "nas.discovery.failed.v1", "error": "DISCOVERY_FAILED", "safe_result": {}}
+            return {"status": "FAILED", "event": "nas.discovery.failed.v1", "error": "DISCOVERY_FAILED", "safe_result": {"ok": False, "error": "DISCOVERY_FAILED"}}
     if job_type == "configuration_apply":
         _advance_lifecycle(nas, "CONFIGURING")
         desired, assignments = _load_desired(session, nas)

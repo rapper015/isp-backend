@@ -7,10 +7,10 @@ from typing import Literal
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
-from .models import BillingAccount, BillingAccountItem, Invoice, Payment, Plan, PlanFranchiseAvailability, PlanNetworkPolicyBinding, PlanOttMapping, PlanPrice
+from .models import BillingAccount, BillingAccountItem, BillingSchedule, Invoice, Payment, Plan, PlanFranchiseAvailability, PlanNetworkPolicyBinding, PlanOttMapping, PlanPrice
 from .billing_cycles import refresh_overdue_invoices, run_due_billing
 from .revenue.router import router as revenue_router
 from .revenue.catalog_router import router as catalog_router
@@ -351,6 +351,83 @@ def _active_policy_version(tenant_id: UUID, policy_version_id: UUID) -> dict:
     return policy
 
 
+def _managed_policy_body(plan: Plan) -> dict:
+    network = plan.network_config or {}
+    billing = plan.billing_config or {}
+    burst = network.get("burst") if isinstance(network.get("burst"), dict) else {}
+    ipv4 = network.get("ipv4") if isinstance(network.get("ipv4"), dict) else {}
+    online_limit = billing.get("online_time_limit") if isinstance(billing.get("online_time_limit"), dict) else {}
+    body = {
+        "download_kbps": plan.download_rate_kbps,
+        "upload_kbps": plan.upload_rate_kbps,
+    }
+    if burst.get("enabled") and burst.get("limit_mbps"):
+        body["burst_download_kbps"] = int(Decimal(str(burst["limit_mbps"])) * 1024)
+        body["burst_upload_kbps"] = int(Decimal(str(burst["limit_mbps"])) * 1024)
+        if burst.get("time_seconds"):
+            body["burst_duration_seconds"] = int(burst["time_seconds"])
+    if ipv4.get("pool") or ipv4.get("pool_name"):
+        body["ipv4_pool"] = ipv4.get("pool") or ipv4.get("pool_name")
+    if network.get("mikrotik_group"):
+        body["mikrotik_group"] = network["mikrotik_group"]
+    if online_limit.get("enabled") and online_limit.get("minutes_per_day"):
+        body["session_timeout"] = int(online_limit["minutes_per_day"]) * 60
+    if billing.get("interim_interval"):
+        body["interim_interval"] = int(billing["interim_interval"])
+    return body
+
+
+def _sync_managed_plan_policy(plan: Plan, db: Session) -> PlanNetworkPolicyBinding:
+    import httpx
+
+    if plan.tenant_id is None:
+        raise HTTPException(422, "tenant_id is required before network settings can be applied")
+    base_url = getenv("BSS_AAA_BASE_URL", "http://aaa-service:8000").rstrip("/")
+    service_key = getenv("BSS_AAA_INTERNAL_API_KEY", "")
+    if not service_key:
+        raise HTTPException(503, "Automatic network configuration is not available")
+    try:
+        response = httpx.post(
+            f"{base_url}/api/aaa/policies/managed",
+            headers={"X-AAA-Service-Key": service_key},
+            json={
+                "tenant_id": str(plan.tenant_id),
+                "code": f"PACKAGE-{plan.id.hex.upper()}",
+                "name": f"{plan.name} access settings",
+                "description": "Automatically managed from the package catalog",
+                "body": _managed_policy_body(plan),
+                "actor": "bss-package-catalog",
+            },
+            timeout=10.0,
+        )
+    except httpx.HTTPError as error:
+        raise HTTPException(503, "Automatic network configuration is temporarily unavailable") from error
+    if response.status_code >= 400:
+        try:
+            detail = response.json().get("detail")
+        except (ValueError, AttributeError):
+            detail = None
+        raise HTTPException(502, detail or "Automatic network configuration could not be applied")
+    managed = response.json()
+    binding = db.scalar(select(PlanNetworkPolicyBinding).where(PlanNetworkPolicyBinding.plan_id == plan.id))
+    values = {
+        "tenant_id": plan.tenant_id,
+        "policy_id": UUID(managed["policy_id"]),
+        "policy_version_id": UUID(managed["policy_version_id"]),
+        "policy_code": managed["policy_code"],
+        "policy_version": int(managed["version"]),
+        "status": managed["state"],
+    }
+    if binding is None:
+        binding = PlanNetworkPolicyBinding(plan_id=plan.id, **values)
+        db.add(binding)
+    else:
+        for field, value in values.items():
+            setattr(binding, field, value)
+    db.flush()
+    return binding
+
+
 @app.post('/plans', response_model=PlanResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(internal_service_auth)])
 def create_plan(payload: PlanCreate, tenant_id: UUID | None = None, db: Session = Depends(db_session)):
     values = payload.model_dump(exclude={"prices", "allowed_franchise_ids", "ott_mappings"})
@@ -362,8 +439,14 @@ def create_plan(payload: PlanCreate, tenant_id: UUID | None = None, db: Session 
     try:
         db.flush()
         _replace_plan_children(db, plan, payload)
+        _sync_managed_plan_policy(plan, db)
         db.commit()
-    except Exception as exc: db.rollback(); raise HTTPException(409, 'plan_code already exists') from exc
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(409, 'plan_code already exists') from exc
     db.refresh(plan); return _plan_response(plan, db)
 @app.get('/plans', response_model=list[PlanResponse], dependencies=[Depends(internal_service_auth)])
 def list_plans(tenant_id: UUID | None = None, db: Session = Depends(db_session)):
@@ -374,16 +457,42 @@ def list_plans(tenant_id: UUID | None = None, db: Session = Depends(db_session))
 @app.get('/plans/{plan_id}', response_model=PlanResponse, dependencies=[Depends(internal_service_auth)])
 def get_plan(plan_id: UUID, request: Request, db: Session = Depends(db_session)):
     plan = _plan_for_request(plan_id, request, db)
+    binding = db.scalar(select(PlanNetworkPolicyBinding).where(PlanNetworkPolicyBinding.plan_id == plan.id))
+    if binding is None:
+        _sync_managed_plan_policy(plan, db)
+        db.commit()
     return _plan_response(plan, db)
 @app.patch('/plans/{plan_id}', response_model=PlanResponse, dependencies=[Depends(internal_service_auth)])
 def update_plan(plan_id: UUID, payload: PlanUpdate, request: Request, db: Session = Depends(db_session)):
     plan = _plan_for_request(plan_id, request, db)
-    for field, value in payload.model_dump(exclude_unset=True, exclude={"prices", "allowed_franchise_ids", "ott_mappings"}).items():
-        setattr(plan, field, value)
-    _replace_plan_children(db, plan, payload)
-    db.commit()
+    try:
+        for field, value in payload.model_dump(exclude_unset=True, exclude={"prices", "allowed_franchise_ids", "ott_mappings"}).items():
+            setattr(plan, field, value)
+        _replace_plan_children(db, plan, payload)
+        _sync_managed_plan_policy(plan, db)
+        db.commit()
+    except HTTPException:
+        db.rollback()
+        raise
     db.refresh(plan)
     return _plan_response(plan, db)
+
+
+@app.delete('/plans/{plan_id}', status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(internal_service_auth)])
+def delete_plan(plan_id: UUID, request: Request, db: Session = Depends(db_session)):
+    plan = _plan_for_request(plan_id, request, db)
+    dependencies = (
+        db.scalar(select(func.count()).select_from(Invoice).where(Invoice.plan_id == plan.id)) or 0,
+        db.scalar(select(func.count()).select_from(BillingSchedule).where(BillingSchedule.plan_id == plan.id)) or 0,
+        db.scalar(select(func.count()).select_from(BillingAccountItem).where(BillingAccountItem.plan_id == plan.id)) or 0,
+    )
+    if any(dependencies):
+        raise HTTPException(409, 'This package is already in use and cannot be deleted. Disable it instead.')
+
+    for model in (PlanNetworkPolicyBinding, PlanPrice, PlanFranchiseAvailability, PlanOttMapping):
+        db.execute(delete(model).where(model.plan_id == plan.id))
+    db.delete(plan)
+    db.commit()
 
 
 @app.get('/plans/{plan_id}/network-policy', dependencies=[Depends(internal_service_auth)])

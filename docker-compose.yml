@@ -189,6 +189,7 @@ services:
   aaa-service:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
     environment:
       <<: *domain-environment
       SERVICE_NAME: aaa-service
@@ -230,6 +231,7 @@ services:
       AAA_COMMAND_MAX_ATTEMPTS: ${AAA_COMMAND_MAX_ATTEMPTS:-3}
       AAA_WORKER_INTERVAL_SECONDS: ${AAA_WORKER_INTERVAL_SECONDS:-5}
     depends_on:
+      aaa-service: {condition: service_healthy}
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
       valkey: {condition: service_healthy}
