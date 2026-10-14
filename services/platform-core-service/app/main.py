@@ -684,8 +684,20 @@ def assign_access_template(target_type: str, target_id: UUID, payload: AccessTem
         if item.scope != "PLATFORM" or "*" not in claims["permissions"]: raise HTTPException(403, "tenant templates are assigned by platform administrators")
     elif target_type == "FRANCHISE":
         if item.scope != "TENANT": raise HTTPException(422, "franchises require a tenant access template")
-        franchise = effective_access([{"scope_type": "FRANCHISE", "scope_id": str(target_id)}])
-        if str(item.tenant_id) not in franchise["tenant_ids"]: raise HTTPException(422, "template and franchise belong to different tenants")
+        # During franchise onboarding CRM has created and flushed the franchise,
+        # but cannot commit it until the platform user/template setup succeeds.
+        # A tenant administrator is already restricted to templates belonging to
+        # their own tenant by access_template_context(), so avoid calling back to
+        # CRM for a row that is intentionally still inside that transaction.
+        # Platform administrators do not carry tenant claims, therefore their
+        # assignments still use CRM as the source of truth.
+        claimed_tenant_id = claims.get("tenant_id")
+        if claimed_tenant_id and "*" not in claims["permissions"]:
+            if str(item.tenant_id) != claimed_tenant_id:
+                raise HTTPException(422, "template and franchise belong to different tenants")
+        else:
+            franchise = effective_access([{"scope_type": "FRANCHISE", "scope_id": str(target_id)}])
+            if str(item.tenant_id) not in franchise["tenant_ids"]: raise HTTPException(422, "template and franchise belong to different tenants")
     else: raise HTTPException(422, "unsupported access template target")
     binding = session.scalar(select(OrganizationAccessTemplate).where(
         OrganizationAccessTemplate.target_type == target_type, OrganizationAccessTemplate.target_id == target_id))
@@ -745,7 +757,18 @@ def create_user(payload: UserCreateIn, request: Request, session: Session = Depe
         scopes = [AccessScopeIn(scope_type="FRANCHISE", scope_id=franchise_id)] if franchise_id else [AccessScopeIn(scope_type="TENANT", scope_id=tenant_id)] if tenant_id else [AccessScopeIn(scope_type="PLATFORM")]
     validate_delegated_scopes(claims, scopes)
     if payload.is_organization_owner and "*" not in claims["permissions"]:
-        raise HTTPException(403, "only a platform administrator can create an organization owner")
+        actor = session.get(PlatformUser, UUID(claims["sub"]))
+        can_create_franchise_owner = bool(
+            actor
+            and actor.is_organization_owner
+            and claims.get("tenant_id")
+            and not claims.get("franchise_id")
+            and tenant_id
+            and franchise_id
+            and str(tenant_id) == str(claims["tenant_id"])
+        )
+        if not can_create_franchise_owner:
+            raise HTTPException(403, "only a platform administrator or tenant owner can create an organization owner")
     if payload.is_organization_owner and not (tenant_id or franchise_id):
         raise HTTPException(422, "an organization owner must belong to a tenant or franchise")
     username_normalized, email_normalized, mobile_normalized = ensure_unique_user_identity(session, payload.username, payload.email, payload.mobile)

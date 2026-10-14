@@ -163,6 +163,35 @@ def _tenant_or_404(session: Session, tenant_id) -> Tenant:
     return tenant
 
 
+def _sync_aaa_tenant(tenant: Tenant) -> None:
+    """Project the authoritative tenant into AAA before network resources use it."""
+    service_key = getenv("TENANCY_AAA_INTERNAL_API_KEY", "")
+    if not service_key:
+        raise HTTPException(503, "AAA tenant synchronization is not configured")
+    upstream = urlrequest.Request(
+        f"{getenv('TENANCY_AAA_BASE_URL', 'http://aaa-service:8000').rstrip('/')}/api/aaa/tenants/{tenant.id}",
+        data=json.dumps({
+            "name": tenant.name,
+            "enabled": tenant.status not in {"SUSPENDED", "OFFBOARDED", "ARCHIVED"},
+            "policy": {},
+        }).encode(),
+        headers={"Content-Type": "application/json", "X-AAA-Service-Key": service_key},
+        method="PUT",
+    )
+    try:
+        with urlrequest.urlopen(upstream, timeout=10):
+            pass
+    except urlerror.HTTPError as exc:
+        raw = exc.read().decode()
+        try:
+            detail = json.loads(raw).get("detail", raw)
+        except (ValueError, AttributeError):
+            detail = raw
+        raise HTTPException(exc.code, detail or "AAA tenant synchronization failed") from exc
+    except urlerror.URLError as exc:
+        raise HTTPException(503, "AAA tenant synchronization is temporarily unavailable") from exc
+
+
 # ===========================================================================
 # Health / status
 # ===========================================================================
@@ -186,6 +215,7 @@ def create_tenant(payload: TenantCreate, request: Request = None, session: Sessi
             session, name=payload.name, code=payload.code, currency=payload.currency,
             country=payload.country, legal_name=payload.legal_name,
             isolation_mode=payload.isolation_mode, requested_by=_actor(request))
+        _sync_aaa_tenant(tenant)
         return {"id": str(tenant.id), "code": tenant.code, "status": tenant.status}
     return _run(session, fn, request)
 
@@ -197,6 +227,7 @@ def onboard_tenant(payload: TenantOnboardingIn, request: Request, session: Sessi
         tenant = tenant_service.create_tenant(session, name=payload.name, code=payload.code,
             currency=payload.currency, country=payload.country, legal_name=payload.legal_name,
             requested_by=_actor(request))
+        _sync_aaa_tenant(tenant)
         tenant.profile = {"organization_type": payload.organization_type,
             "business_email": payload.business_email, "primary_mobile": payload.primary_mobile,
             "website": payload.website, "landline": payload.landline,

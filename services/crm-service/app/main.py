@@ -511,7 +511,7 @@ def create_branch(tenant_id: UUID, payload: BranchIn, request: Request, session:
     if effective_franchise_id is None:
         raise HTTPException(422, "franchise_id is required for tenant and platform administrators")
     franchise = tenant_item(session, Franchise, effective_franchise_id, tenant_id, "franchise")
-    validate_branch_resource_allowances(franchise, payload.profile)
+    validate_branch_resource_allowances(franchise, payload.profile, tenant_id)
     item = Branch(tenant_id=tenant_id, franchise_id=franchise.id, branch_code=payload.branch_code, name=payload.name, profile=payload.profile.model_dump(mode="json"))
     session.add(item)
     session.flush()
@@ -540,15 +540,32 @@ def safe_branch(item: Branch, franchise: Franchise | None = None) -> dict:
     }
 
 
-def validate_branch_resource_allowances(franchise: Franchise, profile: BranchProfile) -> None:
+def validate_branch_resource_allowances(franchise: Franchise, profile: BranchProfile, tenant_id: UUID) -> None:
     franchise_profile = franchise.profile or {}
+    requested_packages = {str(value) for value in profile.package_ids}
     allowed_packages = {str(value) for value in franchise_profile.get("package_ids", [])}
-    requested_packages = set(profile.package_ids)
+    if requested_packages:
+        plans_request = urlrequest.Request(
+            f"{getenv('CRM_BSS_BASE_URL', 'http://bss-service:8000').rstrip('/')}/plans?tenant_id={tenant_id}",
+            headers={"X-BSS-Service-Key": getenv("CRM_BSS_INTERNAL_API_KEY", "")},
+            method="GET",
+        )
+        try:
+            with urlrequest.urlopen(plans_request, timeout=10) as response:
+                tenant_plans = json.loads(response.read())
+        except (urlerror.HTTPError, urlerror.URLError, TimeoutError, ValueError) as exc:
+            raise HTTPException(503, "package availability could not be verified") from exc
+        franchise_id = str(franchise.id)
+        for plan in tenant_plans:
+            plan_id = str(plan.get("id", ""))
+            assigned_franchises = {str(value) for value in plan.get("allowed_franchise_ids", [])}
+            if plan_id and (plan.get("available_to_all_franchises") is True or franchise_id in assigned_franchises):
+                allowed_packages.add(plan_id)
     unauthorized_packages = requested_packages - allowed_packages
     if unauthorized_packages:
         raise HTTPException(422, "one or more selected packages are not assigned to this franchise")
     allowed_pools = {str(value) for value in franchise_profile.get("ip_pool_ids", [])}
-    requested_pools = set(profile.ip_pool_ids)
+    requested_pools = {str(value) for value in profile.ip_pool_ids}
     unauthorized_pools = requested_pools - allowed_pools
     if unauthorized_pools:
         raise HTTPException(422, "one or more selected IP pools are not assigned to this franchise")
@@ -612,7 +629,7 @@ def update_branch(branch_id: UUID, tenant_id: UUID, payload: BranchUpdate, reque
         changes["franchise_id"] = franchise.id
     if payload.profile is not None:
         target_franchise = tenant_item(session, Franchise, payload.franchise_id or item.franchise_id, tenant_id, "franchise")
-        validate_branch_resource_allowances(target_franchise, payload.profile)
+        validate_branch_resource_allowances(target_franchise, payload.profile, tenant_id)
         changes["profile"] = payload.profile.model_dump(mode="json")
     for field, value in changes.items():
         setattr(item, field, value)

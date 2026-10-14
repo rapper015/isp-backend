@@ -452,7 +452,7 @@ def create_plan(payload: PlanCreate, tenant_id: UUID | None = None, db: Session 
 def list_plans(tenant_id: UUID | None = None, db: Session = Depends(db_session)):
     statement = select(Plan)
     if tenant_id is not None:
-        statement = statement.where((Plan.tenant_id == tenant_id) | (Plan.tenant_id.is_(None)))
+        statement = statement.where(Plan.tenant_id == tenant_id)
     return [_plan_response(plan, db) for plan in db.scalars(statement.order_by(Plan.created_at.desc()))]
 @app.get('/plans/{plan_id}', response_model=PlanResponse, dependencies=[Depends(internal_service_auth)])
 def get_plan(plan_id: UUID, request: Request, db: Session = Depends(db_session)):
