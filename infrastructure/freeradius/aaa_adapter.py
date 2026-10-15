@@ -34,7 +34,10 @@ def request(endpoint: str, attributes: dict, idempotency_key=None) -> dict:
         headers={"Content-Type": "application/json", "X-AAA-Service-Key": SERVICE_KEY},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=2) as response:
+    # Password verification uses bcrypt and may take longer on a busy VPS.
+    # Keep this below the FreeRADIUS exec timeout while allowing normal hash
+    # verification to finish instead of turning it into a false rejection.
+    with urllib.request.urlopen(req, timeout=8) as response:
         return json.loads(response.read())
 
 

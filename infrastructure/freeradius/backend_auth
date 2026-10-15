@@ -4,6 +4,6 @@ exec backend_auth {
     input_pairs = request
     output_pairs = reply
     shell_escape = yes
-    timeout = 4
+    timeout = 10
 }
 

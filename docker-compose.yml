@@ -247,6 +247,7 @@ services:
       AAA_BASE_URL: http://aaa-service:8000
       AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
       FREERADIUS_CLIENT_SECRET: ${FREERADIUS_CLIENT_SECRET:?set FREERADIUS_CLIENT_SECRET in .env}
+      FREERADIUS_MANAGED_CLIENT_CIDR: ${FREERADIUS_MANAGED_CLIENT_CIDR:-10.10.10.1}
     depends_on:
       aaa-service:
         condition: service_healthy
