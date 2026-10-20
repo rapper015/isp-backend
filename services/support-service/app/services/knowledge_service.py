@@ -4,6 +4,7 @@ execute operational actions; they only recommend."""
 from __future__ import annotations
 
 import uuid
+import re
 
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
@@ -70,11 +71,12 @@ def publish_article(session: Session, tenant_id, article_id: uuid.UUID, *, actor
 
 
 def search_articles(session: Session, tenant_id, *, query: str | None = None, category_id: uuid.UUID | None = None,
-                    visibility: str | None = None, status: str = "ACTIVE") -> list[KnowledgeArticle]:
+                    visibility: str | None = None, status: str | None = "ACTIVE") -> list[KnowledgeArticle]:
     stmt = select(KnowledgeArticle).where(
         or_(KnowledgeArticle.tenant_id == tenant_id, KnowledgeArticle.tenant_id.is_(None)),
-        KnowledgeArticle.status == status,
     )
+    if status:
+        stmt = stmt.where(KnowledgeArticle.status == status.upper())
     if visibility:
         stmt = stmt.where(KnowledgeArticle.visibility == visibility)
     if category_id:
@@ -84,6 +86,17 @@ def search_articles(session: Session, tenant_id, *, query: str | None = None, ca
         stmt = stmt.where(or_(KnowledgeArticle.title.ilike(like), KnowledgeArticle.body.ilike(like),
                               KnowledgeArticle.slug.ilike(like)))
     return list(session.scalars(stmt.order_by(KnowledgeArticle.usage_count.desc())))
+
+
+def delete_article(session: Session, tenant_id, article_id: uuid.UUID, *, actor: str | None = None) -> None:
+    article = session.get(KnowledgeArticle, article_id)
+    if article is None or article.tenant_id != tenant_id:
+        raise NotFoundError("knowledge article not found")
+    previous = article.status
+    article.status = "ARCHIVED"
+    session.flush()
+    audit(session, tenant_id, "support.kb.article_archived", "kb_article", str(article_id), actor=actor,
+          correlation_id=correlation(None), safe_before={"status": previous}, safe_after={"status": "ARCHIVED"})
 
 
 def suggest_for_ticket(session: Session, tenant_id, ticket: Ticket, *, limit: int = 5) -> list[dict]:
@@ -114,3 +127,29 @@ def record_usage(session: Session, tenant_id, article_id: uuid.UUID, *, ticket_i
     article.usage_count += 1
     session.add(KnowledgeUsage(tenant_id=tenant_id, article_id=article.id, ticket_id=ticket_id, used_by=used_by))
     session.flush()
+
+
+def public_articles(session: Session, tenant_id, *, query: str | None = None) -> list[KnowledgeArticle]:
+    """Customer-safe FAQ catalogue. Draft and internal articles never leave the service."""
+    return search_articles(session, tenant_id, query=query, visibility="PUBLIC", status="ACTIVE")
+
+
+def answer_from_public_faq(session: Session, tenant_id, message: str) -> tuple[KnowledgeArticle | None, float]:
+    """Deterministically match a question to published FAQ text; never generates an answer."""
+    stop = {"about", "after", "again", "also", "been", "does", "from", "have", "help", "into", "just",
+            "more", "only", "that", "their", "there", "these", "they", "this", "what", "when", "where",
+            "which", "with", "would", "your"}
+    tokens = {word for word in re.findall(r"[a-z0-9]+", message.lower()) if len(word) >= 3 and word not in stop}
+    if not tokens:
+        return None, 0.0
+    best: KnowledgeArticle | None = None
+    best_score = 0.0
+    for article in public_articles(session, tenant_id):
+        title_tokens = set(re.findall(r"[a-z0-9]+", article.title.lower()))
+        tag_tokens = set(re.findall(r"[a-z0-9]+", " ".join(article.tags or []).lower()))
+        body_tokens = set(re.findall(r"[a-z0-9]+", article.body.lower()))
+        weighted = sum(3 for token in tokens if token in title_tokens) + sum(2 for token in tokens if token in tag_tokens) + sum(1 for token in tokens if token in body_tokens)
+        score = weighted / max(3 * len(tokens), 1)
+        if score > best_score:
+            best, best_score = article, score
+    return (best, min(best_score, 1.0)) if best is not None and best_score >= 0.30 else (None, best_score)

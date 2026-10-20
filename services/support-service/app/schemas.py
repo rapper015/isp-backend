@@ -226,6 +226,10 @@ class ArticleUpdate(StrictModel):
     tags: list[str] | None = None
 
 
+class FAQChatIn(StrictModel):
+    message: str = Field(..., min_length=2, max_length=500)
+
+
 # ---------------------------------------------------------------------------
 # Queue / team / routing / agent
 # ---------------------------------------------------------------------------

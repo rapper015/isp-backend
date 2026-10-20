@@ -37,6 +37,7 @@ from .schemas import (
     ApproveIn,
     ArticleCreate,
     ArticleUpdate,
+    FAQChatIn,
     AssignIn,
     CancelActionIn,
     CancelIn,
@@ -907,11 +908,20 @@ def publish_article(article_id: UUID, tenant_id: UUID | None = Query(default=Non
 
 
 @app.get("/api/support/knowledge", dependencies=[Depends(management_auth)])
-def search_articles(query: str | None = Query(default=None), tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
+def search_articles(query: str | None = Query(default=None), article_status: str | None = Query(default=None), tenant_id: UUID | None = Query(default=None), session: Session = Depends(db)):
     tenant_id = _tid(tenant_id)
-    articles = knowledge_service.search_articles(session, tenant_id, query=query)
-    return [{"id": str(a.id), "slug": a.slug, "title": a.title, "visibility": a.visibility, "status": a.status,
-             "version": a.version, "usage_count": a.usage_count} for a in articles]
+    articles = knowledge_service.search_articles(session, tenant_id, query=query, status=article_status)
+    return [{"id": str(a.id), "slug": a.slug, "title": a.title, "body": a.body, "tags": a.tags,
+             "category_id": str(a.category_id) if a.category_id else None, "visibility": a.visibility,
+             "status": a.status, "version": a.version, "usage_count": a.usage_count} for a in articles]
+
+
+@app.delete("/api/support/knowledge/{article_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(management_auth)])
+def delete_article(article_id: UUID, tenant_id: UUID | None = Query(default=None), request: Request = None, session: Session = Depends(db)):
+    def fn():
+        knowledge_service.delete_article(session, _tid(tenant_id), article_id, actor=_actor(request))
+        return None
+    return _run(session, fn, request)
 
 
 @app.post("/api/support/tickets/{ticket_id}/knowledge/suggest", dependencies=[Depends(management_auth)])
@@ -1043,6 +1053,30 @@ def _portal_customer(request: Request) -> str:
 @app.get("/api/support/portal/me", dependencies=[Depends(customer_auth)])
 def portal_me(request: Request):
     return _portal(request)
+
+
+def _serialize_public_faq(article: KnowledgeArticle) -> dict:
+    return {"id": str(article.id), "question": article.title, "answer": article.body,
+            "category": (article.tags or ["General"])[0], "tags": article.tags or [],
+            "updated_at": article.updated_at.isoformat() if article.updated_at else None}
+
+
+@app.get("/api/support/portal/faqs", dependencies=[Depends(customer_auth)])
+def portal_faqs(request: Request, query: str | None = Query(default=None), session: Session = Depends(db)):
+    articles = knowledge_service.public_articles(session, _portal_tenant(request), query=query)
+    return [_serialize_public_faq(article) for article in articles]
+
+
+@app.post("/api/support/portal/faq-chat", dependencies=[Depends(customer_auth)])
+def portal_faq_chat(payload: FAQChatIn, request: Request, session: Session = Depends(db)):
+    article, confidence = knowledge_service.answer_from_public_faq(session, _portal_tenant(request), payload.message)
+    if article is None:
+        return {"matched": False, "answer": "I could not find that in the help articles. Please try different words or contact support.",
+                "confidence": round(confidence, 3), "source": None}
+    knowledge_service.record_usage(session, _portal_tenant(request), article.id, used_by=_portal_customer(request))
+    session.commit()
+    return {"matched": True, "answer": article.body, "confidence": round(confidence, 3),
+            "source": {"id": str(article.id), "question": article.title}}
 
 
 @app.post("/api/support/portal/tickets", status_code=status.HTTP_201_CREATED, dependencies=[Depends(customer_auth)])
