@@ -5,12 +5,9 @@ import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
+from isp_shared.contracts.oss import CreateOrderCommand
 
 from .enums import (
-    ORDER_PRIORITIES,
-    ORDER_SOURCES,
-    ORDER_STATES,
-    ORDER_TYPES,
     RESOURCE_TYPES,
     RESERVATION_STATES,
     SAGA_STATES,
@@ -22,22 +19,8 @@ class TenantMixin(BaseModel):
     tenant_id: uuid.UUID
 
 
-class OrderCreate(TenantMixin):
-    order_type: str = Field(..., description="one of " + ", ".join(ORDER_TYPES))
-    customer_id: str | None = None
-    service_location_id: str | None = None
-    service_subscription_id: uuid.UUID | None = None
-    requested_plan_reference: str | None = None
-    previous_plan_reference: str | None = None
-    requested_activation_date: datetime | None = None
-    priority: str = "MEDIUM"
-    source_channel: str = "API"
-    franchise_id: str | None = None
-    reseller_id: str | None = None
-    requested_snapshot: dict = Field(default_factory=dict)
-    actor: str = "system"
-    idempotency_key: str | None = None
-    correlation_id: str | None = None
+class OrderCreate(CreateOrderCommand):
+    """OSS API name for the shared internal create-order contract."""
 
 
 class OrderResponse(BaseModel):

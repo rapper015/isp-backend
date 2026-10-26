@@ -57,12 +57,14 @@ class OnboardingRetryTests(unittest.TestCase):
 
             from app.database import Base
             from app.models import Branch, Customer, CustomerOnboardingOperation, Franchise
-            from app.integrations.oss_client import OssRequestError
+            from isp_shared.contracts import ServiceContractError
+            from isp_shared.contracts.oss import ActivationResult, OrderCreated
             from app import main
 
             engine = create_engine('sqlite://')
             Base.metadata.create_all(engine)
             tenant_id, franchise_id, branch_id, plan_id = uuid4(), uuid4(), uuid4(), uuid4()
+            order_id, subscription_id = uuid4(), uuid4()
             command = {
                 'customer': {'full_name': 'Retry Customer', 'phone': '9876543210',
                              'franchise_id': str(franchise_id), 'branch_id': str(branch_id)},
@@ -75,18 +77,20 @@ class OnboardingRetryTests(unittest.TestCase):
             request.state.crm_principal = {'subject': str(uuid4()), 'tenant_id': str(tenant_id)}
 
             class OfflineClient:
-                def __init__(self, _service): pass
-                def create_order(self, _payload): raise OssRequestError(502, 'OSS offline')
+                def __init__(self, *_args): pass
+                def create_order(self, _payload): raise ServiceContractError('OSS', 502, 'OSS offline')
 
             class OnlineClient:
-                def __init__(self, _service): pass
+                def __init__(self, *_args): pass
                 def create_order(self, payload):
-                    assert payload['idempotency_key'] == 'customer-retry-123456'
-                    return {'id': 'order-1', 'order_number': 'ORD-1', 'state': 'DRAFT'}
-                def activate_order(self, order_id):
-                    assert order_id == 'order-1'
-                    return {'order_state': 'COMPLETED', 'workflow_state': 'COMPLETED',
-                            'subscription_id': 'subscription-1'}
+                    assert payload.idempotency_key == 'customer-retry-123456'
+                    return OrderCreated(id=order_id, tenant_id=tenant_id, order_number='ORD-1',
+                                        order_type='NEW_CONNECTION', state='DRAFT')
+                def activate_order(self, requested_order_id):
+                    assert requested_order_id == str(order_id)
+                    return ActivationResult(order_id=order_id, order_number='ORD-1',
+                                            order_state='COMPLETED', workflow_state='COMPLETED',
+                                            subscription_id=subscription_id)
 
             with Session(engine, expire_on_commit=False) as session:
                 session.add_all([
@@ -108,7 +112,7 @@ class OnboardingRetryTests(unittest.TestCase):
 
                 with patch.object(main, 'OssProvisioningClient', OnlineClient):
                     result = asyncio.run(main.onboard_customer(request, tenant_id, json.dumps(command), None, None, None, None, session))
-                assert result['subscription_id'] == 'subscription-1'
+                assert result['subscription_id'] == str(subscription_id)
                 assert operation.state == 'COMPLETED'
                 assert operation.attempts == 2
                 assert session.scalar(select(func.count()).select_from(Customer)) == 1

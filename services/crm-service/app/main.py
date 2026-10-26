@@ -27,7 +27,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from isp_shared.cors import cors_allowed_origins
-from isp_shared.observability import diagnostic_headers
+from isp_shared.contracts import ServiceContractError
+from isp_shared.contracts.oss import CreateOrderCommand, OssProvisioningClient
+from isp_shared.contracts.platform import CreateOrganizationUserCommand, PlatformClient
 from isp_shared.tenancy import scope_session
 
 from .database import Base, SessionLocal, engine
@@ -53,7 +55,6 @@ from .services.ecosystem_service import (
 )
 from .validation import ValidationError
 from .application.customer_onboarding import final_response, onboarding_key, request_fingerprint
-from .integrations.oss_client import OssProvisioningClient, OssRequestError
 
 SERVICE_NAME = getenv("SERVICE_NAME", "crm-service")
 
@@ -328,58 +329,44 @@ def onboard_franchise(tenant_id: UUID, payload: FranchiseOnboardingIn, request: 
         except (PhoneConflict, IntegrityError) as error:
             session.rollback()
             raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "franchise data already exists") from error
-    body = json.dumps({"username": payload.admin.username, "password": payload.admin.password,
-        "email": payload.admin.email, "full_name": payload.admin.full_name,
-        "mobile": payload.admin.mobile, "tenant_id": str(tenant_id),
-        "franchise_id": str(item.id), "roles": ["FRANCHISE_ADMIN"],
-        "is_organization_owner": True}).encode()
-    upstream = urlrequest.Request(
-        f"{getenv('PLATFORM_CORE_BASE_URL', 'http://platform-core-service:8000').rstrip('/')}/api/v1/platform/users",
-        data=body, headers={**diagnostic_headers(), "Content-Type": "application/json",
-        "Authorization": request.headers.get("Authorization", ""),
-        "Idempotency-Key": f"franchise-onboarding:{item.id}:admin"}, method="POST")
+    platform = PlatformClient(
+        getenv("PLATFORM_CORE_BASE_URL", "http://platform-core-service:8000"),
+        request.headers.get("Authorization", ""),
+    )
+    admin_command = CreateOrganizationUserCommand(
+        username=payload.admin.username,
+        password=payload.admin.password,
+        email=payload.admin.email,
+        full_name=payload.admin.full_name,
+        mobile=payload.admin.mobile,
+        tenant_id=tenant_id,
+        franchise_id=item.id,
+        roles=["FRANCHISE_ADMIN"],
+        is_organization_owner=True,
+    )
     try:
-        with urlrequest.urlopen(upstream, timeout=10) as response:
-            admin = json.loads(response.read())
-    except urlerror.HTTPError as exc:
-        session.rollback()
-        raw = exc.read().decode()
-        try: detail = json.loads(raw).get("detail", raw)
-        except (ValueError, AttributeError): detail = raw
-        item = session.get(Franchise, item.id)
-        item.onboarding_state = "FAILED"; item.onboarding_error = str(detail)[:500]
-        session.commit()
-        raise HTTPException(exc.code, detail or "franchise administrator could not be created") from exc
-    except Exception as exc:
+        admin = platform.create_organization_user(
+            admin_command,
+            idempotency_key=f"franchise-onboarding:{item.id}:admin",
+        ).model_dump(mode="json")
+    except ServiceContractError as exc:
         session.rollback()
         item = session.get(Franchise, item.id)
-        item.onboarding_state = "FAILED"; item.onboarding_error = "administrator service unavailable"
+        item.onboarding_state = "FAILED"; item.onboarding_error = exc.message[:500]
         session.commit()
-        raise HTTPException(502, "franchise administrator service is unavailable") from exc
+        raise HTTPException(exc.status_code, exc.message) from exc
     item.onboarding_state = "ADMIN_CREATED"
     item.onboarding_admin_id = str(admin.get("id")) if admin.get("id") else None
     item.onboarding_error = None
     session.commit()
-    assignment = urlrequest.Request(
-        f"{getenv('PLATFORM_CORE_BASE_URL', 'http://platform-core-service:8000').rstrip('/')}/api/v1/platform/access-template-assignments/FRANCHISE/{item.id}",
-        data=json.dumps({"template_id": str(payload.access_template_id)}).encode(),
-        headers={**diagnostic_headers(), "Content-Type": "application/json", "Authorization": request.headers.get("Authorization", "")},
-        method="PUT")
     try:
-        with urlrequest.urlopen(assignment, timeout=10): pass
-    except urlerror.HTTPError as exc:
-        session.rollback(); raw = exc.read().decode()
-        try: detail = json.loads(raw).get("detail", raw)
-        except (ValueError, AttributeError): detail = raw
+        platform.assign_access_template("FRANCHISE", item.id, payload.access_template_id)
+    except ServiceContractError as exc:
+        session.rollback()
         item = session.get(Franchise, item.id)
-        item.onboarding_state = "FAILED"; item.onboarding_error = str(detail)[:500]
+        item.onboarding_state = "FAILED"; item.onboarding_error = exc.message[:500]
         session.commit()
-        raise HTTPException(exc.code, detail or "franchise access template could not be assigned") from exc
-    except Exception as exc:
-        session.rollback(); item = session.get(Franchise, item.id)
-        item.onboarding_state = "FAILED"; item.onboarding_error = "access template service unavailable"
-        session.commit()
-        raise HTTPException(502, "franchise access template service is unavailable") from exc
+        raise HTTPException(exc.status_code, exc.message) from exc
     item.status = item.onboarding_requested_status or payload.status
     item.onboarding_state = "COMPLETED"; item.onboarding_error = None
     record_audit(session, tenant_id, actor_of(request), "franchise.onboarded", "franchise", str(item.id),
@@ -1069,28 +1056,32 @@ async def onboard_customer(
             "actor": actor,
             "idempotency_key": idempotency_key,
         })
-        client = OssProvisioningClient(SERVICE_NAME)
+        client = OssProvisioningClient(
+            getenv("CRM_OSS_BASE_URL", "http://oss-service:8000"),
+            getenv("CRM_OSS_INTERNAL_API_KEY", ""),
+            SERVICE_NAME,
+        )
         try:
             if operation.order_result:
                 order = operation.order_result
             else:
-                order = client.create_order(order_payload)
+                order = client.create_order(CreateOrderCommand.model_validate(order_payload)).model_dump(mode="json")
                 operation.order_result = order
                 operation.state = "ORDER_CREATED"
                 session.commit()
-            activation = client.activate_order(str(order["id"]))
+            activation = client.activate_order(str(order["id"])).model_dump(mode="json")
             result = final_response(local_resources, order, activation)
             operation.activation_result = activation
             operation.final_result = result
             operation.state = "COMPLETED"
             session.commit()
             return result
-        except OssRequestError as error:
+        except ServiceContractError as error:
             operation.state = "FAILED"
             operation.failed_step = "ORDER_CREATE" if not operation.order_result else "ORDER_ACTIVATE"
-            operation.last_error = error.detail[:500]
+            operation.last_error = error.message[:500]
             session.commit()
-            raise HTTPException(error.status_code, error.detail) from error
+            raise HTTPException(error.status_code, error.message) from error
     except (PhoneConflict, IntegrityError) as error:
         session.rollback()
         if not local_committed:
