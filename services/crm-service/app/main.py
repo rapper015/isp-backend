@@ -30,7 +30,7 @@ from isp_shared.cors import cors_allowed_origins
 from isp_shared.observability import diagnostic_headers
 
 from .database import Base, SessionLocal, engine
-from .models import (AuditLog, Branch, Customer, CustomerPortalIdentity, ExperienceRecovery, ExternalReference,
+from .models import (AuditLog, Branch, Customer, CustomerOnboardingOperation, CustomerPortalIdentity, ExperienceRecovery, ExternalReference,
                      FederationLink, Franchise, KbFeedback, KycCase, KycDocument, Lead,
                      LeadInteraction, FollowUp, LoyaltyScore, ServiceLocation, Tenant,
                      TicketSuggestion, TimelineEntry)
@@ -51,6 +51,8 @@ from .services.ecosystem_service import (
     TicketSlaService,
 )
 from .validation import ValidationError
+from .application.customer_onboarding import final_response, onboarding_key, request_fingerprint
+from .integrations.oss_client import OssProvisioningClient, OssRequestError
 
 SERVICE_NAME = getenv("SERVICE_NAME", "crm-service")
 
@@ -953,10 +955,11 @@ async def onboard_customer(
     caf_document: UploadFile | None = File(default=None),
     session: Session = Depends(db),
 ):
-    """Create a billing customer and their first connection as one UI command.
+    """Create a customer and first connection as a recoverable workflow.
 
-    CRM records are committed only after OSS accepts the provisioning order.
-    Uploaded files are removed if any stage fails.
+    CRM commits its own aggregate before crossing the OSS boundary. Replaying
+    the same command resumes the stored operation instead of duplicating the
+    customer or provisioning order.
     """
     try:
         command = CustomerOnboardingIn.model_validate_json(payload)
@@ -978,108 +981,124 @@ async def onboard_customer(
     if branch.franchise_id != franchise.id:
         raise HTTPException(422, "selected branch does not belong to the selected franchise")
 
+    serialized_command = command.model_dump(mode="json")
+    fingerprint = request_fingerprint(serialized_command)
+    idempotency_key = onboarding_key(command.order.idempotency_key, fingerprint)
+    operation = session.scalar(select(CustomerOnboardingOperation).where(
+        CustomerOnboardingOperation.tenant_id == tenant_id,
+        CustomerOnboardingOperation.idempotency_key == idempotency_key,
+    ))
+    if operation and operation.request_fingerprint != fingerprint:
+        raise HTTPException(409, "idempotency key was already used for a different onboarding request")
+    if operation and operation.state == "COMPLETED":
+        return operation.final_result
+
     stored_files: list[Path] = []
+    local_committed = operation is not None
     try:
         actor = actor_of(request)
-        customer = customer_service.create_customer(session, tenant_id, command.customer.model_dump(), actor)
-        replace_owner_numbers(session, "CUSTOMER", customer.id, {"phone": customer.phone})
-        session.flush()
-        address = customer_service.add_address(session, tenant_id, customer.id, command.address.model_dump(), actor)
-        location_payload = command.service_location.model_dump()
-        location_payload["address_id"] = address.id
-        location = customer_service.create_service_location(session, tenant_id, customer.id, location_payload, actor)
-        kyc = kyc_service.create_kyc_case(session, tenant_id, customer.id, kyc_type=command.kyc.kyc_type, actor=actor)
+        if operation is None:
+            customer = customer_service.create_customer(session, tenant_id, command.customer.model_dump(), actor)
+            replace_owner_numbers(session, "CUSTOMER", customer.id, {"phone": customer.phone})
+            session.flush()
+            address = customer_service.add_address(session, tenant_id, customer.id, command.address.model_dump(), actor)
+            location_payload = command.service_location.model_dump()
+            location_payload["address_id"] = address.id
+            location = customer_service.create_service_location(session, tenant_id, customer.id, location_payload, actor)
+            kyc = kyc_service.create_kyc_case(session, tenant_id, customer.id, kyc_type=command.kyc.kyc_type, actor=actor)
 
-        uploads = (
-            (identity_document, "INCORPORATION" if command.customer.customer_type == "BUSINESS" else "AADHAAR"),
-            (address_proof, "ADDRESS_PROOF"),
-            (customer_photo, "PHOTOGRAPH"),
-            (caf_document, "CAF"),
-        )
-        for upload, kind in uploads:
-            if upload is not None and upload.filename:
-                _, target = await _store_document(session, tenant_id, kyc.id, kind, upload)
-                stored_files.append(target)
+            uploads = (
+                (identity_document, "INCORPORATION" if command.customer.customer_type == "BUSINESS" else "AADHAAR"),
+                (address_proof, "ADDRESS_PROOF"),
+                (customer_photo, "PHOTOGRAPH"),
+                (caf_document, "CAF"),
+            )
+            for upload, kind in uploads:
+                if upload is not None and upload.filename:
+                    _, target = await _store_document(session, tenant_id, kyc.id, kind, upload)
+                    stored_files.append(target)
 
-        caf_payload = command.caf.model_dump()
-        caf_payload.update({"customer_id": customer.id, "franchise_id": customer.franchise_id, "branch_id": customer.branch_id})
-        caf = caf_service.create_caf(session, tenant_id, caf_payload, actor)
+            caf_payload = command.caf.model_dump()
+            caf_payload.update({"customer_id": customer.id, "franchise_id": customer.franchise_id, "branch_id": customer.branch_id})
+            caf = caf_service.create_caf(session, tenant_id, caf_payload, actor)
+            session.flush()
+            local_resources = {
+                "customer_id": str(customer.id),
+                "customer_number": customer.customer_number,
+                "address_id": str(address.id),
+                "service_location_id": str(location.id),
+                "kyc_id": str(kyc.id),
+                "caf_id": str(caf.id),
+                "caf_number": caf.caf_number,
+            }
+            operation = CustomerOnboardingOperation(
+                tenant_id=tenant_id,
+                customer_id=customer.id,
+                idempotency_key=idempotency_key,
+                request_fingerprint=fingerprint,
+                state="LOCAL_DATA_CREATED",
+                attempts=0,
+                local_resources=local_resources,
+            )
+            session.add(operation)
+            session.commit()
+            local_committed = True
+        else:
+            local_resources = operation.local_resources
+
+        operation.attempts += 1
+        operation.last_error = None
+        operation.failed_step = None
+        session.commit()
 
         order_payload = command.order.model_dump(mode="json")
         order_payload.update({
             "tenant_id": str(tenant_id),
-            "customer_id": str(customer.id),
-            "service_location_id": str(location.id),
+            "customer_id": local_resources["customer_id"],
+            "service_location_id": local_resources["service_location_id"],
             "actor": actor,
+            "idempotency_key": idempotency_key,
         })
-        upstream = urlrequest.Request(
-            f"{getenv('CRM_OSS_BASE_URL', 'http://oss-service:8000').rstrip('/')}/api/oss/orders",
-            data=json.dumps(order_payload).encode(),
-            headers={
-                "Content-Type": "application/json",
-                "X-Internal-API-Key": getenv("CRM_OSS_INTERNAL_API_KEY", ""),
-                "X-Service-Name": SERVICE_NAME,
-                **diagnostic_headers(),
-            },
-            method="POST",
-        )
+        client = OssProvisioningClient(SERVICE_NAME)
         try:
-            with urlrequest.urlopen(upstream, timeout=15) as response:
-                order = json.loads(response.read())
-        except urlerror.HTTPError as error:
-            raw = error.read().decode()
-            try:
-                detail = json.loads(raw).get("detail", raw)
-            except (ValueError, AttributeError):
-                detail = raw
-            raise HTTPException(error.code, detail or "provisioning order could not be created") from error
-        except urlerror.URLError as error:
-            raise HTTPException(502, "provisioning service is unavailable") from error
-
-        session.commit()
-        activation = None
-        activation_error = None
-        activation_request = urlrequest.Request(
-            f"{getenv('CRM_OSS_BASE_URL', 'http://oss-service:8000').rstrip('/')}/api/oss/orders/{order['id']}/activate",
-            data=b"{}",
-            headers={
-                "Content-Type": "application/json",
-                "X-Internal-API-Key": getenv("CRM_OSS_INTERNAL_API_KEY", ""),
-                "X-Service-Name": SERVICE_NAME,
-                **diagnostic_headers(),
-            },
-            method="POST",
-        )
-        try:
-            with urlrequest.urlopen(activation_request, timeout=30) as response:
-                activation = json.loads(response.read())
-        except urlerror.HTTPError as error:
-            raw = error.read().decode()
-            try:
-                activation_error = json.loads(raw).get("detail", raw)
-            except (ValueError, AttributeError):
-                activation_error = raw
-        except urlerror.URLError:
-            activation_error = "provisioning service is unavailable"
-        return {
-            "customer_id": str(customer.id), "customer_number": customer.customer_number,
-            "address_id": str(address.id), "service_location_id": str(location.id),
-            "kyc_id": str(kyc.id), "caf_id": str(caf.id), "caf_number": caf.caf_number,
-            "order_id": order.get("id"), "order_number": order.get("order_number"),
-            "order_state": (activation or {}).get("order_state", order.get("state")),
-            "workflow_state": (activation or {}).get("workflow_state"),
-            "subscription_id": (activation or {}).get("subscription_id"),
-            "activation_error": activation_error,
-        }
+            if operation.order_result:
+                order = operation.order_result
+            else:
+                order = client.create_order(order_payload)
+                operation.order_result = order
+                operation.state = "ORDER_CREATED"
+                session.commit()
+            activation = client.activate_order(str(order["id"]))
+            result = final_response(local_resources, order, activation)
+            operation.activation_result = activation
+            operation.final_result = result
+            operation.state = "COMPLETED"
+            session.commit()
+            return result
+        except OssRequestError as error:
+            operation.state = "FAILED"
+            operation.failed_step = "ORDER_CREATE" if not operation.order_result else "ORDER_ACTIVATE"
+            operation.last_error = error.detail[:500]
+            session.commit()
+            raise HTTPException(error.status_code, error.detail) from error
     except (PhoneConflict, IntegrityError) as error:
         session.rollback()
-        for target in stored_files:
-            target.unlink(missing_ok=True)
+        if not local_committed:
+            for target in stored_files:
+                target.unlink(missing_ok=True)
         raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "customer details already exist") from error
-    except Exception:
+    except HTTPException:
+        raise
+    except Exception as error:
         session.rollback()
-        for target in stored_files:
-            target.unlink(missing_ok=True)
+        if local_committed and operation is not None:
+            operation.state = "FAILED"
+            operation.last_error = str(error)[:500]
+            operation.failed_step = operation.failed_step or ("ORDER_ACTIVATE" if operation.order_result else "ORDER_CREATE")
+            session.commit()
+        else:
+            for target in stored_files:
+                target.unlink(missing_ok=True)
         raise
 
 

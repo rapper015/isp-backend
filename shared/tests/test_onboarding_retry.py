@@ -10,6 +10,117 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class OnboardingRetryTests(unittest.TestCase):
+    def test_oss_activation_replay_returns_existing_workflow(self):
+        script = textwrap.dedent(r'''
+            from uuid import uuid4
+            from sqlalchemy import create_engine
+            from sqlalchemy.orm import Session
+
+            from app.database import Base
+            import app.models
+            from app.models import Order, SagaInstance, Tenant
+            from app import main
+
+            engine = create_engine('sqlite://')
+            Base.metadata.create_all(engine)
+            tenant_id, order_id = uuid4(), uuid4()
+            with Session(engine, expire_on_commit=False) as session:
+                session.add(Tenant(id=tenant_id, name='Tenant', code='TENANT-REPLAY'))
+                order = Order(id=order_id, tenant_id=tenant_id, order_number='ORD-REPLAY',
+                              order_type='NEW_CONNECTION', state='PROVISIONING')
+                session.add(order); session.flush()
+                saga = SagaInstance(tenant_id=tenant_id, order_id=order_id,
+                                    workflow_type='NEW_CONNECTION', state='RUNNING')
+                session.add(saga); session.commit()
+                result = main.activate_order(order_id, session)
+                assert result['workflow_id'] == str(saga.id)
+                assert result['workflow_state'] == 'RUNNING'
+                assert result['order_state'] == 'PROVISIONING'
+        ''')
+        env = os.environ.copy()
+        paths = [str(ROOT / 'shared' / 'python'), str(ROOT / 'services' / 'oss-service')]
+        env['PYTHONPATH'] = os.pathsep.join(paths)
+        result = subprocess.run([sys.executable, '-c', script], cwd=ROOT,
+                                env=env, text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_customer_partial_failure_keeps_local_records_and_resumes(self):
+        script = textwrap.dedent(r'''
+            import asyncio
+            import json
+            from unittest.mock import patch
+            from uuid import uuid4
+            from fastapi import HTTPException
+            from sqlalchemy import create_engine, select, func
+            from sqlalchemy.orm import Session
+            from starlette.requests import Request
+
+            from app.database import Base
+            from app.models import Branch, Customer, CustomerOnboardingOperation, Franchise
+            from app.integrations.oss_client import OssRequestError
+            from app import main
+
+            engine = create_engine('sqlite://')
+            Base.metadata.create_all(engine)
+            tenant_id, franchise_id, branch_id, plan_id = uuid4(), uuid4(), uuid4(), uuid4()
+            command = {
+                'customer': {'full_name': 'Retry Customer', 'phone': '9876543210',
+                             'franchise_id': str(franchise_id), 'branch_id': str(branch_id)},
+                'address': {'address_type': 'INSTALLATION', 'city': 'Kolkata'},
+                'order': {'requested_plan_reference': str(plan_id),
+                          'franchise_id': str(franchise_id),
+                          'idempotency_key': 'customer-retry-123456'},
+            }
+            request = Request({'type': 'http', 'headers': []})
+            request.state.crm_principal = {'subject': str(uuid4()), 'tenant_id': str(tenant_id)}
+
+            class OfflineClient:
+                def __init__(self, _service): pass
+                def create_order(self, _payload): raise OssRequestError(502, 'OSS offline')
+
+            class OnlineClient:
+                def __init__(self, _service): pass
+                def create_order(self, payload):
+                    assert payload['idempotency_key'] == 'customer-retry-123456'
+                    return {'id': 'order-1', 'order_number': 'ORD-1', 'state': 'DRAFT'}
+                def activate_order(self, order_id):
+                    assert order_id == 'order-1'
+                    return {'order_state': 'COMPLETED', 'workflow_state': 'COMPLETED',
+                            'subscription_id': 'subscription-1'}
+
+            with Session(engine, expire_on_commit=False) as session:
+                session.add_all([
+                    Franchise(id=franchise_id, tenant_id=tenant_id, franchise_code='FR-1', name='Franchise'),
+                    Branch(id=branch_id, tenant_id=tenant_id, franchise_id=franchise_id,
+                           branch_code='BR-1', name='Branch'),
+                ])
+                session.commit()
+                with patch.object(main, 'OssProvisioningClient', OfflineClient):
+                    try:
+                        asyncio.run(main.onboard_customer(request, tenant_id, json.dumps(command), None, None, None, None, session))
+                        raise AssertionError('expected failure')
+                    except HTTPException as exc:
+                        assert exc.status_code == 502
+                operation = session.scalar(select(CustomerOnboardingOperation))
+                assert operation.state == 'FAILED'
+                assert operation.failed_step == 'ORDER_CREATE'
+                assert session.scalar(select(func.count()).select_from(Customer)) == 1
+
+                with patch.object(main, 'OssProvisioningClient', OnlineClient):
+                    result = asyncio.run(main.onboard_customer(request, tenant_id, json.dumps(command), None, None, None, None, session))
+                assert result['subscription_id'] == 'subscription-1'
+                assert operation.state == 'COMPLETED'
+                assert operation.attempts == 2
+                assert session.scalar(select(func.count()).select_from(Customer)) == 1
+                assert session.scalar(select(func.count()).select_from(CustomerOnboardingOperation)) == 1
+        ''')
+        env = os.environ.copy()
+        paths = [str(ROOT / 'shared' / 'python'), str(ROOT / 'services' / 'crm-service')]
+        env['PYTHONPATH'] = os.pathsep.join(paths)
+        result = subprocess.run([sys.executable, '-c', script], cwd=ROOT,
+                                env=env, text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_oss_create_order_honors_idempotency_key(self):
         script = textwrap.dedent(r'''
             from uuid import uuid4

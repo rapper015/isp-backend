@@ -14,7 +14,7 @@ from . import models  # noqa: F401  (register all tables)
 from .database import Base, SessionLocal, engine
 from isp_shared.tenancy import scope_session
 from .enums import ORDER_STATES, RESOURCE_TYPES
-from .models import ManualIntervention, Order, ResourceReservation, ServiceSubscription
+from .models import ManualIntervention, Order, ResourceReservation, SagaInstance, ServiceSubscription
 from .schemas import (
     CapacityResponse,
     InterventionResolveRequest,
@@ -219,6 +219,18 @@ def activate_order(order_id: UUID, session: Session = Depends(db)):
     available for recovery and non-onboarding operations.
     """
     order = _order_or_404(session, order_id)
+    existing_saga = session.scalar(
+        select(SagaInstance).where(SagaInstance.order_id == order.id).order_by(SagaInstance.created_at.desc())
+    )
+    if existing_saga is not None:
+        return {
+            "order_id": str(order.id),
+            "order_number": order.order_number,
+            "order_state": order.state,
+            "workflow_id": str(existing_saga.id),
+            "workflow_state": existing_saga.state,
+            "subscription_id": str(order.service_subscription_id) if order.service_subscription_id else None,
+        }
     try:
         if order.state == "DRAFT":
             OrderService(session).submit(order_id, actor="customer-onboarding")
