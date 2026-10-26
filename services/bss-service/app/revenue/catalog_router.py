@@ -10,7 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..database import SessionLocal
+from ..database import Base, SessionLocal
+from isp_shared.tenancy import scope_session
 from ..revenue.models import Tenant
 from . import models
 from .catalog import CatalogService, GrowthService, MonetizationService
@@ -19,8 +20,9 @@ from .security import internal_service_auth
 router = APIRouter(prefix="/api/bss", dependencies=[Depends(internal_service_auth)])
 
 
-def db():
+def db(request: Request):
     session = SessionLocal()
+    scope_session(session, Base, getattr(request.state, "bss_principal", None))
     try:
         yield session
     finally:

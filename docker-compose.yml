@@ -8,6 +8,15 @@ x-domain-service: &domain-service
     RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER in .env}:${RABBITMQ_DEFAULT_PASS:?set RABBITMQ_DEFAULT_PASS in .env}@rabbitmq:5672/
     VALKEY_URL: redis://valkey:6379/0
     LOG_LEVEL: INFO
+    LOG_JSON: ${LOG_JSON:-true}
+    ENVIRONMENT: ${ENVIRONMENT:-development}
+    APP_RELEASE: ${APP_RELEASE:-local}
+    SENTRY_DSN: ${SENTRY_DSN:-}
+  logging: &service-logging
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
   depends_on:
     postgres:
       condition: service_healthy
@@ -26,6 +35,11 @@ x-domain-service: &domain-service
 services:
   gateway:
     image: nginx:1.27-alpine
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     ports:
       - "${GATEWAY_PORT:-4000}:80"
     volumes:
@@ -157,6 +171,7 @@ services:
     command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
 
   billing-scheduler:
+    logging: *service-logging
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: bss-service}}
     command: ["sh", "-c", "alembic upgrade head && python -m app.scheduler"]
     environment:
@@ -218,6 +233,7 @@ services:
     networks: [platform, nas-management]
 
   aaa-worker:
+    logging: *service-logging
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment:
@@ -270,6 +286,7 @@ services:
       SERVICE_NAME: platform-core-service
       DATABASE_URL: postgresql://${POSTGRES_USER:?set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/platform_core
       PLATFORM_JWT_SECRET: ${PLATFORM_JWT_SECRET:?set PLATFORM_JWT_SECRET in .env}
+      PLATFORM_IDEMPOTENCY_SECRET: ${PLATFORM_IDEMPOTENCY_SECRET:-${PLATFORM_JWT_SECRET}}
       PLATFORM_CRM_BASE_URL: http://crm-service:8000
       PLATFORM_CRM_INTERNAL_API_KEY: ${CRM_INTERNAL_API_KEY:-change-me-crm-internal-key}
       PLATFORM_BOOTSTRAP_ADMIN_USERNAME: ${PLATFORM_BOOTSTRAP_ADMIN_USERNAME:-admin}
@@ -304,6 +321,7 @@ services:
       SIEM_ENCRYPTION_KEY: ${SIEM_ENCRYPTION_KEY:-change-me-siem-encryption-key-0123456789abcdef}
 
   siem-worker:
+    logging: *service-logging
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: siem-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment:
@@ -330,6 +348,7 @@ services:
       WORKFORCE_INTERNAL_API_KEY: ${WORKFORCE_INTERNAL_API_KEY:-change-me-workforce-internal-key}
 
   workforce-worker:
+    logging: *service-logging
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: workforce-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment:
@@ -368,6 +387,7 @@ services:
       - device-firmware:/data/firmware
 
   device-management-worker:
+    logging: *service-logging
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: device-management-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment: {<<: *domain-environment, SERVICE_NAME: device-management-worker, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/device_management", ACS_PROVIDER: genieacs, GENIEACS_BASE_URL: http://genieacs:7557, DEVICE_FIRMWARE_DIR: /data/firmware}
@@ -391,6 +411,7 @@ services:
       TENANCY_AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
 
   tenancy-worker:
+    logging: *service-logging
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: tenancy-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment:
@@ -410,6 +431,7 @@ services:
     environment: {<<: *domain-environment, SERVICE_NAME: assurance-service, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/assurance"}
 
   assurance-worker:
+    logging: *service-logging
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: assurance-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment: {<<: *domain-environment, SERVICE_NAME: assurance-worker, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/assurance"}
@@ -434,6 +456,7 @@ services:
       LOG_JSON: ${LOG_JSON:-true}
 
   intelligence-worker:
+    logging: *service-logging
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: intelligence-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment:

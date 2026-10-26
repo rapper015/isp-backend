@@ -154,3 +154,8 @@ def list_heatmaps(request: Request, s: Session = Depends(db)):
     rows = s.query(models.AnomalyHeatmap).filter(models.AnomalyHeatmap.tenant_id == tid).all()
     return [{"id": str(r.id), "scope": r.scope, "period": r.period,
              "cells": len(r.cells or []), "anomaly_count": r.anomaly_count} for r in rows]
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "nms-service")

@@ -650,3 +650,8 @@ def complete_investigation(inv_id: uuid.UUID, body: dict, request: Request,
         raise HTTPException(status_code=404, detail=str(e))
     return {"id": str(row.id), "case_ref": row.case_ref, "status": row.status,
             "evidence_count": len(row.evidence_items or [])}
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "siem-service")

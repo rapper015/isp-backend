@@ -11,7 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..database import SessionLocal
+from ..database import Base, SessionLocal
+from isp_shared.tenancy import scope_session
 from ..models import Invoice, Plan
 from .cache import limited
 from .dunning import (
@@ -119,8 +120,9 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def db():
+def db(request: Request):
     session = SessionLocal()
+    scope_session(session, Base, getattr(request.state, "bss_principal", None))
     try:
         yield session
     finally:

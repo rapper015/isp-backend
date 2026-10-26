@@ -4,10 +4,14 @@ It deliberately does not manage FreeRADIUS.  A deployment must explicitly enable
 the Python-to-NAS CoA adapter; otherwise queued commands fail safely and visibly.
 """
 import asyncio
+import logging
 from os import getenv
 from time import sleep
 from .commands import DisabledRadiusCommandAdapter, PyradCommandAdapter
 from .database import SessionLocal
+from isp_shared.observability import configure_observability
+
+configure_observability("aaa-worker")
 from .workers import cleanup_stale_leases, detect_stale_sessions, evaluate_radius_server_health, flush_outbox, process_nas_job, process_radius_command, run_nas_health_checks
 from .events import consume_command_once, consume_nas_job_once, declare_topology
 
@@ -46,7 +50,7 @@ def main() -> None:
         except Exception:
             # The next bounded cycle retries transient infrastructure failures.
             # Individual command attempts remain capped in process_radius_command.
-            pass
+            logging.getLogger(__name__).exception("aaa.worker.cycle_failed")
         sleep(interval)
 
 

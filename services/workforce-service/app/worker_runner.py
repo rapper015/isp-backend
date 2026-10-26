@@ -4,6 +4,9 @@ import os
 import time
 
 from .database import SessionLocal
+from isp_shared.observability import configure_observability
+
+configure_observability("workforce-worker")
 
 log = logging.getLogger("workforce.worker")
 INTERVAL = float(os.getenv("WORKFORCE_WORKER_INTERVAL", "30"))

@@ -1240,3 +1240,8 @@ def billing_context(ticket_id: UUID, tenant_id: UUID | None = Query(default=None
     if result.ok:
         return {"status": "COMPLETE", "billing": result.output}
     return {"status": "FAILED", "error_code": result.error_code, "error_detail": result.error_detail}
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "support-service")

@@ -69,14 +69,10 @@ def schedule_preventive_maintenance(session: Session) -> list[dict]:
 
 
 def deliver_outbox(session: Session, broker=None) -> int:
-    rows = session.query(models.Outbox).filter(models.Outbox.published_at.is_(None)) \
-        .order_by(models.Outbox.created_at).limit(500).all()
-    delivered = 0
-    for r in rows:
-        if broker is not None:
-            broker.publish(events.envelope(r.event_type, r.payload), r.aggregate_type, r.aggregate_id)
-        r.published_at = datetime.now(timezone.utc)
-        delivered += 1
-    if delivered:
-        session.commit()
-    return delivered
+    from isp_shared.outbox import envelope, flush
+    publisher = None
+    if broker is not None:
+        def publisher(row):
+            broker.publish(envelope(row, "workforce"), row.aggregate_type, row.aggregate_id)
+            return True
+    return len(flush(session, models.Outbox, "workforce.events.v1", limit=500, publisher=publisher))

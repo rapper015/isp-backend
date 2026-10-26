@@ -5,6 +5,9 @@ from os import getenv
 from sqlalchemy import select
 
 from .database import SessionLocal
+from isp_shared.observability import configure_observability
+
+configure_observability("device-management-worker")
 from . import tasks  # noqa: F401
 from .models import Tenant
 

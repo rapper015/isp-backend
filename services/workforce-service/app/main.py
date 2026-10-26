@@ -525,3 +525,8 @@ def use_spare_part(part_id: uuid.UUID, body: dict, request: Request,
         raise HTTPException(status_code=409, detail=str(e))
     return {"id": str(p.id), "part_code": p.part_code, "quantity": p.quantity,
             "used_count": p.used_count, "status": p.status}
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "workforce-service")

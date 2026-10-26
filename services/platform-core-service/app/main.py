@@ -2,6 +2,8 @@
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from os import getenv
+import hashlib
+import hmac
 import json
 from urllib import error as urlerror, request as urlrequest
 from uuid import UUID
@@ -186,6 +188,15 @@ def ensure_unique_user_identity(session, username, email=None, mobile=None):
     if mobile_normalized and session.scalar(select(PlatformUser.id).where(PlatformUser.mobile_normalized == mobile_normalized)):
         raise HTTPException(409, "mobile number already exists")
     return username_normalized, email_normalized, mobile_normalized
+
+
+def user_request_fingerprint(payload: UserCreateIn, idempotency_key: str) -> str:
+    """Fingerprint a create request without persisting the password."""
+    secret = getenv("PLATFORM_IDEMPOTENCY_SECRET", getenv("PLATFORM_JWT_SECRET", ""))
+    if len(secret) < 32:
+        raise HTTPException(503, "user idempotency is not securely configured")
+    canonical = json.dumps(payload.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+    return hmac.new(secret.encode(), f"{idempotency_key}:{canonical}".encode(), hashlib.sha256).hexdigest()
 def ensure_foundations(session):
     # The wildcard is a persisted permission granted only to the bootstrap role.
     # Runtime authorization therefore always comes from role-permission bindings,
@@ -771,12 +782,23 @@ def create_user(payload: UserCreateIn, request: Request, session: Session = Depe
             raise HTTPException(403, "only a platform administrator or tenant owner can create an organization owner")
     if payload.is_organization_owner and not (tenant_id or franchise_id):
         raise HTTPException(422, "an organization owner must belong to a tenant or franchise")
+    idempotency_key = request.headers.get("Idempotency-Key", "").strip() or None
+    if idempotency_key and not 16 <= len(idempotency_key) <= 200:
+        raise HTTPException(422, "Idempotency-Key must contain 16 to 200 characters")
+    fingerprint = user_request_fingerprint(payload, idempotency_key) if idempotency_key else None
+    if idempotency_key:
+        existing = session.scalar(select(PlatformUser).where(PlatformUser.idempotency_key == idempotency_key))
+        if existing:
+            if not hmac.compare_digest(existing.request_fingerprint or "", fingerprint):
+                raise HTTPException(409, "Idempotency-Key was already used for a different user request")
+            return safe_user(session, existing)
     username_normalized, email_normalized, mobile_normalized = ensure_unique_user_identity(session, payload.username, payload.email, payload.mobile)
     user = PlatformUser(username=payload.username.strip(), username_normalized=username_normalized,
         email=email_normalized, email_normalized=email_normalized, full_name=payload.full_name,
         mobile=payload.mobile, mobile_normalized=mobile_normalized, tenant_id=tenant_id,
         franchise_id=franchise_id, department_id=payload.department_id,
-        is_organization_owner=payload.is_organization_owner, password_hash=hash_password(payload.password))
+        is_organization_owner=payload.is_organization_owner, password_hash=hash_password(payload.password),
+        idempotency_key=idempotency_key, request_fingerprint=fingerprint)
     session.add(user)
     try:
         session.flush()
@@ -785,6 +807,10 @@ def create_user(payload: UserCreateIn, request: Request, session: Session = Depe
         set_user_scopes(session, user, scopes, UUID(claims["sub"])); audit(session, "user.created", user.id); session.commit()
     except IntegrityError as exc:
         session.rollback()
+        if idempotency_key:
+            existing = session.scalar(select(PlatformUser).where(PlatformUser.idempotency_key == idempotency_key))
+            if existing and hmac.compare_digest(existing.request_fingerprint or "", fingerprint):
+                return safe_user(session, existing)
         raise HTTPException(409, "username, email address, or mobile number already exists") from exc
     return safe_user(session, user)
 @app.patch("/api/v1/platform/users/{user_id}")
@@ -836,3 +862,8 @@ def service_token(request: Request, session: Session = Depends(db)):
     if not account or not account.enabled: raise HTTPException(401, "service account authentication failed")
     account.last_used_at = datetime.now(timezone.utc); audit(session, "service_account.token_issued"); session.commit()
     return {"access_token": issue_service_access_token(account.id, account.tenant_id, __import__("json").loads(account.permissions)), "token_type": "bearer", "expires_in": int(getenv("PLATFORM_SERVICE_TOKEN_TTL_SECONDS", "300"))}
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "platform-core-service")

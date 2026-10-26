@@ -6,11 +6,14 @@ params are reconciled against the authenticated principal and any conflict is
 rejected."""
 from contextlib import asynccontextmanager
 import secrets as _secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from os import getenv
 import uuid
 import json
+import hashlib
+import logging
 from urllib import error as urlerror, request as urlrequest
+from isp_shared.observability import diagnostic_headers
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
@@ -75,6 +78,7 @@ from .schemas import (
     WalletIn,
 )
 from .security import internal_service_auth, management_auth
+from .domain.identity import normalize_tenant_code
 from .services import (
     access_service,
     audit_service,
@@ -86,6 +90,8 @@ from .services import (
     tenant_service,
     wallet_service,
 )
+
+logger = logging.getLogger("tenancy.onboarding")
 from .services.governance_service import (CampaignService, CoreAiService, GovernanceService,
                                           LabService, NotificationService)
 
@@ -122,7 +128,10 @@ def db():
 def _raise(error: Exception) -> None:
     if isinstance(error, TenancyError):
         raise HTTPException(error.status_code, {"code": error.code, "detail": error.message}) from error
-    raise HTTPException(422, str(error)) from error
+    if isinstance(error, ValueError):
+        raise HTTPException(422, str(error)) from error
+    # Infrastructure/programming errors must reach diagnostics as server errors.
+    raise error
 
 
 def _actor(request: Request) -> str:
@@ -175,7 +184,7 @@ def _sync_aaa_tenant(tenant: Tenant) -> None:
             "enabled": tenant.status not in {"SUSPENDED", "OFFBOARDED", "ARCHIVED"},
             "policy": {},
         }).encode(),
-        headers={"Content-Type": "application/json", "X-AAA-Service-Key": service_key},
+        headers={**diagnostic_headers(), "Content-Type": "application/json", "X-AAA-Service-Key": service_key},
         method="PUT",
     )
     try:
@@ -190,6 +199,47 @@ def _sync_aaa_tenant(tenant: Tenant) -> None:
         raise HTTPException(exc.code, detail or "AAA tenant synchronization failed") from exc
     except urlerror.URLError as exc:
         raise HTTPException(503, "AAA tenant synchronization is temporarily unavailable") from exc
+
+
+def _onboarding_fingerprint(payload: TenantOnboardingIn) -> str:
+    values = payload.model_dump(mode="json")
+    values["admin"].pop("password", None)
+    values["admin"].pop("confirm_password", None)
+    canonical = json.dumps(values, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode()).hexdigest()
+
+
+def _set_onboarding_state(session: Session, tenant: Tenant, state: str, **values) -> None:
+    profile = dict(tenant.profile or {})
+    onboarding = dict(profile.get("onboarding") or {})
+    onboarding.update({"state": state, **values})
+    profile["onboarding"] = onboarding
+    tenant.profile = profile
+    session.commit()
+
+
+def _platform_request(path: str, request: Request, *, method: str, body: dict,
+                      idempotency_key: str | None = None) -> dict:
+    headers = {**diagnostic_headers(), "Content-Type": "application/json",
+               "Authorization": request.headers.get("Authorization", "")}
+    if idempotency_key:
+        headers["Idempotency-Key"] = idempotency_key
+    upstream = urlrequest.Request(
+        f"{getenv('PLATFORM_CORE_BASE_URL', 'http://platform-core-service:8000').rstrip('/')}{path}",
+        data=json.dumps(body).encode(), headers=headers, method=method)
+    try:
+        with urlrequest.urlopen(upstream, timeout=10) as response:
+            raw = response.read()
+            return json.loads(raw) if raw else {}
+    except urlerror.HTTPError as exc:
+        raw = exc.read().decode()
+        try:
+            detail = json.loads(raw).get("detail", raw)
+        except (ValueError, AttributeError):
+            detail = raw
+        raise HTTPException(exc.code, detail or "platform operation failed") from exc
+    except urlerror.URLError as exc:
+        raise HTTPException(503, "platform service is temporarily unavailable") from exc
 
 
 # ===========================================================================
@@ -222,59 +272,81 @@ def create_tenant(payload: TenantCreate, request: Request = None, session: Sessi
 
 @app.post("/api/tenancy/tenant-onboarding", status_code=status.HTTP_201_CREATED, dependencies=[Depends(management_auth)])
 def onboard_tenant(payload: TenantOnboardingIn, request: Request, session: Session = Depends(db)):
-    """Create a tenant, profile, domain and initial administrator in one UI request."""
+    """Resumable onboarding; completed remote steps are safe to repeat."""
+    fingerprint = _onboarding_fingerprint(payload)
+    tenant = None
+    failed_step = "LOCAL_TENANT"
     try:
-        tenant = tenant_service.create_tenant(session, name=payload.name, code=payload.code,
-            currency=payload.currency, country=payload.country, legal_name=payload.legal_name,
-            requested_by=_actor(request))
+        code = normalize_tenant_code(payload.code)
+        tenant = session.scalar(select(Tenant).where(Tenant.code == code))
+        if tenant:
+            onboarding = (tenant.profile or {}).get("onboarding") or {}
+            if onboarding.get("fingerprint") != fingerprint:
+                raise HTTPException(409, "tenant code already belongs to another onboarding request")
+        else:
+            tenant = tenant_service.create_tenant(session, name=payload.name, code=code,
+                currency=payload.currency, country=payload.country, legal_name=payload.legal_name,
+                requested_by=_actor(request))
+            tenant.profile = {"organization_type": payload.organization_type,
+                "business_email": payload.business_email, "primary_mobile": payload.primary_mobile,
+                "website": payload.website, "landline": payload.landline,
+                "description": payload.description, "logo_url": payload.logo_url,
+                "address": payload.address, "requested_status": payload.status,
+                "onboarding": {"fingerprint": fingerprint, "state": "LOCAL_CREATED"}}
+            if payload.custom_domain:
+                tenant_service.add_domain(session, tenant.id, payload.custom_domain, is_primary=True,
+                    actor=_actor(request))
+            session.commit()
+
+        failed_step = "AAA_SYNC"
         _sync_aaa_tenant(tenant)
-        tenant.profile = {"organization_type": payload.organization_type,
-            "business_email": payload.business_email, "primary_mobile": payload.primary_mobile,
-            "website": payload.website, "landline": payload.landline,
-            "description": payload.description, "logo_url": payload.logo_url,
-            "address": payload.address, "requested_status": payload.status}
-        domain = tenant_service.add_domain(session, tenant.id, payload.custom_domain, is_primary=True,
-            actor=_actor(request)) if payload.custom_domain else None
-        if payload.status in {"ACTIVE", "TRIAL"}:
-            tenant_service.provision_tenant(session, tenant.id, actor=_actor(request))
-        body = json.dumps({"username": payload.admin.username, "password": payload.admin.password,
+        _set_onboarding_state(session, tenant, "AAA_SYNCED", last_error=None, failed_step=None)
+
+        failed_step = "ADMIN_CREATE"
+        admin = _platform_request("/api/v1/platform/users", request, method="POST", body={
+            "username": payload.admin.username, "password": payload.admin.password,
             "email": payload.admin.email, "full_name": payload.admin.full_name,
             "mobile": payload.admin.mobile, "tenant_id": str(tenant.id), "roles": ["TENANT_ADMIN"],
-            "is_organization_owner": True}).encode()
-        upstream = urlrequest.Request(
-            f"{getenv('PLATFORM_CORE_BASE_URL', 'http://platform-core-service:8000').rstrip('/')}/api/v1/platform/users",
-            data=body, headers={"Content-Type": "application/json",
-            "Authorization": request.headers.get("Authorization", "")}, method="POST")
-        try:
-            with urlrequest.urlopen(upstream, timeout=10) as response:
-                admin = json.loads(response.read())
-        except urlerror.HTTPError as exc:
-            raw = exc.read().decode()
-            try: detail = json.loads(raw).get("detail", raw)
-            except (ValueError, AttributeError): detail = raw
-            raise HTTPException(exc.code, detail or "tenant administrator could not be created") from exc
-        assignment = urlrequest.Request(
-            f"{getenv('PLATFORM_CORE_BASE_URL', 'http://platform-core-service:8000').rstrip('/')}/api/v1/platform/access-template-assignments/TENANT/{tenant.id}",
-            data=json.dumps({"template_id": str(payload.access_template_id)}).encode(),
-            headers={"Content-Type": "application/json", "Authorization": request.headers.get("Authorization", "")},
-            method="PUT")
-        try:
-            with urlrequest.urlopen(assignment, timeout=10): pass
-        except urlerror.HTTPError as exc:
-            raw = exc.read().decode()
-            try: detail = json.loads(raw).get("detail", raw)
-            except (ValueError, AttributeError): detail = raw
-            raise HTTPException(exc.code, detail or "tenant access template could not be assigned") from exc
-        session.commit()
+            "is_organization_owner": True}, idempotency_key=f"tenant-onboarding:{tenant.id}:admin")
+        _set_onboarding_state(session, tenant, "ADMIN_CREATED", admin_id=admin.get("id"))
+
+        failed_step = "ACCESS_TEMPLATE"
+        _platform_request(f"/api/v1/platform/access-template-assignments/TENANT/{tenant.id}",
+            request, method="PUT", body={"template_id": str(payload.access_template_id)})
+        _set_onboarding_state(session, tenant, "ACCESS_ASSIGNED")
+
+        failed_step = "PROVISIONING"
+        if payload.status in {"ACTIVE", "TRIAL"}:
+            tenant_service.provision_tenant(session, tenant.id, actor=_actor(request))
+        elif tenant.status == "REQUESTED":
+            tenant.status = payload.status
+            tenant.provision_state = "NOT_REQUESTED"
+        _set_onboarding_state(session, tenant, "COMPLETED",
+                              completed_at=datetime.now(timezone.utc).isoformat())
+        domain = session.scalar(select(TenantDomain).where(
+            TenantDomain.tenant_id == tenant.id, TenantDomain.is_primary.is_(True)))
         return {"id": str(tenant.id), "code": tenant.code, "status": tenant.status,
             "access_template_id": str(payload.access_template_id),
             "domain": domain.domain if domain else None, "domain_status": domain.status if domain else None,
-            "admin": {"id": admin.get("id"), "username": admin.get("username")}}
-    except HTTPException:
+            "admin": {"id": admin.get("id"), "username": admin.get("username")},
+            "onboarding_state": "COMPLETED"}
+    except HTTPException as exc:
         session.rollback()
+        if tenant is not None and getattr(tenant, "id", None):
+            tenant = session.get(Tenant, tenant.id)
+            if tenant:
+                _set_onboarding_state(session, tenant, "FAILED", failed_step=failed_step,
+                                      last_error=str(exc.detail)[:500])
         raise
     except Exception as exc:
         session.rollback()
+        if tenant is not None and getattr(tenant, "id", None):
+            tenant = session.get(Tenant, tenant.id)
+            if tenant:
+                _set_onboarding_state(session, tenant, "FAILED", failed_step=failed_step,
+                                      last_error="internal onboarding error")
+        logger.exception("tenant.onboarding_failed", extra={"operation": failed_step,
+                         "entity_id": str(tenant.id) if tenant else None})
         _raise(exc)
 
 
@@ -1612,3 +1684,8 @@ def simulate_latency(sim_id: uuid.UUID, request: Request, session: Session = Dep
         raise HTTPException(404, "Latency simulator not found")
     return {"id": str(sim.id), "sim_name": sim.sim_name, "scenario": sim.scenario,
             "status": sim.status}
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "tenancy-service")

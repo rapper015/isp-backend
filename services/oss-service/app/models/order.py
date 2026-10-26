@@ -12,7 +12,10 @@ from ..database import Base
 
 class Order(Base, Timestamped):
     __tablename__ = "oss_orders"
-    __table_args__ = (UniqueConstraint("tenant_id", "order_number", name="uq_oss_order_tenant_number"),)
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "order_number", name="uq_oss_order_tenant_number"),
+        UniqueConstraint("tenant_id", "idempotency_key", name="uq_oss_order_create_idempotency"),
+    )
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("oss_tenants.id"), index=True, nullable=False)
     order_number: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -33,6 +36,8 @@ class Order(Base, Timestamped):
     current_step: Mapped[str | None] = mapped_column(String(64), nullable=True)
     failure_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
     correlation_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    request_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
     # Immutable snapshot of essential requested input (historical integrity).
     requested_snapshot: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
     created_by: Mapped[str | None] = mapped_column(String(128), nullable=True)

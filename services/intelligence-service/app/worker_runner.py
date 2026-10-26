@@ -3,10 +3,14 @@ from __future__ import annotations
 
 import logging
 import time
+from os import getenv
 from datetime import datetime, timezone
 
 from . import tasks
 from .database import SessionLocal
+from isp_shared.observability import configure_observability
+
+configure_observability("intelligence-worker")
 from .models import Base
 
 logger = logging.getLogger("intelligence.worker")
@@ -50,3 +54,7 @@ def run_loop(interval_seconds: int = 300):
             logger.exception("intelligence worker cycle failed")
         elapsed = time.monotonic() - started
         time.sleep(max(1.0, interval_seconds - elapsed))
+
+
+if __name__ == "__main__":
+    run_loop(int(getenv("WORKER_INTERVAL_SECONDS", "300")))

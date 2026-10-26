@@ -726,3 +726,8 @@ def metric_registry(db: Session = Depends(db)):
 def _actor_auto():
     ctx = get_context()
     return ctx.user_id if ctx else None
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "assurance-service")

@@ -881,3 +881,8 @@ def audit_log(tenant_id: UUID | None = Query(default=None), session: Session = D
     return [{"id": str(a.id), "event_type": a.event_type, "entity_type": a.entity_type, "entity_id": a.entity_id,
              "actor": a.actor, "reason": a.reason,
              "created_at": a.created_at.isoformat() if a.created_at else None} for a in rows]
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "device-management-service")

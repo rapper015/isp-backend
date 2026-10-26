@@ -4,6 +4,9 @@ command idempotency."""
 from __future__ import annotations
 
 import uuid
+import hashlib
+import json
+from isp_shared.telemetry import current_correlation_id
 from datetime import datetime, timezone
 from typing import Any
 
@@ -53,13 +56,35 @@ class OrderService:
         requested_snapshot: dict | None = None,
         actor: str = "system",
         correlation_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> Order:
+        correlation_id = correlation_id or current_correlation_id.get() or uuid.uuid4().hex
         if order_type not in ORDER_TYPES:
             raise ValueError(f"invalid order type {order_type!r}")
         if priority not in ("LOW", "MEDIUM", "HIGH", "URGENT"):
             raise ValueError(f"invalid priority {priority!r}")
         if source_channel not in ORDER_SOURCES:
             raise ValueError(f"invalid source channel {source_channel!r}")
+
+        fingerprint_values = {
+            "order_type": order_type, "customer_id": customer_id,
+            "service_location_id": service_location_id,
+            "requested_plan_reference": requested_plan_reference,
+            "previous_plan_reference": previous_plan_reference,
+            "requested_activation_date": requested_activation_date,
+            "priority": priority, "source_channel": source_channel,
+            "franchise_id": franchise_id, "reseller_id": reseller_id,
+            "requested_snapshot": requested_snapshot or {},
+        }
+        fingerprint = hashlib.sha256(json.dumps(fingerprint_values, sort_keys=True,
+            default=str, separators=(",", ":")).encode()).hexdigest()
+        if idempotency_key:
+            existing = self.session.scalar(select(Order).where(
+                Order.tenant_id == tenant_id, Order.idempotency_key == idempotency_key))
+            if existing:
+                if existing.request_fingerprint != fingerprint:
+                    raise ValueError("idempotency key was already used for a different order")
+                return existing
 
         ensure_oss_tenant(self.session, tenant_id)
 
@@ -82,6 +107,9 @@ class OrderService:
             reseller_id=_s(reseller_id),
             requested_snapshot=requested_snapshot or {},
             created_by=actor,
+            correlation_id=correlation_id,
+            idempotency_key=idempotency_key,
+            request_fingerprint=fingerprint if idempotency_key else None,
         )
         self.session.add(order)
         self.session.flush()

@@ -24,6 +24,8 @@ class PlatformUser(Base, Timestamped):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_organization_owner: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(200), unique=True, index=True)
+    request_fingerprint: Mapped[str | None] = mapped_column(String(64))
     failed_login_count: Mapped[int] = mapped_column(default=0, nullable=False)
     locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     password_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

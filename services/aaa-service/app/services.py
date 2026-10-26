@@ -2,6 +2,7 @@
 import hashlib
 from datetime import datetime, timezone
 from uuid import uuid4
+from isp_shared.telemetry import current_correlation_id
 import bcrypt
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -11,7 +12,7 @@ from .ipam import PoolExhausted, allocate
 from .policy import calculate_policy
 from .radius import safe_reply, traffic_counter
 
-def correlation(value: str | None) -> str: return value or uuid4().hex
+def correlation(value: str | None) -> str: return value or current_correlation_id.get() or uuid4().hex
 def outbox(session: Session, event_type: str, tenant_id, correlation_id: str, payload: dict, idempotency_key: str | None = None) -> None:
     session.add(OutboxEvent(event_type=event_type, tenant_id=tenant_id, correlation_id=correlation_id, idempotency_key=idempotency_key, payload=payload))
 def audit(session: Session, tenant_id, action: str, target: str, correlation_id: str, detail: dict) -> None:

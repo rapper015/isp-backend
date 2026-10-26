@@ -17,23 +17,11 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _publish(event) -> None:
-    """Declared aio-pika hook (no-op placeholder); outbox remains source of truth."""
-    _ = envelope(event)
-
-
 def flush_outbox(session: Session, limit: int = 100) -> int:
-    events = unprocessed_events(session, limit)
-    published = 0
-    for event in events:
-        try:
-            _publish(event)
-            event.published_at = _now()
-            published += 1
-        except Exception:  # noqa: BLE001
-            event.attempts += 1
-    session.commit()
-    return published
+    from isp_shared.outbox import flush
+    from .models import OutboxEvent
+    delivered = flush(session, OutboxEvent, "tenancy.events.v1", limit=limit)
+    return len(delivered)
 
 
 def refresh_aggregates(session: Session, tenant_id) -> int:

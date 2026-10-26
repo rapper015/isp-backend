@@ -12,41 +12,11 @@ from .services.activation import ProvisioningService
 from .services.resource_service import ResourceService
 
 
-def flush_outbox(session: Session, limit: int = 100) -> list[str]:
-    """Publish pending outbox events to RabbitMQ (best-effort) and mark them."""
-    from datetime import datetime, timezone
-
-    pending = list(session.scalars(select(OutboxEvent).where(OutboxEvent.published_at.is_(None)).order_by(OutboxEvent.occurred_at).limit(limit)))
-    published: list[str] = []
-    for event in pending:
-        try:
-            _publish(event)
-            event.published_at = datetime.now(timezone.utc)
-            event.attempts += 1
-            published.append(event.event_type)
-        except Exception:  # noqa: BLE001 — broker unavailable; retry later
-            event.attempts += 1
-    session.commit()
-    return published
-
-
-def _publish(event: OutboxEvent) -> None:
-    """Wire format for a single outbox event.
-
-    The real worker resolves the RabbitMQ connection from env and publishes to
-    oss.events.v1 with routing key = event_type; tests assert on the outbox rows
-    instead of a live broker."""
-    payload = {
-        "event_type": event.event_type,
-        "correlation_id": event.correlation_id,
-        "idempotency_key": event.idempotency_key,
-        "tenant_id": str(event.tenant_id) if event.tenant_id else None,
-        "payload": event.payload,
-        "occurred_at": event.occurred_at.isoformat(),
-    }
-    # Hook point for aio-pika publish (declared; broker wiring is deployment).
-    json.dumps(payload)
-    return None
+def flush_outbox(session: Session, limit: int = 100):
+    from isp_shared.outbox import flush
+    from .models import OutboxEvent
+    delivered = flush(session, OutboxEvent, "oss.events.v1", limit=limit)
+    return delivered
 
 
 def expire_reservations(session: Session) -> int:

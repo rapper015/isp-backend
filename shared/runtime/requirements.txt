@@ -12,3 +12,4 @@ routeros_api==0.18.1
 httpx==0.28.1
 alembic==1.15.2
 python-multipart==0.0.20
+sentry-sdk==2.73.0

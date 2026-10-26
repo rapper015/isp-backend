@@ -10,6 +10,7 @@ from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
+from isp_shared.tenancy import scope_session
 from .models import BillingAccount, BillingAccountItem, BillingSchedule, Invoice, Payment, Plan, PlanFranchiseAvailability, PlanNetworkPolicyBinding, PlanOttMapping, PlanPrice
 from .billing_cycles import refresh_overdue_invoices, run_due_billing
 from .revenue.router import router as revenue_router
@@ -25,8 +26,9 @@ app = FastAPI(title="BSS Service", version="2.0.0", lifespan=lifespan)
 app.include_router(revenue_router)
 app.include_router(catalog_router)
 app.include_router(invoice_import_router)
-def db_session():
+def db_session(request: Request):
     db = SessionLocal()
+    scope_session(db, Base, getattr(request.state, "bss_principal", None))
     try: yield db
     finally: db.close()
 
@@ -432,6 +434,9 @@ def _sync_managed_plan_policy(plan: Plan, db: Session) -> PlanNetworkPolicyBindi
 def create_plan(payload: PlanCreate, tenant_id: UUID | None = None, db: Session = Depends(db_session)):
     values = payload.model_dump(exclude={"prices", "allowed_franchise_ids", "ott_mappings"})
     values["tenant_id"] = payload.tenant_id or tenant_id
+    allowed = db.info.get("allowed_tenant_ids")
+    if values["tenant_id"] is None and allowed and len(allowed) == 1:
+        values["tenant_id"] = next(iter(allowed))
     if values["tenant_id"] is None:
         raise HTTPException(422, "tenant_id is required")
     values["monthly_fee"] = payload.monthly_fee or min(item.price for item in payload.prices)
@@ -538,6 +543,9 @@ def create_invoice(payload: InvoiceCreate, tenant_id: UUID | None = None, db: Se
     if plan is None: raise HTTPException(404, 'plan not found')
     if effective_tenant and plan.tenant_id and effective_tenant != plan.tenant_id:
         raise HTTPException(422, 'plan belongs to a different tenant')
+    effective_tenant = effective_tenant or plan.tenant_id
+    if effective_tenant is None:
+        raise HTTPException(422, 'plan must belong to a tenant before invoicing')
     values = payload.model_dump()
     values["tenant_id"] = effective_tenant
     values["invoice_number"] = payload.invoice_number or f"INV-{datetime.now(timezone.utc):%Y%m%d%H%M%S%f}"
@@ -681,3 +689,8 @@ def update_invoice(invoice_id: UUID, payload: InvoiceUpdate, db: Session = Depen
 
 @app.get('/payments', response_model=list[PaymentResponse], dependencies=[Depends(internal_service_auth)])
 def list_payments(db: Session = Depends(db_session)): return list(db.scalars(select(Payment)))
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "bss-service")

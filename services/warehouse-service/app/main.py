@@ -120,3 +120,8 @@ def list_scenarios(req: Request, s: Session = Depends(db)):
 @app.get("/status")
 def status():
     return {"service": "warehouse", "phase": "analytics"}
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "warehouse-service")

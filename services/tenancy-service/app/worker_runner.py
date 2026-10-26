@@ -2,11 +2,15 @@
 from __future__ import annotations
 
 import time
+import logging
 from os import getenv
 
 from sqlalchemy import select
 
 from .database import SessionLocal
+from isp_shared.observability import configure_observability
+
+configure_observability("tenancy-worker")
 from .models import Tenant
 from .services import catalog_service
 
@@ -38,7 +42,7 @@ def run_loop(interval: int | None = None) -> None:
         try:
             run_once()
         except Exception:  # noqa: BLE001
-            pass
+            logging.getLogger(__name__).exception("tenancy.worker.cycle_failed")
         time.sleep(interval)
 
 

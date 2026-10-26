@@ -21,6 +21,11 @@ class Franchise(Base, Timestamped):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[str] = mapped_column(String(16), default="ACTIVE", nullable=False)
     profile: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    onboarding_state: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    onboarding_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    onboarding_admin_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    onboarding_error: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    onboarding_requested_status: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
 
 class Branch(Base, Timestamped):

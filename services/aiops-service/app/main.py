@@ -6,3 +6,8 @@ app = FastAPI(title="AIOps Service", version="0.1.0")
 def health(): return {"status": "ok", "service": getenv("SERVICE_NAME", "aiops-service")}
 @app.get("/status")
 def status(): return {"service": "aiops", "phase": "foundation"}
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "aiops-service")

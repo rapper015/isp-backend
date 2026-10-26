@@ -5,8 +5,9 @@ from os import getenv
 
 from .billing_cycles import refresh_overdue_invoices, run_due_billing
 from .database import SessionLocal
+from isp_shared.observability import configure_observability
 
-logging.basicConfig(level=getenv("LOG_LEVEL", "INFO"))
+configure_observability("bss-billing-worker")
 logger = logging.getLogger("billing-scheduler")
 
 

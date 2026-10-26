@@ -27,6 +27,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from isp_shared.cors import cors_allowed_origins
+from isp_shared.observability import diagnostic_headers
 
 from .database import Base, SessionLocal, engine
 from .models import (AuditLog, Branch, Customer, CustomerPortalIdentity, ExperienceRecovery, ExternalReference,
@@ -276,10 +277,15 @@ def create_franchise(tenant_id: UUID, payload: FranchiseIn, session: Session = D
 
 @app.post("/api/crm/franchise-onboarding", status_code=201, dependencies=[Depends(internal_service_auth)])
 def onboard_franchise(tenant_id: UUID, payload: FranchiseOnboardingIn, request: Request, session: Session = Depends(db)):
-    """Create a franchise and its initial scoped administrator through one operator request."""
+    """Create or resume a franchise and its initial scoped administrator."""
     principal = getattr(request.state, "crm_principal", {}) or {}
     if principal.get("franchise_id") or ("crm.franchise.manage" not in principal.get("permissions", []) and "*" not in principal.get("permissions", [])):
         raise HTTPException(403, "only a tenant administrator can onboard franchises")
+    fingerprint_values = payload.model_dump(mode="json")
+    fingerprint_values["admin"].pop("password", None)
+    fingerprint_values["admin"].pop("confirm_password", None)
+    fingerprint = hashlib.sha256(json.dumps(fingerprint_values, sort_keys=True,
+        separators=(",", ":")).encode()).hexdigest()
     tenant = session.get(Tenant, tenant_id)
     if tenant is None:
         # Tenancy is the source of truth. A tenant-scoped, authenticated request
@@ -287,19 +293,29 @@ def onboard_franchise(tenant_id: UUID, payload: FranchiseOnboardingIn, request: 
         tenant = Tenant(id=tenant_id, name=f"tenant-{str(tenant_id)[:8]}")
         session.add(tenant)
         session.flush()
-    if session.scalar(select(Franchise).where(
-        Franchise.tenant_id == tenant_id, Franchise.franchise_code == payload.franchise_code)):
-        raise HTTPException(409, "franchise code already exists")
-    item = Franchise(tenant_id=tenant_id, franchise_code=payload.franchise_code,
-        name=payload.name, status=payload.status, profile=payload.profile.model_dump(mode="json"))
-    session.add(item)
-    session.flush()
-    try:
-        replace_owner_numbers(session, "FRANCHISE", item.id, profile_numbers(item.profile))
-        session.flush()
-    except (PhoneConflict, IntegrityError) as error:
-        session.rollback()
-        raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "phone number already exists") from error
+    item = session.scalar(select(Franchise).where(
+        Franchise.tenant_id == tenant_id, Franchise.franchise_code == payload.franchise_code))
+    if item and item.onboarding_fingerprint != fingerprint:
+        raise HTTPException(409, "franchise code already belongs to another onboarding request")
+    if item and item.onboarding_state == "COMPLETED":
+        return {"id": str(item.id), "franchise_code": item.franchise_code,
+            "access_template_id": str(payload.access_template_id), "status": item.status,
+            "administrator": {"id": item.onboarding_admin_id, "username": payload.admin.username},
+            "onboarding_state": "COMPLETED"}
+    if item is None:
+        item = Franchise(tenant_id=tenant_id, franchise_code=payload.franchise_code,
+            name=payload.name, status="INACTIVE", profile=payload.profile.model_dump(mode="json"),
+            onboarding_state="LOCAL_CREATED", onboarding_fingerprint=fingerprint,
+            onboarding_requested_status=payload.status)
+        session.add(item)
+        try:
+            session.flush()
+            replace_owner_numbers(session, "FRANCHISE", item.id, profile_numbers(item.profile))
+            session.flush()
+            session.commit()
+        except (PhoneConflict, IntegrityError) as error:
+            session.rollback()
+            raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "franchise data already exists") from error
     body = json.dumps({"username": payload.admin.username, "password": payload.admin.password,
         "email": payload.admin.email, "full_name": payload.admin.full_name,
         "mobile": payload.admin.mobile, "tenant_id": str(tenant_id),
@@ -307,8 +323,9 @@ def onboard_franchise(tenant_id: UUID, payload: FranchiseOnboardingIn, request: 
         "is_organization_owner": True}).encode()
     upstream = urlrequest.Request(
         f"{getenv('PLATFORM_CORE_BASE_URL', 'http://platform-core-service:8000').rstrip('/')}/api/v1/platform/users",
-        data=body, headers={"Content-Type": "application/json",
-        "Authorization": request.headers.get("Authorization", "")}, method="POST")
+        data=body, headers={**diagnostic_headers(), "Content-Type": "application/json",
+        "Authorization": request.headers.get("Authorization", ""),
+        "Idempotency-Key": f"franchise-onboarding:{item.id}:admin"}, method="POST")
     try:
         with urlrequest.urlopen(upstream, timeout=10) as response:
             admin = json.loads(response.read())
@@ -317,14 +334,24 @@ def onboard_franchise(tenant_id: UUID, payload: FranchiseOnboardingIn, request: 
         raw = exc.read().decode()
         try: detail = json.loads(raw).get("detail", raw)
         except (ValueError, AttributeError): detail = raw
+        item = session.get(Franchise, item.id)
+        item.onboarding_state = "FAILED"; item.onboarding_error = str(detail)[:500]
+        session.commit()
         raise HTTPException(exc.code, detail or "franchise administrator could not be created") from exc
     except Exception as exc:
         session.rollback()
+        item = session.get(Franchise, item.id)
+        item.onboarding_state = "FAILED"; item.onboarding_error = "administrator service unavailable"
+        session.commit()
         raise HTTPException(502, "franchise administrator service is unavailable") from exc
+    item.onboarding_state = "ADMIN_CREATED"
+    item.onboarding_admin_id = str(admin.get("id")) if admin.get("id") else None
+    item.onboarding_error = None
+    session.commit()
     assignment = urlrequest.Request(
         f"{getenv('PLATFORM_CORE_BASE_URL', 'http://platform-core-service:8000').rstrip('/')}/api/v1/platform/access-template-assignments/FRANCHISE/{item.id}",
         data=json.dumps({"template_id": str(payload.access_template_id)}).encode(),
-        headers={"Content-Type": "application/json", "Authorization": request.headers.get("Authorization", "")},
+        headers={**diagnostic_headers(), "Content-Type": "application/json", "Authorization": request.headers.get("Authorization", "")},
         method="PUT")
     try:
         with urlrequest.urlopen(assignment, timeout=10): pass
@@ -332,13 +359,24 @@ def onboard_franchise(tenant_id: UUID, payload: FranchiseOnboardingIn, request: 
         session.rollback(); raw = exc.read().decode()
         try: detail = json.loads(raw).get("detail", raw)
         except (ValueError, AttributeError): detail = raw
+        item = session.get(Franchise, item.id)
+        item.onboarding_state = "FAILED"; item.onboarding_error = str(detail)[:500]
+        session.commit()
         raise HTTPException(exc.code, detail or "franchise access template could not be assigned") from exc
+    except Exception as exc:
+        session.rollback(); item = session.get(Franchise, item.id)
+        item.onboarding_state = "FAILED"; item.onboarding_error = "access template service unavailable"
+        session.commit()
+        raise HTTPException(502, "franchise access template service is unavailable") from exc
+    item.status = item.onboarding_requested_status or payload.status
+    item.onboarding_state = "COMPLETED"; item.onboarding_error = None
     record_audit(session, tenant_id, actor_of(request), "franchise.onboarded", "franchise", str(item.id),
         safe_after={"franchise": jsonable_encoder(safe_franchise(item)), "administrator_id": admin.get("id")})
     session.commit()
     return {"id": str(item.id), "franchise_code": item.franchise_code,
         "access_template_id": str(payload.access_template_id),
-        "status": item.status, "administrator": {"id": admin.get("id"), "username": admin.get("username")}}
+        "status": item.status, "administrator": {"id": admin.get("id"), "username": admin.get("username")},
+        "onboarding_state": "COMPLETED"}
 
 
 def franchise_profile_without_legacy_access_fields(profile: dict | None) -> dict:
@@ -981,6 +1019,7 @@ async def onboard_customer(
                 "Content-Type": "application/json",
                 "X-Internal-API-Key": getenv("CRM_OSS_INTERNAL_API_KEY", ""),
                 "X-Service-Name": SERVICE_NAME,
+                **diagnostic_headers(),
             },
             method="POST",
         )
@@ -1007,6 +1046,7 @@ async def onboard_customer(
                 "Content-Type": "application/json",
                 "X-Internal-API-Key": getenv("CRM_OSS_INTERNAL_API_KEY", ""),
                 "X-Service-Name": SERVICE_NAME,
+                **diagnostic_headers(),
             },
             method="POST",
         )
@@ -1816,3 +1856,8 @@ def list_loyalty(tenant_id: UUID, customer_id: str | None = None,
     rows = session.scalars(stmt.order_by(LoyaltyScore.created_at.desc()).limit(100)).all()
     return [{"id": str(l.id), "customer_id": l.customer_id, "period": l.period,
              "score": l.score} for l in rows]
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "crm-service")

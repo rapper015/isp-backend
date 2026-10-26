@@ -15,7 +15,8 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .database import SessionLocal
+from .database import Base, SessionLocal
+from isp_shared.tenancy import scope_session
 from .models import InvoiceImportBatch, InvoiceImportRow
 from .revenue.models import BillingAccount, RevenueInvoice, Tenant
 from .revenue.security import management_auth
@@ -33,8 +34,9 @@ ALIASES = {
 }
 
 
-def db():
+def db(request: Request):
     session = SessionLocal()
+    scope_session(session, Base, getattr(request.state, "bss_principal", None))
     try:
         yield session
     finally:

@@ -8,6 +8,7 @@ raise a manual intervention."""
 from __future__ import annotations
 
 import uuid
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Callable
@@ -264,6 +265,10 @@ class SagaEngine:
             except RetryableAdapterError as error:
                 result = fail_result("RETRYABLE_ERROR", str(error), retryable=True)
             except Exception as error:  # noqa: BLE001
+                logging.getLogger(__name__).exception("workflow.step.exception", extra={
+                    "workflow_id": str(saga.id), "order_id": str(saga.order_id),
+                    "correlation_id": saga.correlation_id, "operation": step_row.step_name,
+                })
                 result = fail_result("STEP_ERROR", str(error), retryable=False)
             if result.ok:
                 attempt_row.status = "COMPLETED"
@@ -279,6 +284,10 @@ class SagaEngine:
                 self.session.commit()
                 return "ok"
             attempt_row.status = "FAILED"
+            logging.getLogger(__name__).log(logging.WARNING if result.retryable else logging.ERROR,
+                "workflow.step.failed", extra={"workflow_id": str(saga.id), "order_id": str(saga.order_id),
+                    "correlation_id": saga.correlation_id, "operation": step_row.step_name,
+                    "error_code": result.error_code, "retry_count": attempt})
             attempt_row.completed_at = _now()
             attempt_row.error_code = result.error_code
             attempt_row.error_detail = result.error_detail

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import uuid
+from isp_shared.telemetry import current_correlation_id
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
@@ -15,7 +16,7 @@ def _now() -> datetime:
 
 
 def correlation(correlation_id: str | None = None) -> str:
-    return correlation_id or str(uuid.uuid4())
+    return correlation_id or current_correlation_id.get() or str(uuid.uuid4())
 
 
 def audit(session: Session, tenant_id, actor: str | None, action: str, *, resource_type: str | None = None,

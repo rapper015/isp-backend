@@ -4,6 +4,7 @@ from os import getenv
 
 import jwt
 from fastapi import HTTPException, Request
+from isp_shared.tenancy import validate_tenant_scope
 
 
 ROLE_PERMISSIONS = {
@@ -42,6 +43,8 @@ def management_permission(method: str, path: str) -> str | None:
         return "bss.invoice.view" if method == "GET" else "bss.invoice.manage"
     if path.startswith("/payments"):
         return "bss.payment.view" if method == "GET" else "bss.payment.manage"
+    if path.startswith("/billing/accounts"):
+        return "bss.invoice.view" if method == "GET" else "bss.invoice.manage"
     if not path.startswith("/api/bss"):
         return None
     if "/gateway-accounts" in path:
@@ -79,27 +82,28 @@ def management_permission(method: str, path: str) -> str | None:
 
 async def management_auth(request: Request) -> None:
     header = request.headers.get("Authorization", "")
-    secret = getenv("BSS_JWT_SECRET", "")
+    secret = getenv("PLATFORM_JWT_SECRET", getenv("BSS_JWT_SECRET", ""))
     if not header.startswith("Bearer ") or not secret:
         raise HTTPException(401, "management authentication failed")
     if len(secret) < 32:
         raise HTTPException(503, "management authentication is not securely configured")
     try:
-        claims = jwt.decode(header[7:], secret, algorithms=["HS256"])
+        claims = jwt.decode(header[7:], secret, algorithms=["HS256"], issuer="isp-platform",
+                            options={"require": ["sub", "exp", "iat", "iss", "jti"]})
     except jwt.PyJWTError as error:
         raise HTTPException(401, "invalid or expired management token") from error
     required = management_permission(request.method, request.url.path)
+    if claims.get("token_type") != "access":
+        raise HTTPException(401, "invalid token type")
     role = claims.get("role", "")
     permissions = set(claims.get("permissions", []))
     if required and "*" not in permissions and required not in permissions:
         raise HTTPException(403, "BSS permission denied")
     claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
-    if claimed_tenant and "*" not in permissions:
-        supplied = request.query_params.get("tenant_id") or (await _json_tenant(request))
-        if supplied and not secrets.compare_digest(str(claimed_tenant), str(supplied)):
-            raise HTTPException(403, "tenant access denied")
+    allowed = await validate_tenant_scope(request, claims)
     request.state.bss_principal = {"subject": claims.get("userId", claims.get("sub", "admin")), "role": role,
-                                   "tenant_id": claimed_tenant, "permissions": sorted(permissions)}
+                                   "tenant_id": claimed_tenant, "permissions": sorted(permissions),
+                                   "allowed_tenant_ids": allowed}
 
 
 async def _json_tenant(request: Request) -> str | None:

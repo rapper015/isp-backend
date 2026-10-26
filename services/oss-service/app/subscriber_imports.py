@@ -14,7 +14,8 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .database import SessionLocal
+from .database import Base, SessionLocal
+from isp_shared.tenancy import scope_session
 from .models import ServiceSubscription, SubscriberImportBatch, SubscriberImportRow
 from .security import management_auth
 from .services.tenant_service import ensure_oss_tenant
@@ -30,8 +31,9 @@ ALIASES = {
 }
 
 
-def db():
+def db(request: Request):
     session = SessionLocal()
+    scope_session(session, Base, getattr(request.state, "oss_principal", None))
     try: yield session
     finally: session.close()
 

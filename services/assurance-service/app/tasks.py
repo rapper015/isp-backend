@@ -97,10 +97,6 @@ def run_complete_maintenance(session: Session, tenant_id, *, now: datetime | Non
 
 
 def run_flush_outbox(session: Session) -> int:
-    events = unprocessed_events(session)
-    count = 0
-    for event in events:
-        event.published_at = _now()
-        count += 1
-    session.flush()
-    return count
+    from isp_shared.outbox import flush
+    from .models import OutboxEvent
+    return len(flush(session, OutboxEvent, "assurance.events.v1", commit=False))

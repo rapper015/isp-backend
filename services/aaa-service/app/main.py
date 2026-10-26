@@ -1104,3 +1104,8 @@ def reset_subscriber_usage(subscriber_id: UUID, tenant_id: UUID, payload: QuotaR
             command = RadiusCommand(tenant_id=tenant_id, nas_id=live.nas_id, session_id=live.id, subscriber_id=subscriber_id, command_type="COA", status="QUEUED", idempotency_key=key, correlation_id=request_id, attributes={"Acct-Session-Id": live.session_id, **normal})
             session.add(command); outbox(session, "aaa.coa.requested.v1", tenant_id, request_id, {"command_id": str(command.id), "session_id": str(live.id), "reason": "fup_cleared"}, key)
     session.commit(); return {"subscriber_id": str(subscriber_id), "period": period, "reset": True, "correlation_id": request_id}
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "aaa-service")

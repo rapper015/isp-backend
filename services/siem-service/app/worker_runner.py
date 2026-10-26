@@ -4,6 +4,9 @@ import os
 import time
 
 from .database import SessionLocal
+from isp_shared.observability import configure_observability
+
+configure_observability("siem-worker")
 
 log = logging.getLogger("siem.worker")
 

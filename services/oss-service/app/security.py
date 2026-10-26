@@ -5,6 +5,7 @@ from os import getenv
 
 import jwt
 from fastapi import HTTPException, Request
+from isp_shared.tenancy import validate_tenant_scope
 
 from .cache import limited
 
@@ -128,10 +129,7 @@ async def management_auth(request: Request) -> None:
     if required and "*" not in permissions and required not in permissions:
         raise HTTPException(403, "OSS permission denied")
     claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
-    if claimed_tenant and "*" not in permissions:
-        supplied = request.query_params.get("tenant_id") or (await _json_tenant(request))
-        if supplied and not secrets.compare_digest(str(claimed_tenant), str(supplied)):
-            raise HTTPException(403, "tenant access denied")
+    allowed = await validate_tenant_scope(request, claims)
     remote = request.client.host if request.client else "unknown"
     if not limited(f"oss:management:{remote}:{request.url.path}", int(getenv("OSS_MANAGEMENT_RATE_LIMIT", "120")), 60):
         raise HTTPException(429, "rate limit exceeded")
@@ -139,6 +137,8 @@ async def management_auth(request: Request) -> None:
         "subject": claims["sub"],
         "roles": roles or ([legacy_role] if legacy_role else []),
         "permissions": sorted(permissions),
+        "tenant_id": claimed_tenant,
+        "allowed_tenant_ids": allowed,
     }
 
 

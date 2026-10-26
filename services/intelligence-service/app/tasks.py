@@ -116,11 +116,9 @@ def _recent_mean(session: Session, model_id) -> float | None:
 
 
 def run_flush_outbox(session: Session) -> int:
-    events = unprocessed_events(session)
-    for event in events:
-        event.published_at = _now()
-    session.flush()
-    return len(events)
+    from isp_shared.outbox import flush
+    from .models import OutboxEvent
+    return len(flush(session, OutboxEvent, "intelligence.events.v1", commit=False))
 
 
 def run_close_stale_intents(session: Session, tenant_id, *, max_age_hours: int = 24) -> int:

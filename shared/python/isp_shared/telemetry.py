@@ -15,6 +15,7 @@ import logging
 import os
 import re
 import time
+import traceback
 import uuid
 from contextvars import ContextVar
 from datetime import datetime, timezone
@@ -63,7 +64,9 @@ def parse_traceparent(value: str | None) -> dict | None:
     if len(parts) != 4:
         return None
     version, trace_id, parent_id, flags = parts
-    if not _TRACE_ID_RE.match(trace_id) or not _SPAN_ID_RE.match(parent_id):
+    if (version != "00" or not re.fullmatch(r"[0-9a-f]{2}", flags)
+            or not _TRACE_ID_RE.fullmatch(trace_id) or int(trace_id, 16) == 0
+            or not _SPAN_ID_RE.fullmatch(parent_id) or int(parent_id, 16) == 0):
         return None
     return {"version": version, "trace_id": trace_id, "parent_id": parent_id, "flags": flags}
 
@@ -140,51 +143,83 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name,
             "service": getattr(record, "service", None) or _SERVICE,
             "environment": getattr(record, "environment", None) or _ENV,
-            "message": record.getMessage(),
+            "message": redact(record.getMessage()),
             "trace_id": getattr(record, "trace_id", None) or current_trace_id.get(),
             "span_id": getattr(record, "span_id", None) or current_span_id.get(),
             "correlation_id": getattr(record, "correlation_id", None) or current_correlation_id.get(),
             "tenant_id": getattr(record, "tenant_id", None) or current_tenant_id.get(),
         }
         for key in ("operation", "entity_type", "entity_id", "workflow_id", "result",
-                    "duration_ms", "retry_count", "error_class", "instance"):
+                    "duration_ms", "retry_count", "error_class", "instance", "status_code",
+                    "job_id", "nas_id", "order_id", "error_code", "step_name"):
             value = getattr(record, key, None)
             if value is not None:
-                payload[key] = value
+                payload[key] = redact(str(value)) if isinstance(value, str) else value
         exc = record.exc_info
         if exc and exc[0] is not None:
-            payload["exception"] = f"{exc[0].__name__}: {exc[1]}"
-        return json.dumps(payload, default=str)
+            # SQL/HTTP exception messages may embed credentials or whole payloads.
+            # Frame locations preserve debugging value without exporting values.
+            payload["error_class"] = exc[0].__name__
+            payload["stacktrace"] = [
+                {"file": frame.filename, "line": frame.lineno, "function": frame.name}
+                for frame in traceback.extract_tb(exc[2])
+            ]
+        return json.dumps(redact_value(payload), default=str)
 
 
 class RedactionFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
-        message = record.getMessage()
-        if _SENSITIVE_RE.search(message):
-            record.msg = _SENSITIVE_RE.sub(r"\1=••••", message)
+        record.msg = redact(record.getMessage())
+        record.args = ()
+        for name, context in (("trace_id", current_trace_id), ("span_id", current_span_id),
+                              ("correlation_id", current_correlation_id), ("tenant_id", current_tenant_id)):
+            if not hasattr(record, name):
+                setattr(record, name, context.get())
+        if not hasattr(record, "service"):
+            record.service = _SERVICE
         return True
+
+
+class SafeTextFormatter(logging.Formatter):
+    def formatException(self, exc_info):
+        frames = traceback.extract_tb(exc_info[2])
+        return "\n".join([exc_info[0].__name__] + [f"  {f.filename}:{f.lineno} in {f.name}" for f in frames])
 
 
 def configure_logging(*, level: str | None = None, json_output: bool | None = None,
                       service: str | None = None) -> None:
     """Idempotent logging configuration. Reads LOG_LEVEL / LOG_JSON when unset."""
+    global _SERVICE
+    if service:
+        _SERVICE = service
     level = (level or os.getenv("LOG_LEVEL", "INFO")).upper()
     json_output = json_output if json_output is not None else \
-        os.getenv("LOG_JSON", "false").lower() in ("1", "true", "yes")
+        os.getenv("LOG_JSON", "true").lower() in ("1", "true", "yes")
     root = logging.getLogger()
     root.setLevel(level)
-    if root.handlers:
-        root.handlers.clear()
+    for existing in list(root.handlers):
+        if getattr(existing, "isp_handler", False):
+            root.removeHandler(existing)
+            existing.close()
     handler = logging.StreamHandler()
+    handler.isp_handler = True
+    handler.addFilter(RedactionFilter())
     if json_output:
         handler.setFormatter(JsonFormatter())
     else:
-        handler.setFormatter(logging.Formatter(
+        handler.setFormatter(SafeTextFormatter(
             "%(asctime)s %(levelname)s %(name)s trace=%(trace_id)s span=%(span_id)s corr=%(correlation_id)s %(message)s"))
     root.addHandler(handler)
-    root.addFilter(RedactionFilter())
-    if service:
-        logging.getLogger().service = service
+    # Uvicorn's own access log contains raw query strings. RequestDiagnostics
+    # emits a route-template access log instead.
+    logging.getLogger("uvicorn.access").disabled = True
+    for name in ("uvicorn", "uvicorn.error"):
+        server_logger = logging.getLogger(name)
+        server_logger.handlers.clear()
+        server_logger.propagate = True
+    # httpx logs full request URLs at INFO; use the structured route logs.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 def get_logger(name: str, **defaults) -> logging.Logger:
@@ -195,7 +230,22 @@ def get_logger(name: str, **defaults) -> logging.Logger:
 
 
 def redact(text: str) -> str:
-    return _SENSITIVE_RE.sub(r"\1=••••", text or "")
+    text = re.sub(r"(?i)\bBearer\s+[^\s,\"']+", "Bearer [REDACTED]", text or "")
+    text = re.sub(r"(?i)([a-z][a-z0-9+.-]*://)[^\s/@]+:[^\s/@]+@", r"\1[REDACTED]@", text)
+    # Includes quoted JSON keys and values containing spaces.
+    text = re.sub(r'''(?ix)((?:[\"']?)(?:password|passwd|secret|token|api[_-]?key|authorization|cookie|shared_secret|access_token|refresh_token)(?:[\"']?)\s*[:=]\s*)(?:\"[^\"]*\"|'[^']*'|[^\s,;}]+)''', r"\1[REDACTED]", text)
+    return _SENSITIVE_RE.sub(r"\1=[REDACTED]", text)
+
+
+def redact_value(value):
+    """Scrub nested structured extras as well as the human-readable message."""
+    if isinstance(value, dict):
+        return {key: "[REDACTED]" if re.search(
+            r"(?i)(password|passwd|secret|token|authorization|cookie|api[_-]?key|email|mobile|phone|aadhaar|(^|_)pan($|_)|account_number)", str(key))
+            else redact_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [redact_value(item) for item in value]
+    return redact(value) if isinstance(value, str) else value
 
 
 def assert_safe_label(name: str, value: str) -> None:

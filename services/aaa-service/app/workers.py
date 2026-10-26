@@ -95,6 +95,7 @@ def process_nas_job(session: Session, job_id) -> str | None:
     acquired, owner = acquire_nas_lock(session, nas.id, ttl_seconds=int(getenv("AAA_NAS_LOCK_TTL_SECONDS", "90")))
     if not acquired:
         return "LOCKED"  # leave QUEUED; another worker owns the NAS
+    adapter = None
     try:
         credential = _load_active_credential(session, nas)
         adapter = build_adapter(nas, credential)
@@ -108,6 +109,9 @@ def process_nas_job(session: Session, job_id) -> str | None:
             _advance_lifecycle(nas, result.get("lifecycle", nas.lifecycle_status))
             outbox(session, event, nas.tenant_id, job.correlation_id, {"nas_id": str(nas.id), "job_id": str(job.id), "job_type": job.job_type}, job.idempotency_key)
         else:
+            logger.error("nas.job.failed", extra={"operation": job.job_type, "job_id": str(job.id),
+                "nas_id": str(nas.id), "correlation_id": job.correlation_id,
+                "error_code": result.get("error", "JOB_FAILED")})
             outbox(session, event, nas.tenant_id, job.correlation_id, {"nas_id": str(nas.id), "job_id": str(job.id), "error": result.get("error", "job failed")}, job.idempotency_key)
         session.commit()
         return job.status
@@ -125,7 +129,10 @@ def process_nas_job(session: Session, job_id) -> str | None:
         return "FAILED"
     finally:
         if adapter is not None:
-            adapter.disconnect()
+            try:
+                adapter.disconnect()
+            except Exception:
+                logger.exception("nas.disconnect.failed", extra={"job_id": str(job_id), "nas_id": str(nas_id)})
         try:
             release_nas_lock(session, nas.id, owner)
         except Exception:  # noqa: BLE001 - release is best effort

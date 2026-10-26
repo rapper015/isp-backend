@@ -5,6 +5,9 @@ import time
 from os import getenv
 
 from .database import SessionLocal
+from isp_shared.observability import configure_observability
+
+configure_observability("support-worker")
 from . import tasks  # noqa: F401
 
 

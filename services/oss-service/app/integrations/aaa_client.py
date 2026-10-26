@@ -6,6 +6,7 @@ from os import getenv
 import secrets
 
 import httpx
+from isp_shared.observability import diagnostic_headers
 
 from .base import Adapter, AdapterError, ok_result, register
 
@@ -71,7 +72,7 @@ class AaaClient(Adapter):
                     "source": "oss",
                     "actor": actor,
                 },
-                headers={"X-AAA-Service-Key": service_key},
+                headers={**diagnostic_headers(), "X-AAA-Service-Key": service_key},
                 timeout=5.0,
             )
         except httpx.HTTPError as error:
@@ -94,7 +95,7 @@ class AaaClient(Adapter):
             response = httpx.post(
                 f"{base_url}/api/aaa/subscribers/{subscriber_id}/managed-credentials",
                 json={"tenant_id": str(tenant_id), "username": username, "allowed_methods": ["pap"]},
-                headers={"X-AAA-Service-Key": service_key},
+                headers={**diagnostic_headers(), "X-AAA-Service-Key": service_key},
                 timeout=8.0,
             )
         except httpx.HTTPError as error:

@@ -849,3 +849,8 @@ def automate_workforce(payload: dict, request: Request, db: Session = Depends(db
                                                                          actor=_actor(request))
     return {"id": str(row.id), "task_name": row.task_name, "automation_pct": row.automation_pct,
             "status": row.status}
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "intelligence-service")

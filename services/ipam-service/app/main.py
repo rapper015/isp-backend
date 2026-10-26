@@ -38,3 +38,8 @@ def allocate(address_id:UUID,subscriber_id:UUID,s:Session=Depends(db)):
  if not x:raise HTTPException(404,'address not found')
  if x.status!='available':raise HTTPException(409,'address not available')
  x.status='allocated';x.subscriber_id=subscriber_id;s.commit();s.refresh(x);return x
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "ipam-service")

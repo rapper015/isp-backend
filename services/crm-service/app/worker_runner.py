@@ -1,8 +1,12 @@
 """Process-local worker runner for CRM background tasks."""
 from os import getenv
+import logging
 from time import sleep
 
 from .database import SessionLocal
+from isp_shared.observability import configure_observability
+
+configure_observability("crm-worker")
 from .events import declare_topology
 from .tasks import process_followups
 
@@ -24,7 +28,7 @@ def main() -> None:
         try:
             run_once()
         except Exception:
-            pass
+            logging.getLogger(__name__).exception("crm.worker.cycle_failed")
         sleep(interval)
 
 

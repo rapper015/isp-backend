@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from . import models  # noqa: F401  (register all tables)
 from .database import Base, SessionLocal, engine
+from isp_shared.tenancy import scope_session
 from .enums import ORDER_STATES, RESOURCE_TYPES
 from .models import ManualIntervention, Order, ResourceReservation, ServiceSubscription
 from .schemas import (
@@ -61,8 +62,9 @@ app = FastAPI(title="OSS Service", version="2.0.0", lifespan=lifespan)
 app.include_router(subscriber_import_router)
 
 
-def db():
+def db(request: Request):
     session = SessionLocal()
+    scope_session(session, Base, getattr(request.state, "oss_principal", None))
     try:
         yield session
     finally:
@@ -126,6 +128,7 @@ def create_order(payload: OrderCreate, session: Session = Depends(db)):
             requested_snapshot=payload.requested_snapshot,
             actor=payload.actor,
             correlation_id=payload.correlation_id,
+            idempotency_key=payload.idempotency_key,
         )
         if payload.service_subscription_id:
             order.service_subscription_id = payload.service_subscription_id
@@ -748,3 +751,8 @@ def list_poles(tenant_id: UUID = Query(...), session: Session = Depends(db)):
              "pole_type": p.pole_type, "height_m": p.height_m,
              "status": p.status} for p in session.scalars(
         select(models.TelecomPole).where(models.TelecomPole.tenant_id == tenant_id))]
+
+
+# Install after service middleware so diagnostics cover authentication failures too.
+from isp_shared.observability import install_observability
+install_observability(app, "oss-service")

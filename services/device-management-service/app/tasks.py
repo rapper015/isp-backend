@@ -14,26 +14,11 @@ from .services import configuration_service, firmware_service, telemetry_service
 from .services.audit_service import correlation
 
 
-def _publish(event) -> None:
-    """Declared aio-pika hook: currently a no-op placeholder for the broker
-    integration. The outbox remains the source of truth until published."""
-    _ = envelope(event)
-
-
 def flush_outbox(session: Session, limit: int = 100) -> int:
-    from datetime import datetime, timezone
-
-    events = unprocessed_events(session, limit)
-    published = 0
-    for event in events:
-        try:
-            _publish(event)
-            event.published_at = datetime.now(timezone.utc)
-            published += 1
-        except Exception:  # noqa: BLE001
-            event.attempts += 1
-    session.commit()
-    return published
+    from isp_shared.outbox import flush
+    from .models import OutboxEvent
+    delivered = flush(session, OutboxEvent, "device.events.v1", limit=limit)
+    return len(delivered)
 
 
 def _all_pending_jobs(session: Session, limit: int = 200) -> list[ConfigurationJob]:
