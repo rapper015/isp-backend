@@ -15,6 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .database import Base, SessionLocal
+from isp_shared.request_context import get_request_context
 from isp_shared.tenancy import scope_session
 from .models import ServiceSubscription, SubscriberImportBatch, SubscriberImportRow
 from .security import management_auth
@@ -33,7 +34,8 @@ ALIASES = {
 
 def db(request: Request):
     session = SessionLocal()
-    scope_session(session, Base, getattr(request.state, "oss_principal", None))
+    context = getattr(request.state, "request_context", None)
+    scope_session(session, Base, context or getattr(request.state, "oss_principal", None))
     try: yield session
     finally: session.close()
 
@@ -87,7 +89,7 @@ async def validate_import(request: Request, file: UploadFile = File(...), franch
         file_name=file.filename or "subscribers.csv", file_hash=hashlib.sha256(content).hexdigest(),
         options={"update_existing": update_existing, "create_missing_packages": create_missing_packages,
                  "create_missing_locations": create_missing_locations, "dry_run": dry_run},
-        created_by=str(request.state.oss_principal.get("subject", "system")))
+        created_by=get_request_context(request).user_id)
     session.add(batch); session.flush()
     seen: set[str] = set(); counts = {"create_count": 0, "update_count": 0, "skip_count": 0, "duplicate_rows": 0}
     rows = []

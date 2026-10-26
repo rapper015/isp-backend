@@ -8,6 +8,8 @@ from os import getenv
 import jwt
 from cryptography.fernet import Fernet
 from fastapi import HTTPException, Request
+from isp_shared.request_context import context_from_claims, install_request_context, internal_request_context
+from isp_shared.tenancy import validate_tenant_scope
 
 from .cache import limited
 
@@ -87,37 +89,15 @@ async def _jwt_management_auth(request: Request) -> None:
     if claims.get("token_type") != "access":
         raise HTTPException(401, "invalid token type")
     permissions = set(claims.get("permissions", []))
-    claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
     if required and "*" not in permissions and required not in permissions:
         raise HTTPException(403, "CRM permission denied")
-    if claimed_tenant and "*" not in permissions:
-        supplied = request.query_params.get("tenant_id") or (await _json_tenant(request))
-        if supplied and not secrets.compare_digest(str(claimed_tenant), str(supplied)):
-            raise HTTPException(403, "tenant access denied")
-    elif "*" not in permissions:
-        supplied = request.query_params.get("tenant_id") or (await _json_tenant(request))
-        allowed_tenants = {str(value) for value in (claims.get("effective_access") or {}).get("tenant_ids", [])}
-        if supplied and str(supplied) not in allowed_tenants:
-            raise HTTPException(403, "tenant access denied")
+    allowed = await validate_tenant_scope(request, claims)
     remote = request.client.host if request.client else "unknown"
     if not limited(f"crm:management:{remote}:{request.url.path}", int(getenv("CRM_MANAGEMENT_RATE_LIMIT", "120")), 60):
         raise HTTPException(429, "rate limit exceeded")
-    request.state.crm_principal = {
-        "subject": claims["sub"],
-        "roles": claims.get("roles", []),
-        "permissions": sorted(permissions),
-        "tenant_id": str(claimed_tenant) if claimed_tenant else None,
-        "franchise_id": str(claims.get("franchise_id")) if claims.get("franchise_id") else None,
-        "effective_access": claims.get("effective_access", {}),
-    }
-
-
-async def _json_tenant(request: Request) -> str | None:
-    try:
-        body = await request.json()
-        return body.get("tenant_id")
-    except (ValueError, TypeError):
-        return None
+    context = context_from_claims(request, claims, allowed)
+    install_request_context(request, context, "crm_principal")
+    request.state.crm_principal["effective_access"] = claims.get("effective_access", {})
 
 
 async def internal_service_auth(request: Request) -> None:
@@ -137,3 +117,5 @@ async def internal_service_auth(request: Request) -> None:
     remote = request.client.host if request.client else "unknown"
     if not limited(f"crm:internal:{remote}:{request.url.path}", int(getenv("CRM_INTERNAL_RATE_LIMIT", "300")), 60):
         raise HTTPException(429, "rate limit exceeded")
+    context = internal_request_context(request, request.headers.get("X-Service-Name", "internal-service"))
+    install_request_context(request, context, "crm_principal")

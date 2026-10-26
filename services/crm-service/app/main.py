@@ -28,6 +28,7 @@ from sqlalchemy.orm import Session
 
 from isp_shared.cors import cors_allowed_origins
 from isp_shared.observability import diagnostic_headers
+from isp_shared.tenancy import scope_session
 
 from .database import Base, SessionLocal, engine
 from .models import (AuditLog, Branch, Customer, CustomerOnboardingOperation, CustomerPortalIdentity, ExperienceRecovery, ExternalReference,
@@ -74,8 +75,10 @@ app.add_middleware(
 )
 
 
-def db():
+def db(request: Request):
     session = SessionLocal()
+    context = getattr(request.state, "request_context", None)
+    scope_session(session, Base, context or getattr(request.state, "crm_principal", None))
     try:
         yield session
     finally:
@@ -137,6 +140,10 @@ def visible_tenant_filter(request: Request, tenant_id: UUID | None) -> UUID | No
     cross-tenant directory.  This is intentionally used only by list routes;
     tenant-owned mutation routes continue to require a concrete tenant.
     """
+    context = getattr(request.state, "request_context", None)
+    if context is not None:
+        return context.resolve_tenant(tenant_id, allow_global=context.platform_wide)
+    # Transitional fallback for direct unit calls that predate RequestContext.
     principal = getattr(request.state, "crm_principal", None) or {}
     permissions = set(principal.get("permissions", []))
     claimed = principal.get("tenant_id")
@@ -168,6 +175,9 @@ def visible_item(session: Session, request: Request, model, item_id: UUID, tenan
 
 
 def actor_of(request: Request) -> str:
+    context = getattr(request.state, "request_context", None)
+    if context is not None:
+        return context.user_id
     principal = getattr(request.state, "crm_principal", None)
     return (principal or {}).get("subject", "system")
 

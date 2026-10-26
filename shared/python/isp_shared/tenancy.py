@@ -52,9 +52,16 @@ def scope_session(session, base, principal):
     stay unrestricted; public portal endpoints retain their explicit ownership
     queries. This does not authorize arbitrary SQL text or cross-service IDs.
     """
-    if not principal or "allowed_tenant_ids" not in principal:
+    if not principal:
         return
-    allowed = principal["allowed_tenant_ids"]
+    if isinstance(principal, dict):
+        if "allowed_tenant_ids" not in principal:
+            return
+        allowed = principal["allowed_tenant_ids"]
+    else:
+        if not hasattr(principal, "allowed_tenant_ids"):
+            return
+        allowed = principal.allowed_tenant_ids
     session.info["allowed_tenant_ids"] = allowed
     if allowed is None:
         return

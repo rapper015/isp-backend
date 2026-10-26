@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from . import models  # noqa: F401  (register all tables)
 from .database import Base, SessionLocal, engine
 from isp_shared.tenancy import scope_session
+from isp_shared.request_context import get_request_context
 from .enums import ORDER_STATES, RESOURCE_TYPES
 from .models import ManualIntervention, Order, ResourceReservation, SagaInstance, ServiceSubscription
 from .schemas import (
@@ -64,7 +65,8 @@ app.include_router(subscriber_import_router)
 
 def db(request: Request):
     session = SessionLocal()
-    scope_session(session, Base, getattr(request.state, "oss_principal", None))
+    context = getattr(request.state, "request_context", None)
+    scope_session(session, Base, context or getattr(request.state, "oss_principal", None))
     try:
         yield session
     finally:
@@ -378,14 +380,14 @@ def register_resource(payload: ResourceRegister, session: Session = Depends(db))
 
 @app.get("/api/oss/resources/capacity", response_model=CapacityResponse, dependencies=[Depends(management_auth)])
 def resource_capacity(request: Request, tenant_id: UUID | None = Query(default=None), resource_type: str | None = Query(default=None), session: Session = Depends(db)):
-    if tenant_id is None and "*" not in request.state.oss_principal.get("permissions", []):
+    if tenant_id is None and not get_request_context(request).platform_wide:
         raise HTTPException(403, "global resource capacity requires platform access")
     return CapacityResponse(capacity=ResourceService(session).capacity(tenant_id, resource_type))
 
 
 @app.get("/api/oss/resources/reservations", response_model=list[ReservationResponse], dependencies=[Depends(management_auth)])
 def list_reservations(request: Request, tenant_id: UUID | None = Query(default=None), order_id: UUID | None = Query(default=None), session: Session = Depends(db)):
-    if tenant_id is None and "*" not in request.state.oss_principal.get("permissions", []):
+    if tenant_id is None and not get_request_context(request).platform_wide:
         raise HTTPException(403, "global reservations require platform access")
     stmt = select(ResourceReservation).order_by(ResourceReservation.reserved_at.desc())
     if tenant_id:

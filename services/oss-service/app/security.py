@@ -5,6 +5,7 @@ from os import getenv
 
 import jwt
 from fastapi import HTTPException, Request
+from isp_shared.request_context import context_from_claims, install_request_context, internal_request_context
 from isp_shared.tenancy import validate_tenant_scope
 
 from .cache import limited
@@ -123,23 +124,15 @@ async def management_auth(request: Request) -> None:
     required = management_permission(request.method, request.url.path)
     if claims.get("token_type") != "access":
         raise HTTPException(401, "invalid token type")
-    roles = claims.get("roles", [])
-    legacy_role = claims.get("role", "")
     permissions = set(claims.get("permissions", []))
     if required and "*" not in permissions and required not in permissions:
         raise HTTPException(403, "OSS permission denied")
-    claimed_tenant = claims.get("tenant_id") or claims.get("tenantId")
     allowed = await validate_tenant_scope(request, claims)
     remote = request.client.host if request.client else "unknown"
     if not limited(f"oss:management:{remote}:{request.url.path}", int(getenv("OSS_MANAGEMENT_RATE_LIMIT", "120")), 60):
         raise HTTPException(429, "rate limit exceeded")
-    request.state.oss_principal = {
-        "subject": claims["sub"],
-        "roles": roles or ([legacy_role] if legacy_role else []),
-        "permissions": sorted(permissions),
-        "tenant_id": claimed_tenant,
-        "allowed_tenant_ids": allowed,
-    }
+    context = context_from_claims(request, claims, allowed)
+    install_request_context(request, context, "oss_principal")
 
 
 def internal_service_auth(request: Request) -> None:
@@ -155,10 +148,7 @@ async def management_or_internal_auth(request: Request) -> None:
     """Authorize an operator JWT or a trusted in-network service credential."""
     if request.headers.get("X-Internal-API-Key"):
         internal_service_auth(request)
-        request.state.oss_principal = {
-            "subject": request.headers.get("X-Service-Name", "internal-service"),
-            "roles": ["INTERNAL_SERVICE"],
-            "permissions": ["*"],
-        }
+        context = internal_request_context(request, request.headers.get("X-Service-Name", "internal-service"))
+        install_request_context(request, context, "oss_principal")
         return
     await management_auth(request)
