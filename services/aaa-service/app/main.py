@@ -100,14 +100,13 @@ def franchise_resource_ids(request: Request, tenant_id: UUID | None, resource: s
         raise HTTPException(403, "franchise resource access requires a tenant scope")
     try:
         response = httpx.get(
-            f"{getenv('AAA_CRM_BASE_URL', 'http://crm-service:8000').rstrip('/')}/api/crm/franchises/{franchise_id}",
+            f"{getenv('AAA_CRM_BASE_URL', 'http://crm-service:8000').rstrip('/')}/api/crm/franchises/{franchise_id}/resource-assignments",
             params={"tenant_id": str(tenant_id)},
             headers={"X-CRM-Service-Key": getenv("AAA_CRM_INTERNAL_API_KEY", "")},
             timeout=5.0,
         )
         response.raise_for_status()
-        profile = response.json().get("profile") or {}
-        values = profile.get(f"{resource}_ids") or profile.get(f"{resource}Ids") or []
+        values = response.json().get(f"{resource}_ids") or []
         return {UUID(str(value)) for value in values}
     except (httpx.HTTPError, ValueError, TypeError) as error:
         raise HTTPException(502, f"could not resolve franchise {resource} access") from error
@@ -921,27 +920,11 @@ def list_ip_pools(request: Request, tenant_id: UUID | None = None, session: Sess
     statement = select(IpPool)
     if effective_tenant:
         statement = statement.where(IpPool.tenant_id == effective_tenant)
-    principal = getattr(request.state, "aaa_principal", {}) or {}
-    franchise_id = principal.get("franchise_id")
-    if franchise_id:
-        if not effective_tenant:
-            raise HTTPException(403, "franchise IP-pool access requires a tenant scope")
-        try:
-            response = httpx.get(
-                f"{getenv('AAA_CRM_BASE_URL', 'http://crm-service:8000').rstrip('/')}/api/crm/franchises/{franchise_id}",
-                params={"tenant_id": str(effective_tenant)},
-                headers={"X-CRM-Service-Key": getenv("AAA_CRM_INTERNAL_API_KEY", "")},
-                timeout=5.0,
-            )
-            response.raise_for_status()
-            profile = response.json().get("profile") or {}
-            allowed_pool_ids = profile.get("ip_pool_ids") or profile.get("ipPoolIds") or []
-            parsed_pool_ids = [UUID(str(value)) for value in allowed_pool_ids]
-        except (httpx.HTTPError, ValueError, TypeError) as error:
-            raise HTTPException(502, "could not resolve franchise IP-pool access") from error
-        if not parsed_pool_ids:
+    allowed_pool_ids = franchise_resource_ids(request, effective_tenant, "ip_pool")
+    if allowed_pool_ids is not None:
+        if not allowed_pool_ids:
             return []
-        statement = statement.where(IpPool.id.in_(parsed_pool_ids))
+        statement = statement.where(IpPool.id.in_(allowed_pool_ids))
     return [{"id": str(item.id), "tenant_id": str(item.tenant_id), "name": item.name, "cidr": item.cidr, "family": item.address_family, "enabled": item.enabled} for item in session.scalars(statement.limit(100))]
 @app.get("/api/aaa/ip-pools/{pool_id}/leases", dependencies=[Depends(internal_service_auth)])
 def list_ip_leases(pool_id: UUID, tenant_id: UUID, limit: int = 100, offset: int = 0, session: Session = Depends(db)):

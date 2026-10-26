@@ -42,6 +42,12 @@ from .security import internal_service_auth
 from .services import (caf_service, conversion_service, customer_360, customer_service, duplicate_service, kyc_service, lead_service, lifecycle_service, merge_service, risk_service)
 from .services.audit_service import outbox, record_audit
 from .services.phone_identity_service import PhoneConflict, profile_numbers, replace_owner_numbers
+from .services.franchise_assignment_service import (
+    assignments_for,
+    load_assignment_map,
+    profile_with_assignments,
+    replace_assignments,
+)
 from .services.ecosystem_service import (
     EscalationService,
     FederationService,
@@ -277,6 +283,7 @@ def create_franchise(tenant_id: UUID, payload: FranchiseIn, session: Session = D
     item = Franchise(tenant_id=tenant_id, **payload.model_dump(mode="json"))
     session.add(item)
     session.flush()
+    replace_assignments(session, item, item.profile, "system")
     try:
         replace_owner_numbers(session, "FRANCHISE", item.id, profile_numbers(item.profile))
         session.flush()
@@ -323,6 +330,7 @@ def onboard_franchise(tenant_id: UUID, payload: FranchiseOnboardingIn, request: 
         session.add(item)
         try:
             session.flush()
+            replace_assignments(session, item, item.profile, actor_of(request))
             replace_owner_numbers(session, "FRANCHISE", item.id, profile_numbers(item.profile))
             session.flush()
             session.commit()
@@ -387,8 +395,10 @@ def franchise_profile_without_legacy_access_fields(profile: dict | None) -> dict
     return cleaned
 
 
-def safe_franchise(item: Franchise) -> dict:
-    profile = franchise_profile_without_legacy_access_fields(item.profile)
+def safe_franchise(item: Franchise, assignments: dict[str, list[str]] | None = None) -> dict:
+    profile = franchise_profile_without_legacy_access_fields(
+        profile_with_assignments(item.profile, assignments) if assignments is not None else item.profile
+    )
     return {
         "id": str(item.id),
         "tenant_id": str(item.tenant_id),
@@ -420,8 +430,13 @@ def list_franchises(request: Request, tenant_id: UUID | None = None, status: str
             statement = statement.where(Franchise.id.in_(allowed))
     if status:
         statement = statement.where(Franchise.status.ilike(status))
-    items = session.scalars(statement.order_by(Franchise.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit)))
-    return [safe_franchise(item) for item in items]
+    items = list(session.scalars(statement.order_by(Franchise.created_at.desc()).offset(max(offset, 0)).limit(bounded(limit))))
+    assignment_maps: dict[UUID, dict[str, list[str]]] = {}
+    tenant_ids = {item.tenant_id for item in items}
+    for item_tenant_id in tenant_ids:
+        tenant_franchise_ids = [item.id for item in items if item.tenant_id == item_tenant_id]
+        assignment_maps.update(load_assignment_map(session, item_tenant_id, tenant_franchise_ids))
+    return [safe_franchise(item, assignment_maps[item.id]) for item in items]
 
 
 @app.get("/api/crm/franchises/{franchise_id}", dependencies=[Depends(internal_service_auth)])
@@ -433,7 +448,26 @@ def get_franchise(franchise_id: UUID, request: Request, tenant_id: UUID | None =
     if principal and not principal.get("tenant_id") and not franchise_scope and "*" not in principal.get("permissions", []):
         allowed = {str(value) for value in (principal.get("effective_access") or {}).get("franchise_ids", [])}
         if str(franchise_id) not in allowed: raise HTTPException(403, "franchise access denied")
-    return safe_franchise(visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise"))
+    item = visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise")
+    return safe_franchise(item, assignments_for(session, item))
+
+
+@app.get("/api/crm/franchises/{franchise_id}/resource-assignments", dependencies=[Depends(internal_service_auth)])
+def get_franchise_resource_assignments(franchise_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
+    franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
+    if franchise_scope and str(franchise_id) != franchise_scope:
+        raise HTTPException(403, "franchise access denied")
+    principal = getattr(request.state, "crm_principal", {}) or {}
+    if principal and not principal.get("tenant_id") and not franchise_scope and "*" not in principal.get("permissions", []):
+        allowed = {str(value) for value in (principal.get("effective_access") or {}).get("franchise_ids", [])}
+        if str(franchise_id) not in allowed:
+            raise HTTPException(403, "franchise access denied")
+    item = visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise")
+    return {
+        "franchise_id": str(item.id),
+        "tenant_id": str(item.tenant_id),
+        **assignments_for(session, item),
+    }
 
 
 @app.patch("/api/crm/franchises/{franchise_id}", dependencies=[Depends(internal_service_auth)])
@@ -442,22 +476,24 @@ def update_franchise(franchise_id: UUID, tenant_id: UUID, payload: FranchiseUpda
     if franchise_scope and str(franchise_id) != franchise_scope:
         raise HTTPException(403, "franchise access denied")
     item = tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
-    before = jsonable_encoder(safe_franchise(item))
+    before = jsonable_encoder(safe_franchise(item, assignments_for(session, item)))
     changes = payload.model_dump(exclude_unset=True, exclude={"profile"}, mode="json")
     if payload.profile is not None:
         changes["profile"] = payload.profile.model_dump(mode="json")
     for field, value in changes.items():
         setattr(item, field, value)
+    if payload.profile is not None:
+        replace_assignments(session, item, item.profile, actor_of(request))
     try:
         replace_owner_numbers(session, "FRANCHISE", item.id, profile_numbers(item.profile))
         session.flush()
     except (PhoneConflict, IntegrityError) as error:
         session.rollback()
         raise HTTPException(409, str(error) if isinstance(error, PhoneConflict) else "phone number already exists") from error
-    record_audit(session, tenant_id, actor_of(request), "franchise.updated", "franchise", str(item.id), safe_after={"before": before, "after": jsonable_encoder(safe_franchise(item))})
+    record_audit(session, tenant_id, actor_of(request), "franchise.updated", "franchise", str(item.id), safe_after={"before": before, "after": jsonable_encoder(safe_franchise(item, assignments_for(session, item)))})
     session.commit()
     session.refresh(item)
-    return safe_franchise(item)
+    return safe_franchise(item, assignments_for(session, item))
 
 
 FRANCHISE_CAPABILITIES = {
@@ -485,8 +521,9 @@ def get_franchise_settings(franchise_id: UUID, request: Request, tenant_id: UUID
     if franchise_scope and str(franchise_id) != franchise_scope:
         raise HTTPException(403, "franchise access denied")
     item = visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise")
+    profile = profile_with_assignments(item.profile, assignments_for(session, item))
     return {"franchise_id": str(item.id), "status": item.status,
-            "settings": franchise_profile_without_legacy_access_fields(item.profile)}
+            "settings": franchise_profile_without_legacy_access_fields(profile)}
 
 
 @app.patch("/api/crm/franchises/{franchise_id}/settings", dependencies=[Depends(internal_service_auth)])
@@ -497,13 +534,16 @@ def patch_franchise_settings(franchise_id: UUID, tenant_id: UUID, payload: Franc
     if franchise_scope and str(franchise_id) != franchise_scope:
         raise HTTPException(403, "franchise access denied")
     item = tenant_item(session, Franchise, franchise_id, tenant_id, "franchise")
-    before = franchise_profile_without_legacy_access_fields(item.profile)
+    before = franchise_profile_without_legacy_access_fields(
+        profile_with_assignments(item.profile, assignments_for(session, item))
+    )
     merged = {**before, **payload.settings}
     try:
         validated = FranchiseProfile.model_validate(merged).model_dump(mode="json")
     except PydanticValidationError as error:
         raise HTTPException(422, jsonable_encoder(error.errors(include_url=False))) from error
     item.profile = validated
+    replace_assignments(session, item, validated, actor_of(request))
     try:
         replace_owner_numbers(session, "FRANCHISE", item.id, profile_numbers(validated))
         session.flush()
@@ -514,8 +554,9 @@ def patch_franchise_settings(franchise_id: UUID, tenant_id: UUID, payload: Franc
     outbox(session, "crm.franchise.settings.updated.v1", tenant_id, request.headers.get("X-Correlation-Id") or "franchise-settings", {"franchise_id": str(item.id), "changed": sorted(payload.settings), "settings": validated})
     session.commit()
     session.refresh(item)
+    profile = profile_with_assignments(item.profile, assignments_for(session, item))
     return {"franchise_id": str(item.id), "status": item.status,
-            "settings": franchise_profile_without_legacy_access_fields(item.profile)}
+            "settings": franchise_profile_without_legacy_access_fields(profile)}
 
 
 @app.get("/api/crm/franchises/{franchise_id}/settings/history", dependencies=[Depends(internal_service_auth)])
@@ -548,7 +589,7 @@ def create_branch(tenant_id: UUID, payload: BranchIn, request: Request, session:
     if effective_franchise_id is None:
         raise HTTPException(422, "franchise_id is required for tenant and platform administrators")
     franchise = tenant_item(session, Franchise, effective_franchise_id, tenant_id, "franchise")
-    validate_branch_resource_allowances(franchise, payload.profile, tenant_id)
+    validate_branch_resource_allowances(session, franchise, payload.profile, tenant_id)
     item = Branch(tenant_id=tenant_id, franchise_id=franchise.id, branch_code=payload.branch_code, name=payload.name, profile=payload.profile.model_dump(mode="json"))
     session.add(item)
     session.flush()
@@ -577,11 +618,13 @@ def safe_branch(item: Branch, franchise: Franchise | None = None) -> dict:
     }
 
 
-def validate_branch_resource_allowances(franchise: Franchise, profile: BranchProfile, tenant_id: UUID) -> None:
-    franchise_profile = franchise.profile or {}
+def validate_branch_resource_allowances(session: Session, franchise: Franchise, profile: BranchProfile, tenant_id: UUID) -> None:
+    franchise_assignments = assignments_for(session, franchise)
     requested_packages = {str(value) for value in profile.package_ids}
-    allowed_packages = {str(value) for value in franchise_profile.get("package_ids", [])}
-    if requested_packages:
+    allowed_packages = set(franchise_assignments["package_ids"])
+    # BSS remains the package-catalog authority.  Consult its availability
+    # projection only for older assignments not yet represented in CRM.
+    if requested_packages - allowed_packages:
         plans_request = urlrequest.Request(
             f"{getenv('CRM_BSS_BASE_URL', 'http://bss-service:8000').rstrip('/')}/plans?tenant_id={tenant_id}",
             headers={"X-BSS-Service-Key": getenv("CRM_BSS_INTERNAL_API_KEY", "")},
@@ -601,7 +644,7 @@ def validate_branch_resource_allowances(franchise: Franchise, profile: BranchPro
     unauthorized_packages = requested_packages - allowed_packages
     if unauthorized_packages:
         raise HTTPException(422, "one or more selected packages are not assigned to this franchise")
-    allowed_pools = {str(value) for value in franchise_profile.get("ip_pool_ids", [])}
+    allowed_pools = set(franchise_assignments["ip_pool_ids"])
     requested_pools = {str(value) for value in profile.ip_pool_ids}
     unauthorized_pools = requested_pools - allowed_pools
     if unauthorized_pools:
@@ -666,7 +709,7 @@ def update_branch(branch_id: UUID, tenant_id: UUID, payload: BranchUpdate, reque
         changes["franchise_id"] = franchise.id
     if payload.profile is not None:
         target_franchise = tenant_item(session, Franchise, payload.franchise_id or item.franchise_id, tenant_id, "franchise")
-        validate_branch_resource_allowances(target_franchise, payload.profile, tenant_id)
+        validate_branch_resource_allowances(session, target_franchise, payload.profile, tenant_id)
         changes["profile"] = payload.profile.model_dump(mode="json")
     for field, value in changes.items():
         setattr(item, field, value)

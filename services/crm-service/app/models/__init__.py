@@ -7,6 +7,7 @@ from .caf import CafRecord
 from .lifecycle import CustomerLifecycleEvent, CustomerRisk, TimelineEntry
 from .audit import AuditLog, ConsumerInbox, OutboxEvent
 from .onboarding import CustomerOnboardingOperation
+from .assignment import FranchiseIpPoolAssignment, FranchiseNasAssignment, FranchisePackageAssignment
 from .ecosystem import (
     ExperienceRecovery,
     FederationLink,
@@ -28,6 +29,7 @@ __all__ = [
     "CustomerLifecycleEvent", "CustomerRisk", "TimelineEntry", "AuditLog",
     "OutboxEvent", "ConsumerInbox",
     "CustomerOnboardingOperation",
+    "FranchisePackageAssignment", "FranchiseNasAssignment", "FranchiseIpPoolAssignment",
     "Partner", "PartnerPerformanceRecord", "PartnerHierarchyNode", "FederationLink",
     "TicketSlaTimer", "TicketEscalation", "TicketSuggestion", "ResellerRegulatoryRecord",
     "KbFeedback", "ExperienceRecovery", "LoyaltyScore",
