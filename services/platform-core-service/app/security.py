@@ -32,6 +32,7 @@ def issue_access_token(user, roles, permissions, access_scopes=None, effective_a
     now = datetime.now(timezone.utc); ttl = int(getenv("PLATFORM_ACCESS_TOKEN_TTL_SECONDS", "900"))
     return jwt.encode({"sub": str(user.id), "tenant_id": str(user.tenant_id) if user.tenant_id else None,
         "franchise_id": str(user.franchise_id) if user.franchise_id else None,
+        "department_id": str(user.department_id) if user.department_id else None,
         "roles": sorted(roles), "permissions": sorted(permissions), "access_scopes": access_scopes or [],
         "effective_access": effective_access or {"platform": False, "tenant_ids": [], "franchise_ids": [], "branch_ids": []},
         "token_type": "access", "jti": str(uuid.uuid4()),

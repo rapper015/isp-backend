@@ -5,6 +5,7 @@ from .database import Base
 class IPPool(Base):
  __tablename__='ip_pools'
  id:Mapped[uuid.UUID]=mapped_column(primary_key=True,default=uuid.uuid4)
+ tenant_id:Mapped[uuid.UUID]=mapped_column(nullable=True,index=True)
  pool_code:Mapped[str]=mapped_column(String(64),unique=True)
  network_cidr:Mapped[str]=mapped_column(String(64))
 class IPAddress(Base):

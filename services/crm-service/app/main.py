@@ -443,7 +443,7 @@ def list_franchises(request: Request, tenant_id: UUID | None = None, status: str
 def get_franchise(franchise_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
     franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
     if franchise_scope and str(franchise_id) != franchise_scope:
-        raise HTTPException(403, "franchise access denied")
+        raise HTTPException(404, "franchise not found")
     principal = getattr(request.state, "crm_principal", {}) or {}
     if principal and not principal.get("tenant_id") and not franchise_scope and "*" not in principal.get("permissions", []):
         allowed = {str(value) for value in (principal.get("effective_access") or {}).get("franchise_ids", [])}
@@ -456,7 +456,7 @@ def get_franchise(franchise_id: UUID, request: Request, tenant_id: UUID | None =
 def get_franchise_resource_assignments(franchise_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
     franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
     if franchise_scope and str(franchise_id) != franchise_scope:
-        raise HTTPException(403, "franchise access denied")
+        raise HTTPException(404, "franchise not found")
     principal = getattr(request.state, "crm_principal", {}) or {}
     if principal and not principal.get("tenant_id") and not franchise_scope and "*" not in principal.get("permissions", []):
         allowed = {str(value) for value in (principal.get("effective_access") or {}).get("franchise_ids", [])}
@@ -519,7 +519,7 @@ FRANCHISE_CAPABILITIES = {
 def get_franchise_settings(franchise_id: UUID, request: Request, tenant_id: UUID | None = None, session: Session = Depends(db)):
     franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
     if franchise_scope and str(franchise_id) != franchise_scope:
-        raise HTTPException(403, "franchise access denied")
+        raise HTTPException(404, "franchise not found")
     item = visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise")
     profile = profile_with_assignments(item.profile, assignments_for(session, item))
     return {"franchise_id": str(item.id), "status": item.status,
@@ -563,7 +563,7 @@ def patch_franchise_settings(franchise_id: UUID, tenant_id: UUID, payload: Franc
 def franchise_settings_history(franchise_id: UUID, request: Request, tenant_id: UUID | None = None, limit: int = 100, session: Session = Depends(db)):
     franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
     if franchise_scope and str(franchise_id) != franchise_scope:
-        raise HTTPException(403, "franchise access denied")
+        raise HTTPException(404, "franchise not found")
     item = visible_item(session, request, Franchise, franchise_id, tenant_id, "franchise")
     rows = session.scalars(select(AuditLog).where(AuditLog.tenant_id == item.tenant_id, AuditLog.aggregate_type == "franchise", AuditLog.aggregate_id == str(franchise_id), AuditLog.action == "franchise.settings.updated").order_by(AuditLog.created_at.desc()).limit(bounded(limit)))
     return [{"action": row.action, "actor": row.actor, "reason": row.reason, "changes": row.safe_after, "created_at": row.created_at} for row in rows]
@@ -685,7 +685,7 @@ def get_branch(branch_id: UUID, request: Request, tenant_id: UUID | None = None,
     item = visible_item(session, request, Branch, branch_id, tenant_id, "branch")
     franchise_scope = (getattr(request.state, "crm_principal", {}) or {}).get("franchise_id")
     if franchise_scope and str(item.franchise_id) != franchise_scope:
-        raise HTTPException(403, "franchise access denied")
+        raise HTTPException(404, "branch not found")
     principal = getattr(request.state, "crm_principal", {}) or {}
     if principal and not principal.get("tenant_id") and not franchise_scope and "*" not in principal.get("permissions", []):
         allowed = {str(value) for value in (principal.get("effective_access") or {}).get("branch_ids", [])}
@@ -1020,6 +1020,9 @@ async def onboard_customer(
     branch = tenant_item(session, Branch, command.customer.branch_id, tenant_id, "branch")
     if branch.franchise_id != franchise.id:
         raise HTTPException(422, "selected branch does not belong to the selected franchise")
+    branch_package_ids = {str(value) for value in (branch.profile or {}).get("package_ids", [])}
+    if str(command.order.requested_plan_reference) not in branch_package_ids:
+        raise HTTPException(422, "selected package is not assigned to this branch")
 
     serialized_command = command.model_dump(mode="json")
     fingerprint = request_fingerprint(serialized_command)

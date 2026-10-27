@@ -7,7 +7,7 @@ import hmac
 import json
 from urllib import error as urlerror, request as urlrequest
 from uuid import UUID
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
@@ -16,7 +16,7 @@ from isp_shared.cors import cors_allowed_origins
 from .database import SessionLocal
 from .models import AccessTemplate, AccessTemplatePermission, Department, OrganizationAccessTemplate, Permission, PlatformUser, RefreshToken, Role, RolePermission, SecurityAuditEvent, ServiceAccount, UserAccessScope, UserRole
 from .schemas import AccessTemplateAssignmentIn, AccessTemplateCreateIn, AccessTemplateUpdateIn, AdminPasswordResetIn, DepartmentCreateIn, DepartmentUpdateIn, LoginIn, PasswordChangeIn, RefreshIn, RoleCreateIn, RoleUpdateIn, ServiceAccountCreateIn, UserCreateIn, UserUpdateIn
-from .security import bearer_claims, hash_password, issue_access_token, issue_service_access_token, limited, new_refresh_token, token_hash, verify_password
+from .security import bearer_claims, decode_access_token, hash_password, issue_access_token, issue_service_access_token, limited, new_refresh_token, token_hash, verify_password
 
 MENU_PERMISSIONS = {
     "menu.dashboard.view": ("Workspace", "Dashboard"),
@@ -230,7 +230,7 @@ def set_user_roles(session, user, role_ids, claims, department_id=None):
     desired = set(role_ids)
     roles = {item.id: item for item in session.scalars(select(Role).where(Role.id.in_(desired), Role.enabled.is_(True)))} if desired else {}
     if set(roles) != desired: raise HTTPException(422, "one or more roles are invalid or inactive")
-    if department_id and any(role.department_id != department_id for role in roles.values()): raise HTTPException(422, "all selected roles must belong to the selected department")
+    if any(role.department_id != department_id for role in roles.values()): raise HTTPException(422, "all selected roles must belong to the selected department")
     if "*" not in claims["permissions"]:
         for role in roles.values():
             if role.scope != "TENANT" or str(role.tenant_id) != str(claims.get("tenant_id")): raise HTTPException(403, "role cannot be delegated outside your tenant")
@@ -286,6 +286,17 @@ def validate_delegated_scopes(claims, scopes):
         if scope.scope_type == "TENANT" and str(scope.scope_id) != str(tenant_id): raise HTTPException(403, "tenant access cannot be delegated")
         if franchise_id and scope.scope_type == "FRANCHISE" and str(scope.scope_id) != str(franchise_id): raise HTTPException(403, "franchise access cannot be delegated")
         if franchise_id and scope.scope_type not in {"FRANCHISE", "BRANCH"}: raise HTTPException(403, "franchise staff can only be assigned this franchise or its branches")
+    # Leaf scopes must also resolve beneath the actor's organization. Merely
+    # accepting a syntactically valid branch UUID lets an administrator assign
+    # a branch owned by another tenant or franchise.
+    access = effective_access([
+        {"scope_type": scope.scope_type, "scope_id": str(scope.scope_id) if scope.scope_id else None}
+        for scope in scopes
+    ])
+    if tenant_id and any(str(value) != str(tenant_id) for value in access["tenant_ids"]):
+        raise HTTPException(403, "organization scope cannot be delegated outside your tenant")
+    if franchise_id and any(str(value) != str(franchise_id) for value in access["franchise_ids"]):
+        raise HTTPException(403, "branch access cannot be delegated outside your franchise")
 def claims_for(session, user):
     role_rows = session.execute(select(Role.name).join(UserRole, UserRole.role_id == Role.id).where(UserRole.user_id == user.id)).scalars().all()
     permissions = set(session.execute(select(Permission.name).join(RolePermission, RolePermission.permission_id == Permission.id).join(Role, Role.id == RolePermission.role_id).join(UserRole, UserRole.role_id == Role.id).where(UserRole.user_id == user.id)).scalars())
@@ -314,13 +325,30 @@ def claims_for(session, user):
     return role_rows, permissions
 def tokens(session, user):
     roles, permissions = claims_for(session, user); refresh = new_refresh_token(); now = datetime.now(timezone.utc)
-    session.add(RefreshToken(user_id=user.id, token_hash=token_hash(refresh), expires_at=now + timedelta(days=int(getenv("PLATFORM_REFRESH_TOKEN_TTL_DAYS", "30")))))
     scopes = user_scopes(session, user.id)
-    return {"access_token": issue_access_token(user, roles, permissions, scopes, effective_access(scopes)), "refresh_token": refresh, "token_type": "bearer", "expires_in": int(getenv("PLATFORM_ACCESS_TOKEN_TTL_SECONDS", "900"))}
+    access_token = issue_access_token(user, roles, permissions, scopes, effective_access(scopes))
+    session.add(RefreshToken(user_id=user.id, token_hash=token_hash(refresh), access_jti=decode_access_token(access_token)["jti"], expires_at=now + timedelta(days=int(getenv("PLATFORM_REFRESH_TOKEN_TTL_DAYS", "30")))))
+    return {"access_token": access_token, "refresh_token": refresh, "token_type": "bearer", "expires_in": int(getenv("PLATFORM_ACCESS_TOKEN_TTL_SECONDS", "900"))}
 def require_permission(request, permission):
     claims = bearer_claims(request)
     if "*" not in claims["permissions"] and permission not in claims["permissions"]: raise HTTPException(403, "permission denied")
     return claims
+
+def claimed_department_id(claims):
+    """Return the authenticated employee's department boundary, if any.
+
+    Organization owners and platform administrators normally have no department.
+    Once an employee is assigned to one, management permissions are deliberately
+    constrained to that department instead of becoming organization-wide.
+    """
+    value = claims.get("department_id")
+    return UUID(str(value)) if value and "*" not in claims["permissions"] else None
+
+def require_same_department(claims, department_id, *, conceal=False):
+    claimed = claimed_department_id(claims)
+    if claimed and claimed != department_id:
+        raise HTTPException(404 if conceal else 403, "resource is outside your department")
+    return claimed
 
 def department_context(claims, scope="TENANT", supplied=None):
     scope = scope.upper()
@@ -346,9 +374,11 @@ def safe_role(session, item):
             "code": item.code, "description": item.description, "enabled": item.enabled,
             "permissions": role_permissions(session, item.id), "created_at": item.created_at, "updated_at": item.updated_at}
 
-def set_role_permissions(session, role, names):
+def set_role_permissions(session, role, names, claims=None):
     unknown = set(names) - PERMISSIONS
     if unknown: raise HTTPException(422, f"unknown permissions: {', '.join(sorted(unknown))}")
+    if claims and "*" not in claims["permissions"] and not set(names).issubset(set(claims["permissions"])):
+        raise HTTPException(403, "a role cannot delegate permissions you do not have")
     existing = {binding.permission_id: binding for binding in session.scalars(select(RolePermission).where(RolePermission.role_id == role.id))}
     desired = {session.scalar(select(Permission.id).where(Permission.name == name)) for name in set(names)}
     for permission_id, binding in existing.items():
@@ -401,6 +431,35 @@ def set_access_template_permissions(session, template, names, claims):
 def validate_access_template_menu(names, enabled):
     if enabled and not any(name in MENU_PERMISSIONS for name in names):
         raise HTTPException(422, "an active access template must allow at least one menu")
+
+def ensure_default_franchise_access_template(session, tenant_id, ceiling_template, claims):
+    """Give a newly onboarded tenant a usable, safely bounded franchise template.
+
+    The tenant assignment is the entitlement ceiling.  The generated template
+    can only delegate permissions that are both inside that ceiling and valid
+    for a franchise administrator.  Existing defaults are never overwritten,
+    so a tenant's later customisation remains intact.
+    """
+    code = "DEFAULT_FRANCHISE_ACCESS"
+    existing = session.scalar(select(AccessTemplate).where(
+        AccessTemplate.scope == "TENANT",
+        AccessTemplate.tenant_id == tenant_id,
+        AccessTemplate.code == code,
+    ))
+    if existing:
+        return existing
+    ceiling_permissions = set(access_template_permissions(session, ceiling_template.id))
+    permissions = sorted(ceiling_permissions & ROLE_PERMISSIONS["FRANCHISE_ADMIN"])
+    validate_access_template_menu(permissions, True)
+    item = AccessTemplate(
+        scope="TENANT", tenant_id=tenant_id, target_type="FRANCHISE",
+        name="Standard franchise access", code=code,
+        description="Default franchise access created during tenant onboarding.", enabled=True,
+    )
+    session.add(item)
+    session.flush()
+    set_access_template_permissions(session, item, permissions, claims)
+    return item
 @asynccontextmanager
 async def lifespan(_):
     # Schema changes are exclusively Alembic-owned; bootstrapping only uses an applied schema.
@@ -424,9 +483,14 @@ def health(): return {"status":"ok", "service":"platform-core-service"}
 @app.post("/api/v1/auth/login")
 def login(payload: LoginIn, request: Request, session: Session = Depends(db)):
     remote = request.client.host if request.client else "unknown"
-    if not limited(f"platform:login:{remote}", int(getenv("PLATFORM_LOGIN_RATE_LIMIT", "20"))):
-        raise HTTPException(429, "login rate limit exceeded")
     principal = (payload.username or payload.email or "").lower()
+    # A shared office, ISP NOC, or test runner commonly places many legitimate
+    # operators behind one public IP. Keep a broad source-IP abuse ceiling while
+    # enforcing the tighter brute-force limit against each login identifier.
+    if not limited(f"platform:login:ip:{remote}", int(getenv("PLATFORM_LOGIN_IP_RATE_LIMIT", "200"))):
+        raise HTTPException(429, "login rate limit exceeded")
+    if not limited(f"platform:login:principal:{principal}", int(getenv("PLATFORM_LOGIN_RATE_LIMIT", "20"))):
+        raise HTTPException(429, "login rate limit exceeded")
     user = session.scalar(select(PlatformUser).where(or_(
         PlatformUser.username_normalized == principal,
         func.lower(PlatformUser.email) == principal,
@@ -455,20 +519,72 @@ def logout(payload: RefreshIn, session: Session = Depends(db)):
     row = session.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_hash(payload.refresh_token)))
     if row and not row.revoked_at: row.revoked_at = datetime.now(timezone.utc); audit(session, "logout", row.user_id); session.commit()
     return {"revoked": True}
+
+@app.get("/internal/auth/introspect", include_in_schema=False)
+def introspect_access_token(request: Request, session: Session = Depends(db)):
+    """Reject access tokens whose account or effective access has changed.
+
+    Downstream services can validate a JWT signature independently, but that
+    alone cannot notice an account disablement, scope change, role change, or
+    access-template change until the token expires.  The edge gateway calls
+    this endpoint before forwarding operator requests so revocation is
+    effective immediately across every management service.
+    """
+    claims = bearer_claims(request)
+    try:
+        user_id = UUID(str(claims["sub"]))
+    except (KeyError, TypeError, ValueError) as exc:
+        raise HTTPException(401, "invalid platform access token") from exc
+    user = session.get(PlatformUser, user_id)
+    if not user or not user.enabled:
+        raise HTTPException(401, "account disabled or unavailable")
+    active_session = session.scalar(select(RefreshToken.id).where(
+        RefreshToken.user_id == user.id,
+        RefreshToken.access_jti == str(claims.get("jti", "")),
+        RefreshToken.revoked_at.is_(None),
+        RefreshToken.expires_at > datetime.now(timezone.utc),
+    ))
+    if not active_session:
+        raise HTTPException(401, "session revoked or unavailable")
+    issued_at = datetime.fromtimestamp(int(claims.get("iat", 0)), timezone.utc)
+    if user.password_changed_at and issued_at <= utc(user.password_changed_at):
+        raise HTTPException(401, "session expired after password change")
+
+    roles, permissions = claims_for(session, user)
+    scopes = user_scopes(session, user.id)
+    current_access = effective_access(scopes)
+    token_scopes = claims.get("access_scopes") or []
+    token_access = claims.get("effective_access") or {}
+    if (
+        set(map(str, claims.get("roles") or [])) != set(map(str, roles))
+        or set(map(str, claims.get("permissions") or [])) != set(map(str, permissions))
+        or sorted(token_scopes, key=lambda item: (str(item.get("scope_type")), str(item.get("scope_id"))))
+        != sorted(scopes, key=lambda item: (str(item.get("scope_type")), str(item.get("scope_id"))))
+        or token_access != current_access
+        or claims.get("tenant_id") != (str(user.tenant_id) if user.tenant_id else None)
+        or claims.get("franchise_id") != (str(user.franchise_id) if user.franchise_id else None)
+        or claims.get("department_id") != (str(user.department_id) if user.department_id else None)
+    ):
+        raise HTTPException(401, "session permissions changed; sign in again")
+    return Response(status_code=204)
+
 @app.get("/api/v1/auth/me")
 def me(request: Request, session: Session = Depends(db)):
+    introspect_access_token(request, session)
     claims = bearer_claims(request); user = session.get(PlatformUser, UUID(claims["sub"]))
     if not user or not user.enabled: raise HTTPException(401, "account disabled")
     return {"id": str(user.id), "username": user.username, "email": user.email,
             "full_name": user.full_name, "mobile": user.mobile,
             "tenant_id": str(user.tenant_id) if user.tenant_id else None,
             "franchise_id": str(user.franchise_id) if user.franchise_id else None,
+            "department_id": str(user.department_id) if user.department_id else None,
             "is_organization_owner": user.is_organization_owner,
             "membership_level": "FRANCHISE" if user.franchise_id else "TENANT" if user.tenant_id else "PLATFORM",
             "roles": claims["roles"], "permissions": claims["permissions"], "access_scopes": user_scopes(session, user.id),
             "effective_access": effective_access(user_scopes(session, user.id))}
 @app.post("/api/v1/auth/change-password")
 def change_password(payload: PasswordChangeIn, request: Request, session: Session = Depends(db)):
+    introspect_access_token(request, session)
     claims = bearer_claims(request); user = session.get(PlatformUser, UUID(claims["sub"]))
     if not user or not verify_password(payload.current_password, user.password_hash): raise HTTPException(401, "invalid credentials")
     user.password_hash = hash_password(payload.new_password); user.password_changed_at = datetime.now(timezone.utc)
@@ -486,6 +602,8 @@ def list_users(request: Request, session: Session = Depends(db)):
         statement = statement.where(PlatformUser.franchise_id == UUID(claims["franchise_id"]))
     elif claims.get("tenant_id"):
         statement = statement.where(PlatformUser.tenant_id == UUID(claims["tenant_id"]), PlatformUser.franchise_id.is_(None))
+    department_id = claimed_department_id(claims)
+    if department_id: statement = statement.where(PlatformUser.department_id == department_id)
     return [safe_user(session, user) for user in session.scalars(statement)]
 
 @app.get("/api/v1/platform/users/{user_id}")
@@ -493,6 +611,7 @@ def get_user(user_id: UUID, request: Request, session: Session = Depends(db)):
     claims = require_permission(request, "platform.users.read"); user = session.get(PlatformUser, user_id)
     if not user or (claims.get("tenant_id") and "*" not in claims["permissions"] and str(user.tenant_id) != claims["tenant_id"]): raise HTTPException(404, "user not found")
     if claims.get("franchise_id") and "*" not in claims["permissions"] and str(user.franchise_id) != claims["franchise_id"]: raise HTTPException(404, "user not found")
+    require_same_department(claims, user.department_id, conceal=True)
     return safe_user(session, user)
 
 @app.get("/api/v1/platform/departments")
@@ -501,6 +620,8 @@ def list_departments(request: Request, scope: str = "TENANT", tenant_id: UUID | 
     selected_scope, selected_tenant = department_context(claims, scope, tenant_id)
     statement = select(Department).where(Department.scope == selected_scope).order_by(Department.name)
     statement = statement.where(Department.tenant_id == selected_tenant) if selected_tenant else statement.where(Department.tenant_id.is_(None))
+    department_id = claimed_department_id(claims)
+    if department_id: statement = statement.where(Department.id == department_id)
     if not include_inactive: statement = statement.where(Department.enabled.is_(True))
     if q:
         search = f"%{q.strip()}%"
@@ -510,6 +631,7 @@ def list_departments(request: Request, scope: str = "TENANT", tenant_id: UUID | 
 @app.post("/api/v1/platform/departments", status_code=201)
 def create_department(payload: DepartmentCreateIn, request: Request, session: Session = Depends(db)):
     claims = require_permission(request, "platform.departments.manage")
+    if claimed_department_id(claims): raise HTTPException(403, "department employees cannot create departments")
     scope, tenant_id = department_context(claims, payload.scope, payload.tenant_id)
     code = payload.code.strip().upper()
     duplicate_query = select(Department.id).where(Department.scope == scope, Department.code == code)
@@ -525,6 +647,7 @@ def update_department(department_id: UUID, payload: DepartmentUpdateIn, request:
     item = session.get(Department, department_id)
     if not item: raise HTTPException(404, "department not found")
     department_context(claims, item.scope, item.tenant_id)
+    require_same_department(claims, item.id, conceal=True)
     values = payload.model_dump(exclude_unset=True)
     if "code" in values:
         values["code"] = values["code"].strip().upper()
@@ -541,6 +664,7 @@ def delete_department(department_id: UUID, request: Request, session: Session = 
     item = session.get(Department, department_id)
     if not item: raise HTTPException(404, "department not found")
     department_context(claims, item.scope, item.tenant_id)
+    if claimed_department_id(claims): raise HTTPException(403, "department employees cannot delete departments")
     if session.scalar(select(Role.id).where(Role.department_id == item.id)): raise HTTPException(409, "department has roles; move or delete those roles first")
     session.delete(item); audit(session, "department.deleted", UUID(claims["sub"])); session.commit()
 
@@ -616,7 +740,11 @@ def list_roles(request: Request, scope: str = "TENANT", tenant_id: UUID | None =
     selected_scope, selected_tenant = department_context(claims, scope, tenant_id)
     statement = select(Role).where(Role.scope == selected_scope).order_by(Role.display_name)
     statement = statement.where(Role.tenant_id == selected_tenant) if selected_tenant else statement.where(Role.tenant_id.is_(None))
-    if department_id: statement = statement.where(Role.department_id == department_id)
+    claimed_department = claimed_department_id(claims)
+    if claimed_department and department_id and claimed_department != department_id:
+        raise HTTPException(403, "role access is outside your department")
+    selected_department = claimed_department or department_id
+    if selected_department: statement = statement.where(Role.department_id == selected_department)
     return [safe_role(session, item) for item in session.scalars(statement)]
 
 @app.get("/api/v1/platform/access-templates")
@@ -693,6 +821,7 @@ def assign_access_template(target_type: str, target_id: UUID, payload: AccessTem
     access_template_context(claims, item.scope, item.tenant_id)
     if target_type == "TENANT":
         if item.scope != "PLATFORM" or "*" not in claims["permissions"]: raise HTTPException(403, "tenant templates are assigned by platform administrators")
+        ensure_default_franchise_access_template(session, target_id, item, claims)
     elif target_type == "FRANCHISE":
         if item.scope != "TENANT": raise HTTPException(422, "franchises require a tenant access template")
         # During franchise onboarding CRM has created and flushed the franchise,
@@ -724,12 +853,13 @@ def create_role(payload: RoleCreateIn, request: Request, session: Session = Depe
     scope, tenant_id = department_context(claims, payload.scope, payload.tenant_id)
     department = session.get(Department, payload.department_id)
     if not department or department.scope != scope or department.tenant_id != tenant_id: raise HTTPException(422, "department does not belong to this role scope")
+    require_same_department(claims, department.id)
     code = payload.code.strip().upper()
     if session.scalar(select(Role.id).where(Role.scope == scope, Role.tenant_id == tenant_id, Role.code == code)): raise HTTPException(409, "role code already exists in this scope")
     internal_name = f"{scope}:{tenant_id or 'PLATFORM'}:{code}"
     item = Role(name=internal_name, display_name=payload.name, code=code, description=payload.description, scope=scope,
                 tenant_id=tenant_id, department_id=department.id, enabled=payload.enabled, global_role=scope == "PLATFORM")
-    session.add(item); session.flush(); set_role_permissions(session, item, payload.permissions)
+    session.add(item); session.flush(); set_role_permissions(session, item, payload.permissions, claims)
     audit(session, "role.created", UUID(claims["sub"])); session.commit(); session.refresh(item); return safe_role(session, item)
 
 @app.patch("/api/v1/platform/roles/{role_id}")
@@ -737,8 +867,10 @@ def update_role(role_id: UUID, payload: RoleUpdateIn, request: Request, session:
     claims = require_permission(request, "platform.roles.manage"); item = session.get(Role, role_id)
     if not item or item.scope == "SYSTEM": raise HTTPException(404, "role not found")
     department_context(claims, item.scope, item.tenant_id)
+    require_same_department(claims, item.department_id, conceal=True)
     values = payload.model_dump(exclude_unset=True); permissions = values.pop("permissions", None)
     if "department_id" in values:
+        require_same_department(claims, values["department_id"])
         department = session.get(Department, values["department_id"])
         if not department or department.scope != item.scope or department.tenant_id != item.tenant_id: raise HTTPException(422, "department does not belong to this role scope")
     if "name" in values: values["display_name"] = values.pop("name")
@@ -747,7 +879,7 @@ def update_role(role_id: UUID, payload: RoleUpdateIn, request: Request, session:
         if session.scalar(select(Role.id).where(Role.scope == item.scope, Role.tenant_id == item.tenant_id, Role.code == values["code"], Role.id != item.id)): raise HTTPException(409, "role code already exists in this scope")
         values["name"] = f"{item.scope}:{item.tenant_id or 'PLATFORM'}:{values['code']}"
     for key, value in values.items(): setattr(item, key, value)
-    if permissions is not None: set_role_permissions(session, item, permissions)
+    if permissions is not None: set_role_permissions(session, item, permissions, claims)
     audit(session, "role.updated", UUID(claims["sub"])); session.commit(); session.refresh(item); return safe_role(session, item)
 
 @app.delete("/api/v1/platform/roles/{role_id}", status_code=204)
@@ -755,6 +887,7 @@ def delete_role(role_id: UUID, request: Request, session: Session = Depends(db))
     claims = require_permission(request, "platform.roles.manage"); item = session.get(Role, role_id)
     if not item or item.scope == "SYSTEM": raise HTTPException(404, "role not found")
     department_context(claims, item.scope, item.tenant_id)
+    require_same_department(claims, item.department_id, conceal=True)
     if session.scalar(select(UserRole.id).where(UserRole.role_id == item.id)): raise HTTPException(409, "role is assigned to one or more users; deactivate it instead")
     session.delete(item); audit(session, "role.deleted", UUID(claims["sub"])); session.commit()
 @app.post("/api/v1/platform/users", status_code=201)
@@ -762,6 +895,9 @@ def create_user(payload: UserCreateIn, request: Request, session: Session = Depe
     claims = require_permission(request, "platform.users.create")
     tenant_id = UUID(claims["tenant_id"]) if claims.get("tenant_id") and "*" not in claims["permissions"] else payload.tenant_id
     franchise_id = UUID(claims["franchise_id"]) if claims.get("franchise_id") and "*" not in claims["permissions"] else payload.franchise_id
+    actor_department = claimed_department_id(claims)
+    if actor_department and payload.department_id != actor_department:
+        raise HTTPException(403, "users can only be created in your department")
     scopes = payload.access_scopes
     if not scopes:
         from .schemas import AccessScopeIn
@@ -818,6 +954,7 @@ def update_user(user_id: UUID, payload: UserUpdateIn, request: Request, session:
     claims = require_permission(request, "platform.users.update"); user = session.get(PlatformUser, user_id)
     if not user or (claims.get("tenant_id") and "*" not in claims["permissions"] and str(user.tenant_id) != claims["tenant_id"]): raise HTTPException(404, "user not found")
     if claims.get("franchise_id") and "*" not in claims["permissions"] and str(user.franchise_id) != claims["franchise_id"]: raise HTTPException(404, "user not found")
+    actor_department = require_same_department(claims, user.department_id, conceal=True)
     values = payload.model_dump(exclude_unset=True); role_ids = values.pop("role_ids", None)
     if values.get("enabled") is False and user.is_organization_owner:
         owner_scope = (PlatformUser.franchise_id == user.franchise_id) if user.franchise_id else (PlatformUser.tenant_id == user.tenant_id)
@@ -837,6 +974,14 @@ def update_user(user_id: UUID, payload: UserUpdateIn, request: Request, session:
         values["mobile_normalized"] = normalized
     if scopes is not None: validate_delegated_scopes(claims, scopes); set_user_scopes(session, user, scopes, UUID(claims["sub"]))
     selected_department = values.get("department_id", user.department_id)
+    if actor_department and selected_department != actor_department:
+        raise HTTPException(403, "users cannot be moved outside your department")
+    if "department_id" in values and role_ids is None:
+        assigned_role_departments = set(session.scalars(
+            select(Role.department_id).join(UserRole, UserRole.role_id == Role.id).where(UserRole.user_id == user.id)
+        ))
+        if any(department_id != selected_department for department_id in assigned_role_departments):
+            raise HTTPException(422, "select roles belonging to the new department when moving a user")
     if role_ids is not None: set_user_roles(session, user, role_ids, claims, selected_department)
     for key, value in values.items(): setattr(user, key, value)
     audit(session, "user.updated", user.id); session.commit(); session.refresh(user); return safe_user(session, user)
@@ -844,6 +989,8 @@ def update_user(user_id: UUID, payload: UserUpdateIn, request: Request, session:
 def reset_password(user_id: UUID, payload: AdminPasswordResetIn, request: Request, session: Session = Depends(db)):
     claims = require_permission(request, "platform.users.update"); user = session.get(PlatformUser, user_id)
     if not user or (claims.get("tenant_id") and "*" not in claims["permissions"] and str(user.tenant_id) != claims["tenant_id"]): raise HTTPException(404, "user not found")
+    if claims.get("franchise_id") and "*" not in claims["permissions"] and str(user.franchise_id) != claims["franchise_id"]: raise HTTPException(404, "user not found")
+    require_same_department(claims, user.department_id, conceal=True)
     user.password_hash = hash_password(payload.new_password); user.password_changed_at = datetime.now(timezone.utc)
     for token in session.scalars(select(RefreshToken).where(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None))): token.revoked_at = datetime.now(timezone.utc)
     audit(session, "password.reset", user.id); session.commit(); return {"reset": True}
