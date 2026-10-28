@@ -277,16 +277,21 @@ def _replace_plan_children(db: Session, plan: Plan, payload: PlanCreate | PlanUp
     if payload.prices is not None:
         for item in db.scalars(select(PlanPrice).where(PlanPrice.plan_id == plan.id)):
             db.delete(item)
+        # Flush removals before reusing a variant name protected by the
+        # (plan_id, name) unique constraint.
+        db.flush()
         for item in payload.prices:
             db.add(PlanPrice(plan_id=plan.id, **item.model_dump()))
     if payload.allowed_franchise_ids is not None:
         for item in db.scalars(select(PlanFranchiseAvailability).where(PlanFranchiseAvailability.plan_id == plan.id)):
             db.delete(item)
+        db.flush()
         for franchise_id in dict.fromkeys(payload.allowed_franchise_ids):
             db.add(PlanFranchiseAvailability(tenant_id=plan.tenant_id, plan_id=plan.id, franchise_id=franchise_id))
     if payload.ott_mappings is not None:
         for item in db.scalars(select(PlanOttMapping).where(PlanOttMapping.plan_id == plan.id)):
             db.delete(item)
+        db.flush()
         for item in payload.ott_mappings:
             db.add(PlanOttMapping(plan_id=plan.id, **item.model_dump()))
 
@@ -479,6 +484,12 @@ def update_plan(plan_id: UUID, payload: PlanUpdate, request: Request, db: Sessio
     except HTTPException:
         db.rollback()
         raise
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "Package details conflict with an existing package entry") from exc
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(500, "Package could not be updated") from exc
     db.refresh(plan)
     return _plan_response(plan, db)
 

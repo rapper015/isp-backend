@@ -157,8 +157,17 @@ PERMISSIONS = {
     "oss.config.manage", "oss.vendor.manage", "oss.enterprise.manage", "oss.infra.view", "oss.infra.manage",
     "oss.security.manage", "oss.telemetry.ingest",
 } | SERVICE_PERMISSIONS | set(MENU_PERMISSIONS)
-ROLE_PERMISSIONS = {"PLATFORM_SUPER_ADMIN": {"*"}, "TENANT_ADMIN": PERMISSIONS,
-    "FRANCHISE_ADMIN": ({permission for permission in PERMISSIONS if not permission.startswith("platform.") and permission not in {"bss.plan.manage", "aaa.policy.manage", "aaa.ip_pool.manage", "aaa.secret.manage", "menu.access_templates.view"}}
+
+# These capabilities control the platform itself and must never be delegated
+# by a tenant to a franchise, even if an older tenant role accidentally still
+# contains them.
+PLATFORM_ONLY_PERMISSIONS = {
+    "menu.tenants.view", "menu.radius.view", "menu.settings.view",
+    "tenants.view", "tenants.create", "tenants.manage", "tenants.activate",
+    "tenants.suspend", "tenants.offboard", "tenants.export", "tenants.health",
+}
+ROLE_PERMISSIONS = {"PLATFORM_SUPER_ADMIN": {"*"}, "TENANT_ADMIN": PERMISSIONS - PLATFORM_ONLY_PERMISSIONS,
+    "FRANCHISE_ADMIN": ({permission for permission in PERMISSIONS if not permission.startswith("platform.") and permission not in ({"bss.plan.manage", "aaa.policy.manage", "aaa.ip_pool.manage", "aaa.secret.manage", "menu.access_templates.view"} | PLATFORM_ONLY_PERMISSIONS)}
         | {"platform.users.read", "platform.users.create", "platform.users.update", "platform.users.disable", "platform.roles.read", "platform.departments.read"}),
     "READ_ONLY": {"platform.users.read", "aaa.nas.read", "aaa.subscribers.read", "aaa.sessions.read", "aaa.ip_pool.view", "aaa.policy.view", "aaa.policy.explain", "crm.lead.view", "crm.customer.view", "crm.franchise.view", "bss.plan.read"}}
 
@@ -421,6 +430,8 @@ def set_access_template_permissions(session, template, names, claims):
     if unknown: raise HTTPException(422, f"unknown permissions: {', '.join(sorted(unknown))}")
     if "*" not in claims["permissions"] and not set(names).issubset(set(claims["permissions"])):
         raise HTTPException(403, "an access template cannot delegate permissions you do not have")
+    if template.scope == "TENANT" and set(names) & PLATFORM_ONLY_PERMISSIONS:
+        raise HTTPException(422, "tenant access templates cannot include platform administration permissions")
     existing = {item.permission_id: item for item in session.scalars(select(AccessTemplatePermission).where(AccessTemplatePermission.template_id == template.id))}
     desired = {session.scalar(select(Permission.id).where(Permission.name == name)) for name in set(names)}
     for permission_id, binding in existing.items():
@@ -673,7 +684,7 @@ def list_permissions(request: Request):
     claims = bearer_claims(request)
     if "*" not in claims["permissions"] and not ({"platform.roles.manage", "platform.access_templates.manage"} & set(claims["permissions"])):
         raise HTTPException(403, "permission catalog access denied")
-    delegable = PERMISSIONS if "*" in claims["permissions"] else (PERMISSIONS & set(claims["permissions"]))
+    delegable = PERMISSIONS if "*" in claims["permissions"] else ((PERMISSIONS & set(claims["permissions"])) - PLATFORM_ONLY_PERMISSIONS)
     result = []
     for name in sorted(delegable):
         if name in MENU_PERMISSIONS:

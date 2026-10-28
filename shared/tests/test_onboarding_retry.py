@@ -96,7 +96,7 @@ class OnboardingRetryTests(unittest.TestCase):
                 session.add_all([
                     Franchise(id=franchise_id, tenant_id=tenant_id, franchise_code='FR-1', name='Franchise'),
                     Branch(id=branch_id, tenant_id=tenant_id, franchise_id=franchise_id,
-                           branch_code='BR-1', name='Branch'),
+                           branch_code='BR-1', name='Branch', profile={'package_ids': [str(plan_id)]}),
                 ])
                 session.commit()
                 with patch.object(main, 'OssProvisioningClient', OfflineClient):

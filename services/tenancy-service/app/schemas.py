@@ -24,7 +24,7 @@ class TenantAdminIn(StrictModel):
     full_name: str = Field(min_length=2, max_length=255)
     username: str = Field(min_length=3, max_length=128)
     email: str
-    mobile: str = Field(min_length=7, max_length=32)
+    mobile: str = Field(min_length=7, max_length=15, pattern=r"^[0-9]+$")
     password: str = Field(min_length=12, max_length=256)
     confirm_password: str
 
@@ -33,7 +33,7 @@ class TenantOnboardingIn(StrictModel):
     code: str = Field(min_length=2, max_length=40)
     organization_type: str
     business_email: str
-    primary_mobile: str
+    primary_mobile: str = Field(min_length=7, max_length=15, pattern=r"^[0-9]+$")
     status: str = "ACTIVE"
     custom_domain: str | None = None
     legal_name: str | None = None
@@ -60,7 +60,7 @@ class TenantUpdateIn(StrictModel):
     name: str = Field(min_length=2, max_length=160)
     organization_type: str
     business_email: str
-    primary_mobile: str
+    primary_mobile: str = Field(min_length=7, max_length=15, pattern=r"^[0-9]+$")
     custom_domain: str | None = None
     legal_name: str | None = None
     website: str | None = None
