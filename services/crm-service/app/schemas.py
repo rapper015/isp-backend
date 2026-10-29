@@ -3,16 +3,48 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
+import re
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from urllib.parse import urlsplit
 
 from .enums import (ADDRESS_TYPES, CAF_STATUSES, CONTACT_ROLES, CUSTOMER_LIFECYCLE, CUSTOMER_TYPES, FOLLOWUP_STATUSES, INTERACTION_CHANNELS, KYC_DOCUMENT_TYPES, KYC_STATUSES, KYC_TYPES, LEAD_PRIORITIES, LEAD_SOURCES, LEAD_STAGES, LEAD_TYPES, RISK_LEVELS, RISK_SOURCES)
 
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+
+_SQL_CONTROL_SYNTAX = re.compile(
+    r"(?:['\"].*\b(?:or|and)\b.*(?:=|\blike\b))|"
+    r"(?:;\s*(?:select|insert|update|delete|drop|alter|create)\b)|"
+    r"(?:--\s*$)|(?:/\*)",
+    re.IGNORECASE,
+)
+_COMMON_PROVIDER_DOMAINS = {
+    "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com",
+    "yahoo.com", "yahoo.co.in", "icloud.com", "proton.me", "protonmail.com",
+}
+_COMMON_PROVIDER_NAMES = {domain.split(".", 1)[0] for domain in _COMMON_PROVIDER_DOMAINS}
+
+
+def _reject_sql_control_syntax(value: str | None) -> str | None:
+    if value is not None and _SQL_CONTROL_SYNTAX.search(value):
+        raise ValueError("input contains unsupported control syntax")
+    return value
+
+
+def _validate_email_provider(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip().lower()
+    domain = normalized.rsplit("@", 1)[-1]
+    provider = domain.split(".", 1)[0]
+    if provider in _COMMON_PROVIDER_NAMES and domain not in _COMMON_PROVIDER_DOMAINS:
+        raise ValueError("enter a valid email domain")
+    return normalized
 
 
 # ---------------------------------------------------------------------------
@@ -314,8 +346,8 @@ class FranchiseProfile(StrictModel):
     currency_symbol: str = Field(default="INR", min_length=1, max_length=8)
     entity_code: str | None = Field(default=None, max_length=64)
     contact_person: str | None = Field(default=None, max_length=255)
-    mobile: str | None = Field(default=None, max_length=32, pattern=r"^[+0-9() -]+$")
-    landline: str | None = Field(default=None, max_length=32, pattern=r"^[0-9]+$")
+    mobile: str | None = Field(default=None, min_length=7, max_length=15, pattern=r"^[0-9]+$")
+    landline: str | None = Field(default=None, min_length=7, max_length=15, pattern=r"^[0-9]+$")
     email: str | None = Field(default=None, max_length=255, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
     sms_gateway: str | None = Field(default=None, max_length=64)
     address: str | None = Field(default=None, max_length=1000)
@@ -327,7 +359,7 @@ class FranchiseProfile(StrictModel):
     area: str | None = Field(default=None, max_length=128)
     city: str | None = Field(default=None, max_length=128)
     zip_code: str | None = Field(default=None, max_length=16)
-    currency_id: str | None = Field(default=None, max_length=64)
+    currency_id: Literal["INR", "USD", "EUR", "GBP", "AED", "SGD", "AUD", "CAD"] | None = None
     bank_account_name: str | None = Field(default=None, max_length=255)
     static_isp_share: Decimal = Field(default=Decimal("0"), ge=0, le=100)
     static_reseller_share: Decimal = Field(default=Decimal("0"), ge=0, le=100)
@@ -369,25 +401,56 @@ class FranchiseProfile(StrictModel):
     nas_ids: list[UUID] = Field(default_factory=list, max_length=500)
     ip_pool_ids: list[UUID] = Field(default_factory=list, max_length=500)
 
+    @field_validator("custom_url")
+    @classmethod
+    def valid_custom_url(cls, value):
+        if value is None:
+            return None
+        parsed = urlsplit(value)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            raise ValueError("custom URL must be a complete http or https URL")
+        return value
+
+    @field_validator("email")
+    @classmethod
+    def valid_email_provider(cls, value):
+        return _validate_email_provider(value)
+
+    @model_validator(mode="after")
+    def reject_control_syntax(self):
+        for name in ("custom_url", "contact_person", "address", "country_id", "state_id", "district", "area", "city", "bank_account_name", "comments"):
+            _reject_sql_control_syntax(getattr(self, name, None))
+        return self
+
 
 class FranchiseIn(StrictModel):
-    franchise_code: str = Field(min_length=1, max_length=64)
-    name: str = Field(min_length=1, max_length=255)
+    franchise_code: str = Field(min_length=1, max_length=64, pattern=r"^[A-Z0-9][A-Z0-9_-]*$")
+    name: str = Field(min_length=1, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 ._&()/,-]*$")
     profile: FranchiseProfile = Field(default_factory=FranchiseProfile)
 
 
 class FranchiseAdminIn(StrictModel):
-    full_name: str = Field(min_length=2, max_length=255)
-    username: str = Field(min_length=3, max_length=128)
-    email: str = Field(min_length=3, max_length=255)
-    mobile: str = Field(min_length=7, max_length=32)
+    full_name: str = Field(min_length=2, max_length=255, pattern=r"^[A-Za-z][A-Za-z .'-]*$")
+    username: str = Field(min_length=3, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.@-]*$")
+    email: str = Field(min_length=3, max_length=255, pattern=r"^[^\s@]+@[^\s@]+\.[A-Za-z]{2,24}$")
+    mobile: str = Field(min_length=7, max_length=15, pattern=r"^[0-9]+$")
     password: str = Field(min_length=12, max_length=256)
     confirm_password: str
 
+    @field_validator("email")
+    @classmethod
+    def valid_email_provider(cls, value):
+        return _validate_email_provider(value)
+
+    @field_validator("full_name", "username", "password", "confirm_password")
+    @classmethod
+    def reject_control_syntax(cls, value):
+        return _reject_sql_control_syntax(value)
+
 
 class FranchiseOnboardingIn(StrictModel):
-    franchise_code: str = Field(min_length=2, max_length=64)
-    name: str = Field(min_length=2, max_length=255)
+    franchise_code: str = Field(min_length=2, max_length=64, pattern=r"^[A-Z0-9][A-Z0-9_-]*$")
+    name: str = Field(min_length=2, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 ._&()/,-]*$")
     status: Literal["ACTIVE", "INACTIVE"] = "ACTIVE"
     profile: FranchiseProfile
     admin: FranchiseAdminIn
@@ -409,8 +472,8 @@ class FranchiseOnboardingIn(StrictModel):
 
 
 class FranchiseUpdate(StrictModel):
-    franchise_code: str | None = Field(default=None, min_length=1, max_length=64)
-    name: str | None = Field(default=None, min_length=1, max_length=255)
+    franchise_code: str | None = Field(default=None, min_length=1, max_length=64, pattern=r"^[A-Z0-9][A-Z0-9_-]*$")
+    name: str | None = Field(default=None, min_length=1, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 ._&()/,-]*$")
     status: Literal["ACTIVE", "INACTIVE"] | None = None
     profile: FranchiseProfile | None = None
 

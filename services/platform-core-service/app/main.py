@@ -332,10 +332,20 @@ def claims_for(session, user):
         ).scalars()) if template and template.enabled else set()
         permissions = ceiling if "*" in permissions else permissions & ceiling
     return role_rows, permissions
+def resolved_organization_access(scopes):
+    if not scopes:
+        raise HTTPException(403, "Your account is not assigned to an active organization. Please contact your system administrator.")
+    try:
+        return effective_access(scopes)
+    except HTTPException as error:
+        if error.status_code == 503:
+            raise HTTPException(403, "Your account is not assigned to an active organization. Please contact your system administrator.") from error
+        raise
+
 def tokens(session, user):
     roles, permissions = claims_for(session, user); refresh = new_refresh_token(); now = datetime.now(timezone.utc)
     scopes = user_scopes(session, user.id)
-    access_token = issue_access_token(user, roles, permissions, scopes, effective_access(scopes))
+    access_token = issue_access_token(user, roles, permissions, scopes, resolved_organization_access(scopes))
     session.add(RefreshToken(user_id=user.id, token_hash=token_hash(refresh), access_jti=decode_access_token(access_token)["jti"], expires_at=now + timedelta(days=int(getenv("PLATFORM_REFRESH_TOKEN_TTL_DAYS", "30")))))
     return {"access_token": access_token, "refresh_token": refresh, "token_type": "bearer", "expires_in": int(getenv("PLATFORM_ACCESS_TOKEN_TTL_SECONDS", "900"))}
 def require_permission(request, permission):

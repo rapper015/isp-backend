@@ -84,7 +84,7 @@ class RoleCreateIn(Strict):
     name: str = Field(min_length=2, max_length=128)
     code: str = Field(min_length=2, max_length=32, pattern=r"^[A-Za-z0-9_-]+$")
     description: str | None = Field(default=None, max_length=1000)
-    permissions: list[str] = Field(default_factory=list)
+    permissions: list[str] = Field(min_length=1)
     enabled: bool = True
 
 class RoleUpdateIn(Strict):
@@ -92,7 +92,7 @@ class RoleUpdateIn(Strict):
     name: str | None = Field(default=None, min_length=2, max_length=128)
     code: str | None = Field(default=None, min_length=2, max_length=32, pattern=r"^[A-Za-z0-9_-]+$")
     description: str | None = Field(default=None, max_length=1000)
-    permissions: list[str] | None = None
+    permissions: list[str] | None = Field(default=None, min_length=1)
     enabled: bool | None = None
 
 class AccessTemplateCreateIn(Strict):

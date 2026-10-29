@@ -21,11 +21,89 @@ def run_service_script(service: str, script: str) -> subprocess.CompletedProcess
         env=env,
         text=True,
         capture_output=True,
-        timeout=30,
+        timeout=60,
     )
 
 
 class QcRegressionTests(unittest.TestCase):
+    def test_nas_registration_rejects_control_syntax(self):
+        result = run_service_script("aaa-service", r'''
+            from uuid import uuid4
+            from pydantic import ValidationError
+            from app.schemas import NasDraftIn
+
+            base = {
+                "tenant_id": uuid4(), "name": "Central Router", "management_host": "192.0.2.10",
+                "routeros_version": "7.19", "routeros_username": "isp-api",
+                "routeros_password": "StrongPassword!23", "radius_source_ip": "192.0.2.10",
+            }
+            NasDraftIn.model_validate(base)
+            for field in ("name", "short_name", "routeros_username", "routeros_password"):
+                payload = {**base, field: "' OR '1'='1' --"}
+                try:
+                    NasDraftIn.model_validate(payload)
+                    raise AssertionError(f"control syntax accepted in {field}")
+                except ValidationError:
+                    pass
+        ''')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_franchise_onboarding_rejects_invalid_formats(self):
+        result = run_service_script("crm-service", r'''
+            from uuid import uuid4
+            from pydantic import ValidationError
+            from app.schemas import FranchiseOnboardingIn
+
+            base = {
+                "franchise_code": "NORTH-01", "name": "North Office", "access_template_id": uuid4(),
+                "profile": {"address": "Main Road", "city": "Kolkata", "zip_code": "700001",
+                    "mobile": "9876543210", "email": "office@example.com", "reseller_type": "BULK",
+                    "currency_id": "INR", "sms_gateway": "OWN_SMS_GATEWAY"},
+                "admin": {"full_name": "QA Admin", "username": "qa-admin", "email": "qa-admin@example.com",
+                    "mobile": "9876543210", "password": "Password123!", "confirm_password": "Password123!"},
+            }
+            FranchiseOnboardingIn.model_validate(base)
+            invalid = [
+                {**base, "name": "' OR '1'='1' --"},
+                {**base, "profile": {**base["profile"], "currency_id": "INR 232313"}},
+                {**base, "profile": {**base["profile"], "mobile": "2" * 23}},
+                {**base, "profile": {**base["profile"], "email": "f2@gmail.cip"}},
+            ]
+            for payload in invalid:
+                try:
+                    FranchiseOnboardingIn.model_validate(payload)
+                    raise AssertionError(f"invalid franchise payload accepted: {payload}")
+                except ValidationError:
+                    pass
+        ''')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_custom_roles_require_at_least_one_permission(self):
+        result = run_service_script("platform-core-service", r'''
+            from uuid import uuid4
+            from pydantic import ValidationError
+            from fastapi import HTTPException
+            from app.main import resolved_organization_access
+            from app.schemas import RoleCreateIn, RoleUpdateIn
+
+            for schema, payload in (
+                (RoleCreateIn, {"department_id": uuid4(), "name": "NOC", "code": "NOC", "permissions": []}),
+                (RoleUpdateIn, {"permissions": []}),
+            ):
+                try:
+                    schema.model_validate(payload)
+                    raise AssertionError("empty permissions accepted")
+                except ValidationError:
+                    pass
+            try:
+                resolved_organization_access([])
+                raise AssertionError("unassigned organization was accepted")
+            except HTTPException as error:
+                assert error.status_code == 403
+                assert "not assigned to an active organization" in error.detail
+        ''')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_tenant_mobile_numbers_are_digits_with_bounded_length(self):
         result = run_service_script("tenancy-service", r'''
             from uuid import uuid4

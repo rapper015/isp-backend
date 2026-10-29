@@ -1,6 +1,20 @@
+import re
 from typing import Any, Literal
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+_SQL_CONTROL_SYNTAX = re.compile(
+    r"(?:['\"].*\b(?:or|and)\b.*(?:=|\blike\b))|"
+    r"(?:;\s*(?:select|insert|update|delete|drop|alter|create)\b)|"
+    r"(?:--\s*$)|(?:/\*)",
+    re.IGNORECASE,
+)
+
+
+def _reject_sql_control_syntax(value: str | None) -> str | None:
+    if value is not None and _SQL_CONTROL_SYNTAX.search(value):
+        raise ValueError("input contains unsupported control syntax")
+    return value
 
 class StrictModel(BaseModel): model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 class RadiusRequest(StrictModel):
@@ -113,7 +127,7 @@ class QuotaResetIn(StrictModel):
     period: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}$")
 class NasDraftIn(StrictModel):
     tenant_id: UUID
-    name: str = Field(min_length=1, max_length=128)
+    name: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z0-9 ._()/&-]*$")
     description: str | None = Field(default=None, max_length=500)
     site: str | None = Field(default=None, max_length=128)
     management_host: str = Field(min_length=1, max_length=253)
@@ -123,16 +137,21 @@ class NasDraftIn(StrictModel):
     routeros_version: str = Field(min_length=3, max_length=32, pattern=r"^\d+\.\d+(?:\.\d+)?(?:[ .(].*)?$")
     tls_verify: bool = True
     tls_settings: dict[str, Any] = Field(default_factory=dict, max_length=16)
-    routeros_username: str = Field(min_length=1, max_length=128)
+    routeros_username: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.@-]*$")
     routeros_password: str = Field(min_length=1, max_length=512)
     radius_source_ip: str = Field(min_length=1, max_length=64)
     radius_source_ipv6: str | None = Field(default=None, max_length=64)
     nas_identifier: str | None = Field(default=None, max_length=128)
-    short_name: str | None = Field(default=None, max_length=64)
+    short_name: str | None = Field(default=None, max_length=64, pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
     vendor: str = Field(default="mikrotik", max_length=64)
     model: str | None = Field(default=None, max_length=64)
     radius_group_id: UUID | None = None
     services: list[Literal["pppoe", "hotspot", "login", "wireless", "dot1x", "ipsec", "dhcp"]] = Field(default_factory=list)
+
+    @field_validator("name", "short_name", "routeros_username", "routeros_password")
+    @classmethod
+    def reject_control_syntax(cls, value):
+        return _reject_sql_control_syntax(value)
 class NasUpdateManagementIn(StrictModel):
     name: str | None = Field(default=None, min_length=1, max_length=128)
     description: str | None = Field(default=None, max_length=500)
