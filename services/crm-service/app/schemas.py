@@ -346,15 +346,15 @@ class FranchiseProfile(StrictModel):
     currency_symbol: str = Field(default="INR", min_length=1, max_length=8)
     entity_code: str | None = Field(default=None, max_length=64)
     contact_person: str | None = Field(default=None, max_length=255)
-    mobile: str | None = Field(default=None, min_length=7, max_length=15, pattern=r"^[0-9]+$")
+    mobile: str | None = Field(default=None, min_length=10, max_length=10, pattern=r"^[6-9][0-9]{9}$")
     landline: str | None = Field(default=None, min_length=7, max_length=15, pattern=r"^[0-9]+$")
     email: str | None = Field(default=None, max_length=255, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
     sms_gateway: str | None = Field(default=None, max_length=64)
     address: str | None = Field(default=None, max_length=1000)
     country_id: str | None = Field(default=None, max_length=128)
-    state_id: str | None = Field(default=None, max_length=128)
+    state_id: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z][A-Za-z .&'-]*$")
     country: str | None = Field(default=None, max_length=64)
-    state: str | None = Field(default=None, max_length=128)
+    state: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z][A-Za-z .&'-]*$")
     district: str | None = Field(default=None, max_length=128)
     area: str | None = Field(default=None, max_length=128)
     city: str | None = Field(default=None, max_length=128)
@@ -433,7 +433,7 @@ class FranchiseAdminIn(StrictModel):
     full_name: str = Field(min_length=2, max_length=255, pattern=r"^[A-Za-z][A-Za-z .'-]*$")
     username: str = Field(min_length=3, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.@-]*$")
     email: str = Field(min_length=3, max_length=255, pattern=r"^[^\s@]+@[^\s@]+\.[A-Za-z]{2,24}$")
-    mobile: str = Field(min_length=7, max_length=15, pattern=r"^[0-9]+$")
+    mobile: str = Field(min_length=10, max_length=10, pattern=r"^[6-9][0-9]{9}$")
     password: str = Field(min_length=12, max_length=256)
     confirm_password: str
 
@@ -485,7 +485,7 @@ class FranchiseSettingsPatch(StrictModel):
 
 class BranchProfile(StrictModel):
     email: str = Field(min_length=3, max_length=255, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
-    mobile: str = Field(min_length=5, max_length=32, pattern=r"^[+0-9() -]+$")
+    mobile: str = Field(min_length=10, max_length=10, pattern=r"^[6-9][0-9]{9}$")
     landline: str | None = Field(default=None, max_length=32, pattern=r"^[0-9]+$")
     address: str = Field(min_length=3, max_length=1000)
     package_ids: list[str] = Field(default_factory=list, max_length=500)

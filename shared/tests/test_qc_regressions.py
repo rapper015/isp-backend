@@ -67,12 +67,41 @@ class QcRegressionTests(unittest.TestCase):
                 {**base, "name": "' OR '1'='1' --"},
                 {**base, "profile": {**base["profile"], "currency_id": "INR 232313"}},
                 {**base, "profile": {**base["profile"], "mobile": "2" * 23}},
+                {**base, "profile": {**base["profile"], "mobile": "5876543210"}},
+                {**base, "profile": {**base["profile"], "state_id": "34234234234"}},
                 {**base, "profile": {**base["profile"], "email": "f2@gmail.cip"}},
+                {**base, "admin": {**base["admin"], "mobile": "1234567890"}},
             ]
             for payload in invalid:
                 try:
                     FranchiseOnboardingIn.model_validate(payload)
                     raise AssertionError(f"invalid franchise payload accepted: {payload}")
+                except ValidationError:
+                    pass
+        ''')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_team_members_require_safe_usernames_and_indian_mobile_numbers(self):
+        result = run_service_script("platform-core-service", r'''
+            from pydantic import ValidationError
+            from app.schemas import UserCreateIn, UserUpdateIn
+
+            base = {
+                "username": "rahul.sharma", "password": "Password123!",
+                "email": "rahul@example.com", "mobile": "9876543210",
+            }
+            UserCreateIn.model_validate(base)
+            UserUpdateIn.model_validate({"mobile": "6876543210"})
+            invalid = [
+                (UserCreateIn, {**base, "username": "rahul@#$%"}),
+                (UserCreateIn, {**base, "mobile": "1234567890"}),
+                (UserCreateIn, {**base, "mobile": "9" * 18}),
+                (UserUpdateIn, {"mobile": "5876543210"}),
+            ]
+            for schema, payload in invalid:
+                try:
+                    schema.model_validate(payload)
+                    raise AssertionError(f"invalid team member accepted: {payload}")
                 except ValidationError:
                     pass
         ''')

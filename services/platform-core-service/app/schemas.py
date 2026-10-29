@@ -25,8 +25,8 @@ class AccessScopeIn(Strict):
         if self.scope_type != "PLATFORM" and self.scope_id is None: raise ValueError("scope_id is required")
         return self
 class UserCreateIn(Strict):
-    username: str = Field(min_length=3, max_length=128); password: str = Field(min_length=12, max_length=256)
-    email: str | None = None; full_name: str | None = None; mobile: str | None = None; tenant_id: UUID | None = None; franchise_id: UUID | None = None; department_id: UUID | None = None
+    username: str = Field(min_length=3, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$"); password: str = Field(min_length=12, max_length=256)
+    email: str | None = None; full_name: str | None = None; mobile: str | None = Field(default=None, min_length=10, max_length=10, pattern=r"^[6-9][0-9]{9}$"); tenant_id: UUID | None = None; franchise_id: UUID | None = None; department_id: UUID | None = None
     roles: list[str] = ["READ_ONLY"]
     role_ids: list[UUID] = Field(default_factory=list)
     access_scopes: list[AccessScopeIn] = Field(default_factory=list)
@@ -41,18 +41,10 @@ class UserCreateIn(Strict):
             raise ValueError("enter a valid email address")
         return normalized
 
-    @field_validator("mobile")
-    @classmethod
-    def valid_mobile(cls, value):
-        if value is None: return None
-        digits = "".join(character for character in value if character.isdigit())
-        if not 7 <= len(digits) <= 15:
-            raise ValueError("mobile number must contain 7 to 15 digits")
-        return value.strip()
 class UserUpdateIn(Strict):
     full_name: str | None = Field(default=None, max_length=255)
     email: str | None = None
-    mobile: str | None = None
+    mobile: str | None = Field(default=None, min_length=10, max_length=10, pattern=r"^[6-9][0-9]{9}$")
     enabled: bool | None = None
     department_id: UUID | None = None
     role_ids: list[UUID] | None = None
