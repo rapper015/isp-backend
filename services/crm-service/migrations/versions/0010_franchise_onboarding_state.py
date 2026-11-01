@@ -13,18 +13,31 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column("crm_franchises", sa.Column("onboarding_state", sa.String(32)))
-    op.add_column("crm_franchises", sa.Column("onboarding_fingerprint", sa.String(64)))
-    op.add_column("crm_franchises", sa.Column("onboarding_admin_id", sa.String(64)))
-    op.add_column("crm_franchises", sa.Column("onboarding_error", sa.String(500)))
-    op.add_column("crm_franchises", sa.Column("onboarding_requested_status", sa.String(16)))
-    op.create_index("ix_crm_franchises_onboarding_state", "crm_franchises", ["onboarding_state"])
+    inspector = sa.inspect(op.get_bind())
+    columns = {item["name"] for item in inspector.get_columns("crm_franchises")}
+    for name, column_type in (
+        ("onboarding_state", sa.String(32)),
+        ("onboarding_fingerprint", sa.String(64)),
+        ("onboarding_admin_id", sa.String(64)),
+        ("onboarding_error", sa.String(500)),
+        ("onboarding_requested_status", sa.String(16)),
+    ):
+        if name not in columns:
+            op.add_column("crm_franchises", sa.Column(name, column_type))
+    indexes = {item["name"] for item in inspector.get_indexes("crm_franchises")}
+    if "ix_crm_franchises_onboarding_state" not in indexes:
+        op.create_index("ix_crm_franchises_onboarding_state", "crm_franchises", ["onboarding_state"])
 
 
 def downgrade():
-    op.drop_index("ix_crm_franchises_onboarding_state", table_name="crm_franchises")
-    op.drop_column("crm_franchises", "onboarding_requested_status")
-    op.drop_column("crm_franchises", "onboarding_error")
-    op.drop_column("crm_franchises", "onboarding_admin_id")
-    op.drop_column("crm_franchises", "onboarding_fingerprint")
-    op.drop_column("crm_franchises", "onboarding_state")
+    inspector = sa.inspect(op.get_bind())
+    indexes = {item["name"] for item in inspector.get_indexes("crm_franchises")}
+    if "ix_crm_franchises_onboarding_state" in indexes:
+        op.drop_index("ix_crm_franchises_onboarding_state", table_name="crm_franchises")
+    columns = {item["name"] for item in inspector.get_columns("crm_franchises")}
+    for name in (
+        "onboarding_requested_status", "onboarding_error", "onboarding_admin_id",
+        "onboarding_fingerprint", "onboarding_state",
+    ):
+        if name in columns:
+            op.drop_column("crm_franchises", name)

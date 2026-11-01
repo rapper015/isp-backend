@@ -14,6 +14,8 @@ depends_on = None
 
 
 def upgrade():
+    if sa.inspect(op.get_bind()).has_table("crm_customer_onboarding_operations"):
+        return
     op.create_table(
         "crm_customer_onboarding_operations",
         sa.Column("id", sa.Uuid(), nullable=False),
@@ -47,7 +49,5 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_index("ix_crm_customer_onboarding_tenant_state", table_name="crm_customer_onboarding_operations")
-    op.drop_index("ix_crm_customer_onboarding_customer_id", table_name="crm_customer_onboarding_operations")
-    op.drop_index("ix_crm_customer_onboarding_tenant_id", table_name="crm_customer_onboarding_operations")
-    op.drop_table("crm_customer_onboarding_operations")
+    if sa.inspect(op.get_bind()).has_table("crm_customer_onboarding_operations"):
+        op.drop_table("crm_customer_onboarding_operations")

@@ -24,26 +24,33 @@ TABLES = (
 
 
 def upgrade():
-    for table, resource_column, _, unique_name in TABLES:
-        op.create_table(
-            table,
-            sa.Column("id", sa.Uuid(), nullable=False),
-            sa.Column("tenant_id", sa.Uuid(), nullable=False),
-            sa.Column("franchise_id", sa.Uuid(), nullable=False),
-            sa.Column(resource_column, sa.Uuid(), nullable=False),
-            sa.Column("created_by", sa.String(128)),
-            sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-            sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-            sa.ForeignKeyConstraint(["tenant_id"], ["crm_tenants.id"]),
-            sa.ForeignKeyConstraint(["franchise_id"], ["crm_franchises.id"], ondelete="CASCADE"),
-            sa.PrimaryKeyConstraint("id"),
-            sa.UniqueConstraint("tenant_id", "franchise_id", resource_column, name=unique_name),
-        )
-        op.create_index(f"ix_{table}_tenant_id", table, ["tenant_id"])
-        op.create_index(f"ix_{table}_franchise_id", table, ["franchise_id"])
-        op.create_index(f"ix_{table}_{resource_column}", table, [resource_column])
-
     connection = op.get_bind()
+    inspector = sa.inspect(connection)
+    for table, resource_column, _, unique_name in TABLES:
+        if not inspector.has_table(table):
+            op.create_table(
+                table,
+                sa.Column("id", sa.Uuid(), nullable=False),
+                sa.Column("tenant_id", sa.Uuid(), nullable=False),
+                sa.Column("franchise_id", sa.Uuid(), nullable=False),
+                sa.Column(resource_column, sa.Uuid(), nullable=False),
+                sa.Column("created_by", sa.String(128)),
+                sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+                sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+                sa.ForeignKeyConstraint(["tenant_id"], ["crm_tenants.id"]),
+                sa.ForeignKeyConstraint(["franchise_id"], ["crm_franchises.id"], ondelete="CASCADE"),
+                sa.PrimaryKeyConstraint("id"),
+                sa.UniqueConstraint("tenant_id", "franchise_id", resource_column, name=unique_name),
+            )
+            op.create_index(f"ix_{table}_tenant_id", table, ["tenant_id"])
+            op.create_index(f"ix_{table}_franchise_id", table, ["franchise_id"])
+            op.create_index(f"ix_{table}_{resource_column}", table, [resource_column])
+
+    existing = {}
+    for table, resource_column, _, _ in TABLES:
+        existing[table] = set(connection.execute(sa.text(
+            f"SELECT tenant_id, franchise_id, {resource_column} FROM {table}"
+        )))
     franchises = connection.execute(sa.text(
         "SELECT id, tenant_id, profile FROM crm_franchises"
     )).mappings()
@@ -76,17 +83,20 @@ def upgrade():
                 sa.column(resource_column, sa.Uuid()),
             )
             for resource_id in valid_ids:
+                key = (tenant_id, franchise_id, resource_id)
+                if key in existing[table]:
+                    continue
                 connection.execute(assignment_table.insert().values(
                     id=uuid4(),
                     tenant_id=tenant_id,
                     franchise_id=franchise_id,
                     **{resource_column: resource_id},
                 ))
+                existing[table].add(key)
 
 
 def downgrade():
+    inspector = sa.inspect(op.get_bind())
     for table, resource_column, _, _ in reversed(TABLES):
-        op.drop_index(f"ix_{table}_{resource_column}", table_name=table)
-        op.drop_index(f"ix_{table}_franchise_id", table_name=table)
-        op.drop_index(f"ix_{table}_tenant_id", table_name=table)
-        op.drop_table(table)
+        if inspector.has_table(table):
+            op.drop_table(table)

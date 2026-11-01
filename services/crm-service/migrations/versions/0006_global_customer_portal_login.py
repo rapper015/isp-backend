@@ -8,6 +8,10 @@ branch_labels = None
 depends_on = None
 
 
+def _unique_constraints(connection, table_name):
+    return {item["name"] for item in sa.inspect(connection).get_unique_constraints(table_name)}
+
+
 def upgrade():
     connection = op.get_bind()
     duplicate = connection.execute(sa.text("""
@@ -27,14 +31,29 @@ def upgrade():
         WHERE customer.id = identity.customer_id
     """))
 
-    op.drop_constraint("uq_crm_customer_tenant_number", "crm_customers", type_="unique")
-    op.create_unique_constraint("uq_crm_customer_number_global", "crm_customers", ["customer_number"])
-    op.drop_constraint("uq_crm_portal_username", "crm_customer_portal_identities", type_="unique")
-    op.create_unique_constraint("uq_crm_portal_login_global", "crm_customer_portal_identities", ["username"])
+    customer_constraints = _unique_constraints(connection, "crm_customers")
+    if "uq_crm_customer_tenant_number" in customer_constraints:
+        op.drop_constraint("uq_crm_customer_tenant_number", "crm_customers", type_="unique")
+    if "uq_crm_customer_number_global" not in customer_constraints:
+        op.create_unique_constraint("uq_crm_customer_number_global", "crm_customers", ["customer_number"])
+
+    portal_constraints = _unique_constraints(connection, "crm_customer_portal_identities")
+    if "uq_crm_portal_username" in portal_constraints:
+        op.drop_constraint("uq_crm_portal_username", "crm_customer_portal_identities", type_="unique")
+    if "uq_crm_portal_login_global" not in portal_constraints:
+        op.create_unique_constraint("uq_crm_portal_login_global", "crm_customer_portal_identities", ["username"])
 
 
 def downgrade():
-    op.drop_constraint("uq_crm_portal_login_global", "crm_customer_portal_identities", type_="unique")
-    op.create_unique_constraint("uq_crm_portal_username", "crm_customer_portal_identities", ["tenant_id", "username"])
-    op.drop_constraint("uq_crm_customer_number_global", "crm_customers", type_="unique")
-    op.create_unique_constraint("uq_crm_customer_tenant_number", "crm_customers", ["tenant_id", "customer_number"])
+    connection = op.get_bind()
+    portal_constraints = _unique_constraints(connection, "crm_customer_portal_identities")
+    if "uq_crm_portal_login_global" in portal_constraints:
+        op.drop_constraint("uq_crm_portal_login_global", "crm_customer_portal_identities", type_="unique")
+    if "uq_crm_portal_username" not in portal_constraints:
+        op.create_unique_constraint("uq_crm_portal_username", "crm_customer_portal_identities", ["tenant_id", "username"])
+
+    customer_constraints = _unique_constraints(connection, "crm_customers")
+    if "uq_crm_customer_number_global" in customer_constraints:
+        op.drop_constraint("uq_crm_customer_number_global", "crm_customers", type_="unique")
+    if "uq_crm_customer_tenant_number" not in customer_constraints:
+        op.create_unique_constraint("uq_crm_customer_tenant_number", "crm_customers", ["tenant_id", "customer_number"])

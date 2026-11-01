@@ -25,24 +25,27 @@ def _normalize(value):
 
 
 def upgrade():
-    op.create_table(
-        "crm_phone_identities",
-        sa.Column("normalized_phone", sa.String(32), primary_key=True),
-        sa.Column("owner_type", sa.String(32), nullable=False),
-        sa.Column("owner_id", sa.Uuid(), nullable=False),
-        sa.Column("field_name", sa.String(32), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.UniqueConstraint("owner_type", "owner_id", "field_name", name="uq_crm_phone_identity_owner_field"),
-    )
-    op.create_index("ix_crm_phone_identities_owner_type", "crm_phone_identities", ["owner_type"])
-    op.create_index("ix_crm_phone_identities_owner_id", "crm_phone_identities", ["owner_id"])
-
     connection = op.get_bind()
+    if not sa.inspect(connection).has_table("crm_phone_identities"):
+        op.create_table(
+            "crm_phone_identities",
+            sa.Column("normalized_phone", sa.String(32), primary_key=True),
+            sa.Column("owner_type", sa.String(32), nullable=False),
+            sa.Column("owner_id", sa.Uuid(), nullable=False),
+            sa.Column("field_name", sa.String(32), nullable=False),
+            sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+            sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+            sa.UniqueConstraint("owner_type", "owner_id", "field_name", name="uq_crm_phone_identity_owner_field"),
+        )
+        op.create_index("ix_crm_phone_identities_owner_type", "crm_phone_identities", ["owner_type"])
+        op.create_index("ix_crm_phone_identities_owner_id", "crm_phone_identities", ["owner_id"])
+
     table = sa.table("crm_phone_identities",
         sa.column("normalized_phone", sa.String), sa.column("owner_type", sa.String),
         sa.column("owner_id", sa.Uuid), sa.column("field_name", sa.String))
-    used = set()
+    used = set(connection.execute(sa.text(
+        "SELECT normalized_phone FROM crm_phone_identities"
+    )).scalars())
     rows = []
     # Stable precedence preserves the earlier parent record when historical
     # duplicates exist: franchise -> branch -> customer -> contact -> lead.
@@ -63,6 +66,5 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_index("ix_crm_phone_identities_owner_id", table_name="crm_phone_identities")
-    op.drop_index("ix_crm_phone_identities_owner_type", table_name="crm_phone_identities")
-    op.drop_table("crm_phone_identities")
+    if sa.inspect(op.get_bind()).has_table("crm_phone_identities"):
+        op.drop_table("crm_phone_identities")

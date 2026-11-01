@@ -9,6 +9,8 @@ depends_on = None
 
 
 def upgrade():
+    if sa.inspect(op.get_bind()).has_table("crm_customer_portal_identities"):
+        return
     op.create_table(
         "crm_customer_portal_identities",
         sa.Column("id", sa.Uuid(), primary_key=True),
@@ -30,4 +32,5 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table("crm_customer_portal_identities")
+    if sa.inspect(op.get_bind()).has_table("crm_customer_portal_identities"):
+        op.drop_table("crm_customer_portal_identities")
