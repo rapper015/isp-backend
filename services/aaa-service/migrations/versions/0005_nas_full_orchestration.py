@@ -120,12 +120,6 @@ def upgrade() -> None:
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     )
-    reveal_table = "nas_secret_reveals"
-    reveal_columns = {column["name"] for column in sa.inspect(bind).get_columns(reveal_table)}
-    if "rotation_id" not in reveal_columns:
-        op.add_column(reveal_table, sa.Column("rotation_id", sa.Uuid(), sa.ForeignKey("nas_secret_rotations.id"), nullable=True))
-    if "secret_ciphertext" not in reveal_columns:
-        op.add_column(reveal_table, sa.Column("secret_ciphertext", sa.Text(), nullable=True))
     create_table_if_missing(
         "nas_secret_rotations",
         sa.Column("id", sa.Uuid(), primary_key=True),
@@ -144,6 +138,47 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     )
+
+    reveal_table = "nas_secret_reveals"
+    reveal_inspector = sa.inspect(bind)
+    reveal_columns = {column["name"] for column in reveal_inspector.get_columns(reveal_table)}
+    if "rotation_id" not in reveal_columns:
+        op.add_column(
+            reveal_table,
+            sa.Column(
+                "rotation_id",
+                sa.Uuid(),
+                sa.ForeignKey("nas_secret_rotations.id"),
+                nullable=True,
+            ),
+        )
+    else:
+        rotation_foreign_key = any(
+            foreign_key.get("constrained_columns") == ["rotation_id"]
+            and foreign_key.get("referred_table") == "nas_secret_rotations"
+            for foreign_key in reveal_inspector.get_foreign_keys(reveal_table)
+        )
+        if not rotation_foreign_key:
+            op.create_foreign_key(
+                "fk_nas_secret_reveals_rotation",
+                reveal_table,
+                "nas_secret_rotations",
+                ["rotation_id"],
+                ["id"],
+            )
+    if "secret_ciphertext" not in reveal_columns:
+        op.add_column(reveal_table, sa.Column("secret_ciphertext", sa.Text(), nullable=True))
+
+    reveal_indexes = {
+        tuple(index.get("column_names") or [])
+        for index in sa.inspect(bind).get_indexes(reveal_table)
+    }
+    if ("rotation_id",) not in reveal_indexes:
+        op.create_index(
+            "ix_nas_secret_reveals_rotation_id",
+            reveal_table,
+            ["rotation_id"],
+        )
 
 
 def downgrade() -> None:

@@ -35,7 +35,8 @@ _M3_TABLES = (
 def upgrade() -> None:
     from app.database import Base
     import app.models  # noqa: F401
-    Base.metadata.create_all(bind=op.get_bind())
+    tables = [Base.metadata.tables[name] for name in _M3_TABLES]
+    Base.metadata.create_all(bind=op.get_bind(), tables=tables)
 
 
 def downgrade() -> None:
