@@ -30,3 +30,21 @@ docker compose exec core-platform python manage.py migrate
 
 For a pre-existing local SQLite setup, move the ignored `db.sqlite3` file into
 `services/core-platform` first.
+
+## Redeploy changed services
+
+`docker compose up -d SERVICE` reuses an existing image. It does not copy
+newly pulled source code into that image. After pulling a commit that changes a
+service or its migrations, rebuild and force-recreate the affected containers:
+
+```bash
+sh scripts/redeploy-services.sh aaa-service aaa-worker
+```
+
+The script preserves database volumes. To perform the same steps manually:
+
+```bash
+docker compose build --pull aaa-service aaa-worker
+docker compose up -d --force-recreate aaa-service aaa-worker
+docker compose logs --no-color --tail=100 aaa-service
+```
