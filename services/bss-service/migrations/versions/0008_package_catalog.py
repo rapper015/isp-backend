@@ -13,6 +13,9 @@ depends_on = None
 
 
 def upgrade():
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    plan_columns = {column["name"] for column in inspector.get_columns("plans")}
     for column in (
         sa.Column("package_type", sa.String(32), nullable=False, server_default="BASE_PLAN"),
         sa.Column("package_data_type", sa.String(32), nullable=False, server_default="UNLIMITED"),
@@ -27,36 +30,50 @@ def upgrade():
         sa.Column("promotion_content", sa.Text(), nullable=True),
         sa.Column("comment", sa.String(200), nullable=True),
     ):
-        op.add_column("plans", column)
+        if column.name not in plan_columns:
+            op.add_column("plans", column)
 
-    op.create_table("plan_prices",
-        sa.Column("id", sa.Uuid(), primary_key=True),
-        sa.Column("plan_id", sa.Uuid(), sa.ForeignKey("plans.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("name", sa.String(128), nullable=False),
-        sa.Column("price", sa.Numeric(12, 2), nullable=False),
-        sa.Column("duration", sa.Integer(), nullable=False),
-        sa.Column("duration_unit", sa.String(16), nullable=False, server_default="DAY"),
-        sa.Column("status", sa.String(16), nullable=False, server_default="ACTIVE"),
-        sa.UniqueConstraint("plan_id", "name", name="uq_plan_price_name"))
-    op.create_table("plan_franchise_availability",
-        sa.Column("id", sa.Uuid(), primary_key=True),
-        sa.Column("tenant_id", sa.Uuid(), nullable=False, index=True),
-        sa.Column("plan_id", sa.Uuid(), sa.ForeignKey("plans.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("franchise_id", sa.Uuid(), nullable=False, index=True),
-        sa.UniqueConstraint("plan_id", "franchise_id", name="uq_plan_franchise"))
-    op.create_table("plan_ott_mappings",
-        sa.Column("id", sa.Uuid(), primary_key=True),
-        sa.Column("plan_id", sa.Uuid(), sa.ForeignKey("plans.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("provider_id", sa.String(128), nullable=False),
-        sa.Column("provider_name", sa.String(128), nullable=False),
-        sa.Column("provider_plan_id", sa.String(128), nullable=False),
-        sa.Column("provider_plan_name", sa.String(128), nullable=False),
-        sa.Column("status", sa.String(16), nullable=False, server_default="ACTIVE"))
+    if not inspector.has_table("plan_prices"):
+        op.create_table(
+            "plan_prices",
+            sa.Column("id", sa.Uuid(), primary_key=True),
+            sa.Column("plan_id", sa.Uuid(), sa.ForeignKey("plans.id", ondelete="CASCADE"), nullable=False, index=True),
+            sa.Column("name", sa.String(128), nullable=False),
+            sa.Column("price", sa.Numeric(12, 2), nullable=False),
+            sa.Column("duration", sa.Integer(), nullable=False),
+            sa.Column("duration_unit", sa.String(16), nullable=False, server_default="DAY"),
+            sa.Column("status", sa.String(16), nullable=False, server_default="ACTIVE"),
+            sa.UniqueConstraint("plan_id", "name", name="uq_plan_price_name"),
+        )
+    if not inspector.has_table("plan_franchise_availability"):
+        op.create_table(
+            "plan_franchise_availability",
+            sa.Column("id", sa.Uuid(), primary_key=True),
+            sa.Column("tenant_id", sa.Uuid(), nullable=False, index=True),
+            sa.Column("plan_id", sa.Uuid(), sa.ForeignKey("plans.id", ondelete="CASCADE"), nullable=False, index=True),
+            sa.Column("franchise_id", sa.Uuid(), nullable=False, index=True),
+            sa.UniqueConstraint("plan_id", "franchise_id", name="uq_plan_franchise"),
+        )
+    if not inspector.has_table("plan_ott_mappings"):
+        op.create_table(
+            "plan_ott_mappings",
+            sa.Column("id", sa.Uuid(), primary_key=True),
+            sa.Column("plan_id", sa.Uuid(), sa.ForeignKey("plans.id", ondelete="CASCADE"), nullable=False, index=True),
+            sa.Column("provider_id", sa.String(128), nullable=False),
+            sa.Column("provider_name", sa.String(128), nullable=False),
+            sa.Column("provider_plan_id", sa.String(128), nullable=False),
+            sa.Column("provider_plan_name", sa.String(128), nullable=False),
+            sa.Column("status", sa.String(16), nullable=False, server_default="ACTIVE"),
+        )
 
 
 def downgrade():
-    op.drop_table("plan_ott_mappings")
-    op.drop_table("plan_franchise_availability")
-    op.drop_table("plan_prices")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    for table_name in ("plan_ott_mappings", "plan_franchise_availability", "plan_prices"):
+        if inspector.has_table(table_name):
+            op.drop_table(table_name)
+    plan_columns = {column["name"] for column in inspector.get_columns("plans")}
     for name in ("comment", "promotion_content", "service_config", "billing_config", "fup_config", "network_config", "self_care_portal_enabled", "available_to_all_franchises", "policy_mode", "apply_to", "package_data_type", "package_type"):
-        op.drop_column("plans", name)
+        if name in plan_columns:
+            op.drop_column("plans", name)

@@ -13,42 +13,55 @@ depends_on = None
 
 
 def upgrade():
-    op.create_table(
-        "billing_accounts",
-        sa.Column("id", sa.Uuid(), primary_key=True),
-        sa.Column("tenant_id", sa.Uuid(), nullable=False, index=True),
-        sa.Column("customer_id", sa.Uuid(), nullable=False, index=True),
-        sa.Column("account_number", sa.String(64), nullable=False, unique=True, index=True),
-        sa.Column("currency", sa.String(3), nullable=False, server_default="INR"),
-        sa.Column("cycle_days", sa.Integer(), nullable=False, server_default="30"),
-        sa.Column("due_days", sa.Integer(), nullable=False, server_default="7"),
-        sa.Column("tax_percent", sa.Numeric(6, 3), nullable=False, server_default="0"),
-        sa.Column("next_invoice_at", sa.DateTime(timezone=True), nullable=False, index=True),
-        sa.Column("last_invoice_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("status", sa.String(16), nullable=False, server_default="active", index=True),
-        sa.Column("auto_invoice", sa.Boolean(), nullable=False, server_default=sa.true()),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
-        sa.UniqueConstraint("tenant_id", "customer_id", name="uq_billing_account_customer"),
-    )
-    op.create_table(
-        "billing_account_items",
-        sa.Column("id", sa.Uuid(), primary_key=True),
-        sa.Column("billing_account_id", sa.Uuid(), sa.ForeignKey("billing_accounts.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("tenant_id", sa.Uuid(), nullable=False, index=True),
-        sa.Column("customer_id", sa.Uuid(), nullable=False, index=True),
-        sa.Column("subscriber_id", sa.Uuid(), nullable=False, index=True),
-        sa.Column("plan_id", sa.Uuid(), sa.ForeignKey("plans.id"), nullable=False, index=True),
-        sa.Column("description", sa.String(255), nullable=False, server_default="Internet service"),
-        sa.Column("custom_amount", sa.Numeric(12, 2), nullable=True),
-        sa.Column("status", sa.String(16), nullable=False, server_default="active", index=True),
-        sa.Column("effective_from", sa.DateTime(timezone=True), server_default=sa.func.now()),
-        sa.Column("effective_until", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
-        sa.UniqueConstraint("billing_account_id", "subscriber_id", name="uq_billing_item_subscriber"),
-    )
-    op.add_column("invoices", sa.Column("billing_account_id", sa.Uuid(), nullable=True))
-    op.create_index("ix_invoices_billing_account_id", "invoices", ["billing_account_id"])
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+
+    if not inspector.has_table("billing_accounts"):
+        op.create_table(
+            "billing_accounts",
+            sa.Column("id", sa.Uuid(), primary_key=True),
+            sa.Column("tenant_id", sa.Uuid(), nullable=False, index=True),
+            sa.Column("customer_id", sa.Uuid(), nullable=False, index=True),
+            sa.Column("account_number", sa.String(64), nullable=False, unique=True, index=True),
+            sa.Column("currency", sa.String(3), nullable=False, server_default="INR"),
+            sa.Column("cycle_days", sa.Integer(), nullable=False, server_default="30"),
+            sa.Column("due_days", sa.Integer(), nullable=False, server_default="7"),
+            sa.Column("tax_percent", sa.Numeric(6, 3), nullable=False, server_default="0"),
+            sa.Column("next_invoice_at", sa.DateTime(timezone=True), nullable=False, index=True),
+            sa.Column("last_invoice_at", sa.DateTime(timezone=True), nullable=True),
+            sa.Column("status", sa.String(16), nullable=False, server_default="active", index=True),
+            sa.Column("auto_invoice", sa.Boolean(), nullable=False, server_default=sa.true()),
+            sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+            sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+            sa.UniqueConstraint("tenant_id", "customer_id", name="uq_billing_account_customer"),
+        )
+    if not inspector.has_table("billing_account_items"):
+        op.create_table(
+            "billing_account_items",
+            sa.Column("id", sa.Uuid(), primary_key=True),
+            sa.Column("billing_account_id", sa.Uuid(), sa.ForeignKey("billing_accounts.id", ondelete="CASCADE"), nullable=False, index=True),
+            sa.Column("tenant_id", sa.Uuid(), nullable=False, index=True),
+            sa.Column("customer_id", sa.Uuid(), nullable=False, index=True),
+            sa.Column("subscriber_id", sa.Uuid(), nullable=False, index=True),
+            sa.Column("plan_id", sa.Uuid(), sa.ForeignKey("plans.id"), nullable=False, index=True),
+            sa.Column("description", sa.String(255), nullable=False, server_default="Internet service"),
+            sa.Column("custom_amount", sa.Numeric(12, 2), nullable=True),
+            sa.Column("status", sa.String(16), nullable=False, server_default="active", index=True),
+            sa.Column("effective_from", sa.DateTime(timezone=True), server_default=sa.func.now()),
+            sa.Column("effective_until", sa.DateTime(timezone=True), nullable=True),
+            sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+            sa.UniqueConstraint("billing_account_id", "subscriber_id", name="uq_billing_item_subscriber"),
+        )
+
+    invoice_columns = {column["name"] for column in inspector.get_columns("invoices")}
+    if "billing_account_id" not in invoice_columns:
+        op.add_column("invoices", sa.Column("billing_account_id", sa.Uuid(), nullable=True))
+
+    # Re-inspect after the possible ALTER and accept an equivalent index even
+    # when a metadata-created database gave it a different generated name.
+    invoice_indexes = sa.inspect(bind).get_indexes("invoices")
+    if not any(index.get("column_names") == ["billing_account_id"] for index in invoice_indexes):
+        op.create_index("ix_invoices_billing_account_id", "invoices", ["billing_account_id"])
 
     # Preserve existing schedules while collapsing multiple connections onto one
     # customer-owned account. DISTINCT ON deterministically chooses the earliest
@@ -78,7 +91,15 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_index("ix_invoices_billing_account_id", table_name="invoices")
-    op.drop_column("invoices", "billing_account_id")
-    op.drop_table("billing_account_items")
-    op.drop_table("billing_accounts")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    if inspector.has_table("invoices"):
+        indexes = inspector.get_indexes("invoices")
+        if any(index["name"] == "ix_invoices_billing_account_id" for index in indexes):
+            op.drop_index("ix_invoices_billing_account_id", table_name="invoices")
+        if "billing_account_id" in {column["name"] for column in inspector.get_columns("invoices")}:
+            op.drop_column("invoices", "billing_account_id")
+    if inspector.has_table("billing_account_items"):
+        op.drop_table("billing_account_items")
+    if inspector.has_table("billing_accounts"):
+        op.drop_table("billing_accounts")

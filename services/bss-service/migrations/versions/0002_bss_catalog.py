@@ -16,15 +16,22 @@ BATCH5_TABLES = (
     "bss_cost_centers", "bss_profit_centers", "bss_feature_adoption",
     "bss_partner_sla_metric", "bss_churn_records", "bss_trial_records",
     "bss_product_stickiness", "bss_commission_records", "bss_wallet_ledger",
+    "bss_coupon", "bss_redemption", "bss_service_composition",
+    "bss_expense_record", "bss_margin_optimization", "bss_referral",
 )
 
 
 def upgrade() -> None:
     from app.database import Base
     import app.revenue.models  # noqa: F401
-    Base.metadata.create_all(bind=op.get_bind())
+    Base.metadata.create_all(
+        bind=op.get_bind(),
+        tables=[Base.metadata.tables[name] for name in BATCH5_TABLES],
+    )
 
 
 def downgrade() -> None:
-    for t in BATCH5_TABLES:
-        op.drop_table(t)
+    from app.database import Base
+    import app.revenue.models  # noqa: F401
+    for name in reversed(BATCH5_TABLES):
+        Base.metadata.tables[name].drop(bind=op.get_bind(), checkfirst=True)
