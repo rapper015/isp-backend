@@ -1,4 +1,3 @@
-from contextlib import asynccontextmanager
 from datetime import datetime,timezone
 from os import getenv
 from uuid import UUID
@@ -6,14 +5,12 @@ import uuid
 from fastapi import Depends,FastAPI,HTTPException,Request
 from pydantic import BaseModel,ConfigDict
 from sqlalchemy.orm import Session
-from .database import Base,SessionLocal,engine
+from .database import SessionLocal
 from . import models
 from .models import AnomalyHeatmap,HealthObservation,NasDevice,Runbook
 from .security import management_auth
 from .services import OpsService
-@asynccontextmanager
-async def lifespan(_):Base.metadata.create_all(bind=engine);yield
-app=FastAPI(title='NMS Service',version='0.2.0',lifespan=lifespan)
+app=FastAPI(title='NMS Service',version='0.2.0')
 def db():
  s=SessionLocal()
  try:yield s

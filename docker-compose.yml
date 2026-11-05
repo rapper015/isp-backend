@@ -304,6 +304,7 @@ services:
       NMS_JWT_SECRET: ${NMS_JWT_SECRET:-change-me-nms-jwt-secret-0123456789abcdef}
       NMS_INTERNAL_API_KEY: ${NMS_INTERNAL_API_KEY:-change-me-nms-internal-key}
       NMS_INTERNAL_API_KEYS: ${NMS_INTERNAL_API_KEY:-change-me-nms-internal-key}
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
 
   ipam-service:
     <<: *domain-service
