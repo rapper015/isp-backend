@@ -9,7 +9,9 @@ class Base(DeclarativeBase):
     pass
 
 
-url = getenv("DATABASE_URL", "sqlite:///./workforce.db")
+url = getenv("DATABASE_URL")
+if not url:
+    raise RuntimeError("DATABASE_URL is required for the Workforce service")
 if url.startswith("postgresql://"):
     url = url.replace("postgresql://", "postgresql+psycopg://", 1)
 

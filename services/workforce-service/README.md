@@ -31,9 +31,10 @@ isolation, append-only audit. Rebuilt after the source `.py` files were lost
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r ..\..\shared\runtime\requirements.txt -r requirements.txt
-set DATABASE_URL=sqlite:///./workforce.db
+set DATABASE_URL=postgresql+psycopg://isp:<password>@localhost:5432/workforce
 set WORKFORCE_JWT_SECRET=<32+ chars>
 set WORKFORCE_INTERNAL_API_KEY=<internal key>
+alembic upgrade head
 uvicorn app.main:app --port 8013
 python -m app.worker_runner
 ```

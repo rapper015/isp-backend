@@ -355,6 +355,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/workforce
       WORKFORCE_JWT_SECRET: ${WORKFORCE_JWT_SECRET:-change-me-workforce-jwt-secret-0123456789abcdef}
       WORKFORCE_INTERNAL_API_KEY: ${WORKFORCE_INTERNAL_API_KEY:-change-me-workforce-internal-key}
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
 
   workforce-worker:
     logging: *service-logging
@@ -370,6 +371,7 @@ services:
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
       valkey: {condition: service_healthy}
+      workforce-service: {condition: service_healthy}
     networks: [platform]
 
   warehouse-service:
