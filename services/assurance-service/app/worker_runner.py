@@ -30,7 +30,7 @@ def run_once(interval_seconds: int = 300, *, create_all: bool = True) -> dict:
         try:
             counts["slo_windows"] = tasks.run_compute_slo_windows(session, None)
             counts["alerts_expired"] = tasks.run_expire_alerts(session, None)
-            counts["silences_closed"] = tasks.run_close_silences(session)
+            counts["silences_closed"] = tasks.run_close_silences(session, None)
             counts["maintenance_activated"] = tasks.run_activate_maintenance(session, None)
             counts["maintenance_completed"] = tasks.run_complete_maintenance(session, None)
             counts["outbox_flushed"] = tasks.run_flush_outbox(session)

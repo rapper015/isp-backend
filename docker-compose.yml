@@ -85,12 +85,16 @@ services:
       POSTGRES_DB: isp
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
-      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,identity,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy,assurance,intelligence,support
+      POSTGRES_MULTIPLE_DATABASES: crm,bss,oss,aaa,identity,nms,ipam,siem,workforce,warehouse,aiops,device_management,tenancy,assurance,intelligence,support,platform_core
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/postgres/create-service-databases.sh:/docker-entrypoint-initdb.d/create-service-databases.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?set POSTGRES_USER in .env} -d isp"]
+      # The official image starts a temporary Unix-socket-only server while it
+      # runs init scripts. Requiring TCP prevents dependent services from
+      # starting migrations before that temporary server has shut down and the
+      # final PostgreSQL process is accepting network connections.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U ${POSTGRES_USER:?set POSTGRES_USER in .env} -d isp"]
       interval: 5s
       timeout: 3s
       retries: 10

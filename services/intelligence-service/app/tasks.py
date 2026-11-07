@@ -22,9 +22,13 @@ def _now() -> datetime:
 def run_compute_features(session: Session, tenant_id, *, batch: int = 200) -> int:
     """Recompute + store features for recently active analytical entities."""
     counts = 0
-    active = list(session.scalars(select(AnalyticalRecord.entity_type, AnalyticalRecord.entity_ref)
-                                  .where(AnalyticalRecord.tenant_id == tenant_id)
-                                  .order_by(AnalyticalRecord.event_time.desc()).limit(batch).distinct()))
+    active = list(session.execute(
+        select(AnalyticalRecord.entity_type, AnalyticalRecord.entity_ref)
+        .where(AnalyticalRecord.tenant_id == tenant_id)
+        .group_by(AnalyticalRecord.entity_type, AnalyticalRecord.entity_ref)
+        .order_by(func.max(AnalyticalRecord.event_time).desc())
+        .limit(batch)
+    ))
     for entity_type, entity_ref in active:
         try:
             values = feature_service.compute_features(
@@ -106,7 +110,7 @@ def run_detect_drift(session: Session, tenant_id, *, threshold: float = 0.2) -> 
 
 
 def _recent_mean(session: Session, model_id) -> float | None:
-    from ..models import ModelMonitor
+    from .models import ModelMonitor
     since = _now() - timedelta(hours=24)
     row = session.execute(select(func.avg(ModelMonitor.value)).where(
         ModelMonitor.model_id == model_id,

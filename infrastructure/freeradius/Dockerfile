@@ -9,7 +9,11 @@ COPY infrastructure/freeradius/default /etc/raddb/sites-available/default
 COPY infrastructure/freeradius/aaa_adapter.py /usr/local/bin/aaa_adapter.py
 COPY infrastructure/freeradius/entrypoint.sh /usr/local/bin/freeradius-entrypoint
 
-RUN chmod 0755 /usr/local/bin/aaa_adapter.py /usr/local/bin/freeradius-entrypoint \
+RUN chmod 0644 /etc/raddb/clients.conf \
+        /etc/raddb/mods-available/backend_auth \
+        /etc/raddb/mods-available/backend_accounting \
+        /etc/raddb/sites-available/default \
+    && chmod 0755 /usr/local/bin/aaa_adapter.py /usr/local/bin/freeradius-entrypoint \
     && ln -sf ../mods-available/backend_auth /etc/raddb/mods-enabled/backend_auth \
     && ln -sf ../mods-available/backend_accounting /etc/raddb/mods-enabled/backend_accounting
 
