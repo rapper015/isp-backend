@@ -25,10 +25,11 @@ isolation, append-only audit, tamper-evident evidence.
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r ..\..\shared\runtime\requirements.txt -r requirements.txt
-set DATABASE_URL=sqlite:///./siem.db
+set DATABASE_URL=postgresql+psycopg://isp:<password>@localhost:5432/siem
 set SIEM_JWT_SECRET=<32+ chars>
 set SIEM_INTERNAL_API_KEY=<internal key>
 set SIEM_ENCRYPTION_KEY=<32+ chars>
+alembic upgrade head
 uvicorn app.main:app --port 8012
 python -m app.worker_runner
 ```

@@ -326,6 +326,7 @@ services:
       SIEM_JWT_SECRET: ${SIEM_JWT_SECRET:-change-me-siem-jwt-secret-0123456789abcdef}
       SIEM_INTERNAL_API_KEY: ${SIEM_INTERNAL_API_KEY:-change-me-siem-internal-key}
       SIEM_ENCRYPTION_KEY: ${SIEM_ENCRYPTION_KEY:-change-me-siem-encryption-key-0123456789abcdef}
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
 
   siem-worker:
     logging: *service-logging
@@ -342,6 +343,7 @@ services:
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
       valkey: {condition: service_healthy}
+      siem-service: {condition: service_healthy}
     networks: [platform]
 
   workforce-service:

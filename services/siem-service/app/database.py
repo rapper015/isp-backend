@@ -13,7 +13,9 @@ class Base(DeclarativeBase):
     pass
 
 
-url = getenv("DATABASE_URL", "sqlite:///./siem.db")
+url = getenv("DATABASE_URL")
+if not url:
+    raise RuntimeError("DATABASE_URL is required for the SIEM service")
 if url.startswith("postgresql://"):
     url = url.replace("postgresql://", "postgresql+psycopg://", 1)
 
