@@ -389,6 +389,7 @@ services:
     <<: *domain-service
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aiops-service}}
     environment: {<<: *domain-environment, SERVICE_NAME: aiops-service, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/aiops"}
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
 
   device-management-service:
     <<: *domain-service
