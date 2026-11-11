@@ -20,7 +20,13 @@ def _now() -> datetime:
 def flush_outbox(session: Session, limit: int = 100) -> int:
     from isp_shared.outbox import flush
     from .models import OutboxEvent
-    delivered = flush(session, OutboxEvent, "tenancy.events.v1", limit=limit)
+    # Tenancy events are integration notifications. The platform currently has
+    # no mandatory in-stack subscriber, so an empty binding set must not leave
+    # onboarding events retrying forever. Publisher confirms still guarantee
+    # that RabbitMQ accepted the publish.
+    delivered = flush(
+        session, OutboxEvent, "tenancy.events.v1", limit=limit, mandatory=False
+    )
     return len(delivered)
 
 

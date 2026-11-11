@@ -19,7 +19,7 @@ def envelope(row, producer):
             "occurred_at": occurred.isoformat() if occurred else None, "payload": row.payload}
 
 
-async def _publish(row, exchange_name):
+async def _publish(row, exchange_name, *, mandatory=True):
     import aio_pika
     from pamqp.commands import Basic
     url = os.getenv("RABBITMQ_URL", "")
@@ -34,7 +34,7 @@ async def _publish(row, exchange_name):
             body=json.dumps(envelope(row, exchange_name.split(".events")[0]), default=str).encode(),
             message_id=str(row.id), correlation_id=getattr(row, "correlation_id", None),
             content_type="application/json", delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
-        ), routing_key=row.event_type, mandatory=True, timeout=timeout)
+        ), routing_key=row.event_type, mandatory=mandatory, timeout=timeout)
         if not isinstance(confirmed, Basic.Ack):
             raise RuntimeError("Broker did not acknowledge event")
         return True
@@ -42,11 +42,12 @@ async def _publish(row, exchange_name):
         await connection.close()
 
 
-def publish(row, exchange_name):
-    return asyncio.run(_publish(row, exchange_name))
+def publish(row, exchange_name, *, mandatory=True):
+    return asyncio.run(_publish(row, exchange_name, mandatory=mandatory))
 
 
-def flush(session, model, exchange_name, *, limit=100, publisher=None, commit=True):
+def flush(session, model, exchange_name, *, limit=100, publisher=None, commit=True,
+          mandatory=True):
     """Lock the batch until confirmation is committed; never mark no-op delivery.
 
     A crash after broker ACK and before commit can redeliver the same event ID.
@@ -62,7 +63,8 @@ def flush(session, model, exchange_name, *, limit=100, publisher=None, commit=Tr
         if hasattr(row, "attempts"):
             row.attempts += 1
         try:
-            ack = publisher(row) if publisher else publish(row, exchange_name)
+            ack = publisher(row) if publisher else publish(
+                row, exchange_name, mandatory=mandatory)
             if ack is not True:
                 raise RuntimeError("Publisher must confirm delivery")
             row.published_at = datetime.now(timezone.utc)
