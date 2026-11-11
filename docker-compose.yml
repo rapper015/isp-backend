@@ -4,6 +4,7 @@ x-domain-service: &domain-service
   build:
     context: .
     dockerfile: infrastructure/service.Dockerfile
+  restart: unless-stopped
   environment: &domain-environment
     RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER in .env}:${RABBITMQ_DEFAULT_PASS:?set RABBITMQ_DEFAULT_PASS in .env}@rabbitmq:5672/
     VALKEY_URL: redis://valkey:6379/0
@@ -35,6 +36,7 @@ x-domain-service: &domain-service
 services:
   gateway:
     image: nginx:1.27-alpine
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -81,6 +83,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: isp
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
@@ -102,6 +105,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:4-management-alpine
+    restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER in .env}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?set RABBITMQ_DEFAULT_PASS in .env}
@@ -114,6 +118,7 @@ services:
 
   valkey:
     image: valkey/valkey:8-alpine
+    restart: unless-stopped
     command: ["valkey-server", "--appendonly", "yes"]
     volumes:
       - valkey-data:/data
@@ -176,6 +181,7 @@ services:
 
   billing-scheduler:
     logging: *service-logging
+    restart: unless-stopped
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: bss-service}}
     command: ["sh", "-c", "alembic upgrade head && python -m app.scheduler"]
     environment:
@@ -239,6 +245,7 @@ services:
 
   aaa-worker:
     logging: *service-logging
+    restart: unless-stopped
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: aaa-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment:
@@ -264,6 +271,7 @@ services:
     build:
       context: .
       dockerfile: infrastructure/freeradius/Dockerfile
+    restart: unless-stopped
     environment:
       AAA_BASE_URL: http://aaa-service:8000
       AAA_INTERNAL_API_KEY: ${AAA_INTERNAL_API_KEY:?set AAA_INTERNAL_API_KEY in .env}
@@ -334,6 +342,7 @@ services:
 
   siem-worker:
     logging: *service-logging
+    restart: unless-stopped
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: siem-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment:
@@ -363,6 +372,7 @@ services:
 
   workforce-worker:
     logging: *service-logging
+    restart: unless-stopped
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: workforce-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment:
@@ -404,6 +414,7 @@ services:
 
   device-management-worker:
     logging: *service-logging
+    restart: unless-stopped
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: device-management-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment: {<<: *domain-environment, SERVICE_NAME: device-management-worker, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/device_management", ACS_PROVIDER: genieacs, GENIEACS_BASE_URL: http://genieacs:7557, DEVICE_FIRMWARE_DIR: /data/firmware}
@@ -428,6 +439,7 @@ services:
 
   tenancy-worker:
     logging: *service-logging
+    restart: unless-stopped
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: tenancy-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment:
@@ -448,6 +460,7 @@ services:
 
   assurance-worker:
     logging: *service-logging
+    restart: unless-stopped
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: assurance-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment: {<<: *domain-environment, SERVICE_NAME: assurance-worker, DATABASE_URL: "postgresql://${POSTGRES_USER:-isp}:${POSTGRES_PASSWORD:-isp}@postgres:5432/assurance"}
@@ -473,6 +486,7 @@ services:
 
   intelligence-worker:
     logging: *service-logging
+    restart: unless-stopped
     build: {context: ., dockerfile: infrastructure/service.Dockerfile, args: {SERVICE_DIRECTORY: intelligence-service}}
     command: ["python", "-m", "app.worker_runner"]
     environment:
