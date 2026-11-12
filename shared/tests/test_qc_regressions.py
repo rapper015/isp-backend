@@ -11,6 +11,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def run_service_script(service: str, script: str) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
+    # Several service modules require an explicit database URL at import time.
+    # Regression snippets use their own isolated in-memory engines.
+    env["DATABASE_URL"] = "sqlite://"
     env["PYTHONPATH"] = os.pathsep.join([
         str(ROOT / "shared" / "python"),
         str(ROOT / "services" / service),
