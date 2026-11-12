@@ -618,10 +618,13 @@ def safe_branch(item: Branch, franchise: Franchise | None = None) -> dict:
     }
 
 
-def validate_branch_resource_allowances(session: Session, franchise: Franchise, profile: BranchProfile, tenant_id: UUID) -> None:
-    franchise_assignments = assignments_for(session, franchise)
-    requested_packages = {str(value) for value in profile.package_ids}
-    allowed_packages = set(franchise_assignments["package_ids"])
+def package_ids_available_to_franchise(
+    session: Session,
+    franchise: Franchise,
+    tenant_id: UUID,
+    requested_packages: set[str],
+) -> set[str]:
+    allowed_packages = set(assignments_for(session, franchise)["package_ids"])
     # BSS remains the package-catalog authority.  Consult its availability
     # projection only for older assignments not yet represented in CRM.
     if requested_packages - allowed_packages:
@@ -639,8 +642,16 @@ def validate_branch_resource_allowances(session: Session, franchise: Franchise, 
         for plan in tenant_plans:
             plan_id = str(plan.get("id", ""))
             assigned_franchises = {str(value) for value in plan.get("allowed_franchise_ids", [])}
-            if plan_id and (plan.get("available_to_all_franchises") is True or franchise_id in assigned_franchises):
+            active = str(plan.get("status", "active")).lower() == "active"
+            if plan_id and active and (plan.get("available_to_all_franchises") is True or franchise_id in assigned_franchises):
                 allowed_packages.add(plan_id)
+    return allowed_packages
+
+
+def validate_branch_resource_allowances(session: Session, franchise: Franchise, profile: BranchProfile, tenant_id: UUID) -> None:
+    franchise_assignments = assignments_for(session, franchise)
+    requested_packages = {str(value) for value in profile.package_ids}
+    allowed_packages = package_ids_available_to_franchise(session, franchise, tenant_id, requested_packages)
     unauthorized_packages = requested_packages - allowed_packages
     if unauthorized_packages:
         raise HTTPException(422, "one or more selected packages are not assigned to this franchise")
@@ -1020,9 +1031,13 @@ async def onboard_customer(
     branch = tenant_item(session, Branch, command.customer.branch_id, tenant_id, "branch")
     if branch.franchise_id != franchise.id:
         raise HTTPException(422, "selected branch does not belong to the selected franchise")
+    requested_plan_id = str(command.order.requested_plan_reference)
     branch_package_ids = {str(value) for value in (branch.profile or {}).get("package_ids", [])}
-    if str(command.order.requested_plan_reference) not in branch_package_ids:
-        raise HTTPException(422, "selected package is not assigned to this branch")
+    if branch_package_ids:
+        if requested_plan_id not in branch_package_ids:
+            raise HTTPException(422, "selected package is not assigned to this branch")
+    elif requested_plan_id not in package_ids_available_to_franchise(session, franchise, tenant_id, {requested_plan_id}):
+        raise HTTPException(422, "selected package is not available to this franchise")
 
     serialized_command = command.model_dump(mode="json")
     fingerprint = request_fingerprint(serialized_command)

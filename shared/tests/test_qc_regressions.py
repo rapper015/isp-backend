@@ -264,6 +264,47 @@ class QcRegressionTests(unittest.TestCase):
         ''')
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_empty_branch_inherits_only_franchise_available_packages(self):
+        result = run_service_script("crm-service", r'''
+            import json
+            from types import SimpleNamespace
+            from uuid import uuid4
+
+            from app import main
+
+            explicit_id = str(uuid4())
+            inherited_id = str(uuid4())
+            restricted_id = str(uuid4())
+            inactive_id = str(uuid4())
+            franchise = SimpleNamespace(id=uuid4())
+            main.assignments_for = lambda session, item: {
+                "package_ids": [explicit_id], "nas_ids": [], "ip_pool_ids": [],
+            }
+
+            class Response:
+                def __enter__(self):
+                    return self
+                def __exit__(self, *args):
+                    return False
+                def read(self):
+                    return json.dumps([
+                        {"id": inherited_id, "status": "active", "available_to_all_franchises": True},
+                        {"id": restricted_id, "status": "active", "available_to_all_franchises": False,
+                         "allowed_franchise_ids": [str(uuid4())]},
+                        {"id": inactive_id, "status": "inactive", "available_to_all_franchises": True},
+                    ]).encode()
+
+            main.urlrequest.urlopen = lambda *args, **kwargs: Response()
+            allowed = main.package_ids_available_to_franchise(
+                None, franchise, uuid4(), {explicit_id, inherited_id, restricted_id, inactive_id},
+            )
+            assert explicit_id in allowed
+            assert inherited_id in allowed
+            assert restricted_id not in allowed
+            assert inactive_id not in allowed
+        ''')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
