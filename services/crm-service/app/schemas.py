@@ -344,23 +344,23 @@ class FranchiseProfile(StrictModel):
     tds_percentage: Decimal = Field(default=Decimal("0"), ge=0, le=100)
     agr_percentage: Decimal = Field(default=Decimal("0"), ge=0, le=100)
     currency_symbol: str = Field(default="INR", min_length=1, max_length=8)
-    entity_code: str | None = Field(default=None, max_length=64)
-    contact_person: str | None = Field(default=None, max_length=255)
+    entity_code: str | None = Field(default=None, max_length=64, pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+    contact_person: str | None = Field(default=None, max_length=255, pattern=r"^[A-Za-z][A-Za-z .'-]*$")
     mobile: str | None = Field(default=None, min_length=10, max_length=10, pattern=r"^[6-9][0-9]{9}$")
     landline: str | None = Field(default=None, min_length=7, max_length=15, pattern=r"^[0-9]+$")
     email: str | None = Field(default=None, max_length=255, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
     sms_gateway: str | None = Field(default=None, max_length=64)
-    address: str | None = Field(default=None, max_length=1000)
-    country_id: str | None = Field(default=None, max_length=128)
+    address: str | None = Field(default=None, max_length=1000, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .,'#&()/\-]*$")
+    country_id: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z][A-Za-z .'-]*$")
     state_id: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z][A-Za-z .&'-]*$")
     country: str | None = Field(default=None, max_length=64)
     state: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z][A-Za-z .&'-]*$")
-    district: str | None = Field(default=None, max_length=128)
-    area: str | None = Field(default=None, max_length=128)
-    city: str | None = Field(default=None, max_length=128)
-    zip_code: str | None = Field(default=None, max_length=16)
+    district: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
+    area: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
+    city: str | None = Field(default=None, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
+    zip_code: str | None = Field(default=None, min_length=6, max_length=6, pattern=r"^[0-9]{6}$")
     currency_id: Literal["INR", "USD", "EUR", "GBP", "AED", "SGD", "AUD", "CAD"] | None = None
-    bank_account_name: str | None = Field(default=None, max_length=255)
+    bank_account_name: str | None = Field(default=None, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
     static_isp_share: Decimal = Field(default=Decimal("0"), ge=0, le=100)
     static_reseller_share: Decimal = Field(default=Decimal("0"), ge=0, le=100)
     reseller_wallet_offer: Decimal = Field(default=Decimal("0"), ge=0)
@@ -425,7 +425,7 @@ class FranchiseProfile(StrictModel):
 
 class FranchiseIn(StrictModel):
     franchise_code: str = Field(min_length=1, max_length=64, pattern=r"^[A-Z0-9][A-Z0-9_-]*$")
-    name: str = Field(min_length=1, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 ._&()/,-]*$")
+    name: str = Field(min_length=1, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
     profile: FranchiseProfile = Field(default_factory=FranchiseProfile)
 
 
@@ -450,7 +450,7 @@ class FranchiseAdminIn(StrictModel):
 
 class FranchiseOnboardingIn(StrictModel):
     franchise_code: str = Field(min_length=2, max_length=64, pattern=r"^[A-Z0-9][A-Z0-9_-]*$")
-    name: str = Field(min_length=2, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 ._&()/,-]*$")
+    name: str = Field(min_length=2, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
     status: Literal["ACTIVE", "INACTIVE"] = "ACTIVE"
     profile: FranchiseProfile
     admin: FranchiseAdminIn
@@ -473,7 +473,7 @@ class FranchiseOnboardingIn(StrictModel):
 
 class FranchiseUpdate(StrictModel):
     franchise_code: str | None = Field(default=None, min_length=1, max_length=64, pattern=r"^[A-Z0-9][A-Z0-9_-]*$")
-    name: str | None = Field(default=None, min_length=1, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 ._&()/,-]*$")
+    name: str | None = Field(default=None, min_length=1, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
     status: Literal["ACTIVE", "INACTIVE"] | None = None
     profile: FranchiseProfile | None = None
 
@@ -491,20 +491,28 @@ class BranchProfile(StrictModel):
     package_ids: list[str] = Field(default_factory=list, max_length=500)
     ip_pool_ids: list[str] = Field(default_factory=list, max_length=500)
 
+    @field_validator("address")
+    @classmethod
+    def valid_address(cls, value):
+        _reject_sql_control_syntax(value)
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 .,'#&()/\-]*", value):
+            raise ValueError("address contains unsupported characters")
+        return value
+
 
 class BranchIn(StrictModel):
     # Franchise-scoped operators inherit this from their authenticated
     # identity. Tenant/platform administrators must provide it explicitly.
     franchise_id: UUID | None = None
-    branch_code: str = Field(min_length=1, max_length=64)
-    name: str = Field(min_length=1, max_length=255)
+    branch_code: str = Field(min_length=1, max_length=64, pattern=r"^[A-Z0-9][A-Z0-9_-]*$")
+    name: str = Field(min_length=1, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
     profile: BranchProfile
 
 
 class BranchUpdate(StrictModel):
     franchise_id: UUID | None = None
-    branch_code: str | None = Field(default=None, min_length=1, max_length=64)
-    name: str | None = Field(default=None, min_length=1, max_length=255)
+    branch_code: str | None = Field(default=None, min_length=1, max_length=64, pattern=r"^[A-Z0-9][A-Z0-9_-]*$")
+    name: str | None = Field(default=None, min_length=1, max_length=255, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
     status: Literal["ACTIVE", "INACTIVE"] | None = None
     profile: BranchProfile | None = None
 

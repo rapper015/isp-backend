@@ -1,4 +1,5 @@
 import re
+from ipaddress import ip_address, ip_network
 from typing import Any, Literal
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -70,6 +71,28 @@ class IpPoolIn(StrictModel):
     address_family: Literal["ipv4", "ipv6"] = "ipv4"
     cidr: str
     excluded: list[str] = Field(default_factory=list, max_length=1024)
+
+    @field_validator("cidr")
+    @classmethod
+    def valid_cidr(cls, value, info):
+        try:
+            network = ip_network(value, strict=False)
+        except ValueError as exc:
+            raise ValueError("enter a valid network in CIDR format") from exc
+        family = info.data.get("address_family", "ipv4")
+        if (family == "ipv4" and network.version != 4) or (family == "ipv6" and network.version != 6):
+            raise ValueError(f"CIDR does not match address family {family}")
+        return str(network)
+
+    @field_validator("excluded")
+    @classmethod
+    def valid_excluded_addresses(cls, values):
+        for value in values:
+            try:
+                ip_address(value)
+            except ValueError as exc:
+                raise ValueError(f"invalid excluded IP address: {value}") from exc
+        return values
 class IpReservationIn(StrictModel):
     subscriber_id: UUID
     address: str = Field(min_length=1, max_length=64)

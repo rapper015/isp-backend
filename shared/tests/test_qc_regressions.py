@@ -133,7 +133,7 @@ class QcRegressionTests(unittest.TestCase):
         ''')
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_tenant_mobile_numbers_are_digits_with_bounded_length(self):
+    def test_tenant_onboarding_rejects_invalid_identity_and_address_fields(self):
         result = run_service_script("tenancy-service", r'''
             from uuid import uuid4
             from pydantic import ValidationError
@@ -150,11 +150,63 @@ class QcRegressionTests(unittest.TestCase):
                 },
             }
             TenantOnboardingIn.model_validate(base)
-            for value in ("letters", "123456", "1" * 16):
+            for value in ("letters", "123456", "1" * 16, "1234567890"):
                 payload = {**base, "primary_mobile": value}
                 try:
                     TenantOnboardingIn.model_validate(payload)
                     raise AssertionError(f"invalid mobile accepted: {value}")
+                except ValidationError:
+                    pass
+            invalid = [
+                {**base, "name": "Tenant $%^"},
+                {**base, "description": "'; DROP TABLE tenants; --"},
+                {**base, "address": {"address_line_1": "Main <script> Road"}},
+                {**base, "address": {"postal_code": "7000A1", "country": "IN"}},
+                {**base, "address": {"country": "India"}},
+            ]
+            for payload in invalid:
+                try:
+                    TenantOnboardingIn.model_validate(payload)
+                    raise AssertionError(f"invalid tenant payload accepted: {payload}")
+                except ValidationError:
+                    pass
+        ''')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_aaa_pool_rejects_invalid_cidr_and_family_mismatch(self):
+        result = run_service_script("aaa-service", r'''
+            from uuid import uuid4
+            from pydantic import ValidationError
+            from app.schemas import IpPoolIn
+
+            IpPoolIn(tenant_id=uuid4(), name="IPv4 subscribers", address_family="ipv4", cidr="10.20.0.0/24")
+            IpPoolIn(tenant_id=uuid4(), name="IPv6 subscribers", address_family="ipv6", cidr="2001:db8::/64")
+            for family, cidr in (("ipv4", "192.168.0.1/255"), ("ipv4", "2001:db8::/64"), ("ipv6", "10.20.0.0/24")):
+                try:
+                    IpPoolIn(tenant_id=uuid4(), name="Invalid pool", address_family=family, cidr=cidr)
+                    raise AssertionError(f"invalid CIDR accepted: {family} {cidr}")
+                except ValidationError:
+                    pass
+        ''')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_branch_rejects_invalid_names_codes_and_addresses(self):
+        result = run_service_script("crm-service", r'''
+            from uuid import uuid4
+            from pydantic import ValidationError
+            from app.schemas import BranchIn
+
+            base = {"franchise_id": uuid4(), "branch_code": "BR-NORTH", "name": "North Branch",
+                    "profile": {"email": "branch@example.com", "mobile": "9876543210", "address": "12 Main Road"}}
+            BranchIn.model_validate(base)
+            for payload in (
+                {**base, "name": "Branch $%^"},
+                {**base, "branch_code": "branch code"},
+                {**base, "profile": {**base["profile"], "address": "'; DROP TABLE branches; --"}},
+            ):
+                try:
+                    BranchIn.model_validate(payload)
+                    raise AssertionError(f"invalid branch accepted: {payload}")
                 except ValidationError:
                     pass
         ''')

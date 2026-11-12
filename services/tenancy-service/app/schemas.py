@@ -1,10 +1,21 @@
 """Request/response schemas (strict — unknown fields are rejected)."""
 from __future__ import annotations
 
+import re
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+_SQL_CONTROL_SYNTAX = re.compile(r"(?:['\"].*\b(?:or|and)\b.*(?:=|\blike\b))|(?:;\s*(?:select|insert|update|delete|drop|alter|create)\b)|(?:--\s*$)|(?:/\*)", re.IGNORECASE)
+_SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
+_SAFE_ADDRESS = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 .,'#&()/\-]*$")
+
+
+def _reject_control(value: str | None) -> str | None:
+    if value and _SQL_CONTROL_SYNTAX.search(value):
+        raise ValueError("input contains unsupported control syntax")
+    return value
 
 
 class StrictModel(BaseModel):
@@ -24,16 +35,21 @@ class TenantAdminIn(StrictModel):
     full_name: str = Field(min_length=2, max_length=255)
     username: str = Field(min_length=3, max_length=128)
     email: str
-    mobile: str = Field(min_length=7, max_length=15, pattern=r"^[0-9]+$")
+    mobile: str = Field(min_length=10, max_length=10, pattern=r"^[6-9][0-9]{9}$")
     password: str = Field(min_length=12, max_length=256)
     confirm_password: str
 
+    @field_validator("full_name", "username")
+    @classmethod
+    def reject_control_syntax(cls, value):
+        return _reject_control(value)
+
 class TenantOnboardingIn(StrictModel):
-    name: str = Field(min_length=2, max_length=160)
+    name: str = Field(min_length=2, max_length=160, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
     code: str = Field(min_length=2, max_length=40)
     organization_type: str
     business_email: str
-    primary_mobile: str = Field(min_length=7, max_length=15, pattern=r"^[0-9]+$")
+    primary_mobile: str = Field(min_length=10, max_length=10, pattern=r"^[6-9][0-9]{9}$")
     status: str = "ACTIVE"
     custom_domain: str | None = None
     legal_name: str | None = None
@@ -47,20 +63,37 @@ class TenantOnboardingIn(StrictModel):
     admin: TenantAdminIn
     access_template_id: UUID
 
+    @field_validator("legal_name", "description")
+    @classmethod
+    def reject_control_syntax(cls, value):
+        return _reject_control(value)
+
     @model_validator(mode="after")
     def validate_onboarding(self):
         if self.admin.password != self.admin.confirm_password:
             raise ValueError("admin passwords do not match")
         if self.status not in {"ACTIVE", "TRIAL", "SUSPENDED", "INACTIVE"}:
             raise ValueError("unsupported tenant status")
+        for field in ("address_line_1", "address_line_2", "area", "district", "city", "state"):
+            value = str(self.address.get(field) or "").strip()
+            _reject_control(value)
+            matcher = _SAFE_ADDRESS if field.startswith("address_line") else _SAFE_NAME
+            if value and not matcher.fullmatch(value):
+                raise ValueError(f"address.{field} contains unsupported characters")
+        postal_code = str(self.address.get("postal_code") or "")
+        if postal_code and not re.fullmatch(r"[0-9]{6}", postal_code):
+            raise ValueError("address.postal_code must be a 6-digit PIN code")
+        country = str(self.address.get("country") or self.country)
+        if not re.fullmatch(r"[A-Z]{2}", country):
+            raise ValueError("country must be a 2-letter ISO code")
         return self
 
 
 class TenantUpdateIn(StrictModel):
-    name: str = Field(min_length=2, max_length=160)
+    name: str = Field(min_length=2, max_length=160, pattern=r"^[A-Za-z0-9][A-Za-z0-9 .&()'\-]*$")
     organization_type: str
     business_email: str
-    primary_mobile: str = Field(min_length=7, max_length=15, pattern=r"^[0-9]+$")
+    primary_mobile: str = Field(min_length=10, max_length=10, pattern=r"^[6-9][0-9]{9}$")
     custom_domain: str | None = None
     legal_name: str | None = None
     website: str | None = None
@@ -70,6 +103,18 @@ class TenantUpdateIn(StrictModel):
     address: dict
     country: str = "IN"
     currency: str = "INR"
+
+    @model_validator(mode="after")
+    def validate_update(self):
+        _reject_control(self.legal_name)
+        _reject_control(self.description)
+        for field in ("address_line_1", "address_line_2", "area", "district", "city", "state"):
+            value = str(self.address.get(field) or "").strip()
+            _reject_control(value)
+            matcher = _SAFE_ADDRESS if field.startswith("address_line") else _SAFE_NAME
+            if value and not matcher.fullmatch(value):
+                raise ValueError(f"address.{field} contains unsupported characters")
+        return self
 
 
 class TenantStatusIn(StrictModel):
