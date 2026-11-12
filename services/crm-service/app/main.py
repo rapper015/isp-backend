@@ -916,7 +916,7 @@ def list_followups(request: Request, tenant_id: UUID | None = None, status: str 
         statement = statement.where(FollowUp.status == "PENDING", FollowUp.scheduled_at <= datetime.now(timezone.utc))
     if overdue:
         statement = statement.where(FollowUp.status == "MISSED")
-    return [{"id": str(item.id), "subject": item.subject, "scheduled_at": item.scheduled_at, "status": item.status, "lead_id": str(item.lead_id) if item.lead_id else None, "customer_id": str(item.customer_id) if item.customer_id else None} for item in session.scalars(statement.order_by(FollowUp.scheduled_at).offset(max(offset, 0)).limit(bounded(limit)))]
+    return [{"id": str(item.id), "tenant_id": str(item.tenant_id), "subject": item.subject, "scheduled_at": item.scheduled_at, "status": item.status, "lead_id": str(item.lead_id) if item.lead_id else None, "customer_id": str(item.customer_id) if item.customer_id else None} for item in session.scalars(statement.order_by(FollowUp.scheduled_at).offset(max(offset, 0)).limit(bounded(limit)))]
 
 
 @app.post("/api/crm/follow-ups/{followup_id}/complete", dependencies=[Depends(internal_service_auth)])
