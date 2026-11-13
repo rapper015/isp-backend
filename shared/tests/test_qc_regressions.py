@@ -264,6 +264,31 @@ class QcRegressionTests(unittest.TestCase):
         ''')
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_plan_descriptions_reject_unsafe_characters_and_control_syntax(self):
+        result = run_service_script("bss-service", r'''
+            from pydantic import ValidationError
+            from app.main import PlanCreate, PlanUpdate
+
+            base = {
+                "plan_code": "QC-SAFE", "name": "QC Safe", "description": "Home broadband plan",
+                "monthly_fee": "999", "download_rate_kbps": 102400,
+                "upload_rate_kbps": 102400,
+            }
+            PlanCreate.model_validate(base)
+            PlanUpdate.model_validate({"description": "Home broadband, 100 Mbps."})
+            for value in ("@#%$@%", "'; DROP TABLE plans; --", "<script>alert(1)</script>"):
+                for model, payload in (
+                    (PlanCreate, {**base, "description": value}),
+                    (PlanUpdate, {"description": value}),
+                ):
+                    try:
+                        model.model_validate(payload)
+                        raise AssertionError(f"unsafe package description accepted: {value}")
+                    except ValidationError:
+                        pass
+        ''')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_empty_branch_inherits_only_franchise_available_packages(self):
         result = run_service_script("crm-service", r'''
             import json

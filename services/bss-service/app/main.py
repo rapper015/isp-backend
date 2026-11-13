@@ -4,9 +4,10 @@ from decimal import Decimal
 from os import getenv
 from uuid import UUID
 from typing import Literal
+import re
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 from .database import Base, SessionLocal, engine
@@ -26,6 +27,20 @@ app = FastAPI(title="BSS Service", version="2.0.0", lifespan=lifespan)
 app.include_router(revenue_router)
 app.include_router(catalog_router)
 app.include_router(invoice_import_router)
+
+_SQL_CONTROL_SYNTAX = re.compile(r"(?:['\"].*\b(?:or|and)\b.*(?:=|\blike\b))|(?:;\s*(?:select|insert|update|delete|drop|alter|create)\b)|(?:--\s*$)|(?:/\*)", re.IGNORECASE)
+_SAFE_DESCRIPTION = re.compile(r"^[A-Za-z0-9\s.,'&()/\-]*$")
+
+
+def validate_description(value: str | None) -> str | None:
+    if value is None:
+        return value
+    if len(value) > 500:
+        raise ValueError("description must not exceed 500 characters")
+    if _SQL_CONTROL_SYNTAX.search(value) or not _SAFE_DESCRIPTION.fullmatch(value):
+        raise ValueError("description contains unsupported characters or control syntax")
+    return value
+
 def db_session(request: Request):
     db = SessionLocal()
     scope_session(db, Base, getattr(request.state, "bss_principal", None))
@@ -86,6 +101,11 @@ class PlanCreate(BaseModel):
     allowed_franchise_ids: list[UUID] = Field(default_factory=list, max_length=1000)
     ott_mappings: list[PlanOttMappingIn] = Field(default_factory=list, max_length=100)
 
+    @field_validator("description")
+    @classmethod
+    def valid_description(cls, value):
+        return validate_description(value)
+
     @model_validator(mode="after")
     def package_rules(self):
         if self.monthly_fee is None and not self.prices:
@@ -128,6 +148,11 @@ class PlanUpdate(BaseModel):
     prices: list[PlanPriceIn] | None = None
     allowed_franchise_ids: list[UUID] | None = None
     ott_mappings: list[PlanOttMappingIn] | None = None
+
+    @field_validator("description")
+    @classmethod
+    def valid_description(cls, value):
+        return validate_description(value)
 class InvoiceCreate(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     tenant_id: UUID | None = None
